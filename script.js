@@ -1,6 +1,7 @@
 /* ============================================================
    PORTAL DE DASHBOARDS — ALVACO · INTELIGENCIA COMERCIAL
    script.js · Lógica y configuración
+   v2.3 · jul 2026 — NUEVO: "Reporte Inventario" en el área IC
    Secciones: configuración · iconos · favoritos · sidebar ·
    hero · recientes · tarjetas · visor · zoom · carrusel ·
    reloj · buscador · Bootstrap (toast y tooltips)
@@ -97,6 +98,24 @@ const DASHBOARDS = [
     url: "Herramientas_Renta_ALVACO.html"
   },
   {
+    /* ══════════ NUEVO · EXCLUSIVO IC ══════════
+       Herramienta HTML de consulta de inventario.
+       El archivo Reporte_Inventario.html debe estar en la
+       MISMA carpeta del portal (junto a index.html).
+       Si en realidad es un reporte de Power BI, quita la
+       línea tipo: "web" y cambia embed/url por las ligas
+       de Power BI.                                        */
+    nombre: "Reporte Inventario",
+    descripcion: "Consulta y filtrado del inventario de equipos por plaza, cadena y estatus.",
+    categoria: "Herramientas IC",
+    color: "blue",
+    tipo: "web",     /* ← herramienta HTML propia */
+    soloIC: true,    /* ← EXCLUSIVO EQUIPO IC */
+    imagen: "img/maquina_sin_fondo.png",
+    embed: "Reporte_Inventario.html",
+    url: "Reporte_Inventario.html"
+  },
+  {
     nombre: "Tickets IC",
     descripcion: "Solicita apoyo al equipo de Inteligencia Comercial y da seguimiento a tus tickets.",
     categoria: "Solicitudes",
@@ -151,8 +170,9 @@ const ACCESO_DIRECTO_LABEL  = "Solicitar ticket";
    Botón teal que abre de inmediato la herramienta indicada
    (por su "nombre" en DASHBOARDS) dentro del visor.
    Deja "" para ocultar el botón.
-   (Análisis de Renta ahora vive dentro del área IC, por eso
-   este acceso directo queda vacío; puedes reutilizarlo.)   */
+   (Análisis de Renta y Reporte Inventario ahora viven dentro
+   del área IC, por eso este acceso directo queda vacío;
+   puedes reutilizarlo cuando quieras.)                     */
 const ACCESO_DIRECTO2_NOMBRE = "";
 const ACCESO_DIRECTO2_LABEL  = "";
 
@@ -269,7 +289,6 @@ function cerrarLoginIC(){
   icLoginOverlay.classList.remove('visible');
 }
 
-/* --- Conexión con SharePoint (API REST, sesión M365) --- */
 /* --- Contraseñas personales (por correo, en este navegador) --- */
 function hashPersonalIC(correo){
   try { return localStorage.getItem('alvaco-ic-pass-' + correo) || ''; }
@@ -746,7 +765,8 @@ render();
 /* Apertura automática por URL: ?abrir=<nombre>
    Abre de inmediato cualquier tarjeta del portal al cargar.
    Atajos: ?abrir=tickets (Power App) · ?abrir=renta (Análisis
-   de Renta, requiere modo IC). También acepta el nombre de la
+   de Renta) · ?abrir=inventario (Reporte Inventario); los dos
+   últimos requieren sesión IC. También acepta el nombre de la
    tarjeta normalizado (minúsculas, sin acentos, espacios como
    guiones), p. ej. ?abrir=ingresos-diarios.                   */
 (function autoAbrir(){
@@ -756,8 +776,9 @@ render();
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, '-');
   const ALIAS = {
-    'tickets': ACCESO_DIRECTO_NOMBRE,
-    'renta':   'Análisis de Renta'
+    'tickets':    ACCESO_DIRECTO_NOMBRE,
+    'renta':      'Análisis de Renta',
+    'inventario': 'Reporte Inventario'
   };
   const objetivo = ALIAS[p.toLowerCase()];
   const d = DASHBOARDS.find(x => x.embed &&
