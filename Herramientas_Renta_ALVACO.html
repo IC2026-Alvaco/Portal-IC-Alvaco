@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Herramientas de Renta · ALVACO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --navy:#0C447C; --navy-deep:#082D53; --navy-hdr:#173B57; --teal:#17A2A6; --teal-soft:#E2F4F4;
+  --ink:#1B2733; --muted:#5D6B7A; --line:#D9E1E8; --bg:#F4F7FA; --card:#FFFFFF;
+  --pos:#0E7C4A; --neg:#C0392B;
+  --fBlue:#00B0F0; --fOrange:#FFC000; --fRed:#FF7C80;
+  --fija:#F7C1C7; --fijaTxt:#8E1F2B; --pct:#D9F0EE; --pctTxt:#0B6B6E;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+h1,h2,h3{font-family:'Archivo',sans-serif}
+
+header{background:linear-gradient(120deg,var(--navy-deep) 0%,var(--navy) 62%,#0d5a9e 100%);color:#fff;padding:24px 32px 0}
+.brand{font-family:'Archivo';font-stretch:75%;font-weight:800;letter-spacing:.22em;font-size:12px;color:#8FD6D8;text-transform:uppercase}
+header h1{font-weight:700;font-size:25px;margin-top:4px;font-stretch:87%}
+header p{color:#B9CCE0;font-size:13px;margin:4px 0 16px;max-width:680px}
+.tabs{display:flex;gap:6px}
+.tabs button{border:none;background:rgba(255,255,255,.12);color:#CFE0F0;padding:11px 24px;font:700 14px 'Archivo';font-stretch:85%;letter-spacing:.02em;cursor:pointer;border-radius:10px 10px 0 0}
+.tabs button.on{background:var(--bg);color:var(--navy)}
+
+main{max-width:1500px;margin:0 auto;padding:24px 32px 60px}
+.tool{display:none}
+.tool.act{display:block}
+.grid-top{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;align-items:stretch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+.card h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--navy);margin-bottom:12px;font-stretch:80%}
+textarea{width:100%;height:150px;border:1.5px dashed var(--navy);border-radius:8px;padding:10px 12px;font:12px/1.5 'IBM Plex Sans';color:var(--ink);background:#FDFEFF;resize:vertical}
+textarea:focus{outline:2px solid var(--teal);border-color:transparent}
+.hint{font-size:12px;color:var(--muted);margin-top:8px}
+.hint code{background:var(--teal-soft);color:var(--navy);padding:1px 5px;border-radius:4px;font-size:11px}
+
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.mode{border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;background:#fff;text-align:left;font-family:inherit;font-size:13px;transition:.15s}
+.mode strong{display:block;font-family:'Archivo';font-stretch:85%;font-size:13.5px;color:var(--ink)}
+.mode span{font-size:11.5px;color:var(--muted)}
+.mode.on{border-color:var(--teal);background:var(--teal-soft);box-shadow:inset 0 0 0 1px var(--teal)}
+.mode.on strong{color:var(--navy)}
+
+.scope{display:flex;gap:0;margin-bottom:14px;border:1px solid var(--line);border-radius:8px;overflow:hidden;width:fit-content}
+.scope button{border:none;background:#fff;padding:8px 16px;font:600 12.5px 'IBM Plex Sans';color:var(--muted);cursor:pointer}
+.scope button.on{background:var(--navy);color:#fff}
+
+.params{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.params.two{grid-template-columns:1fr 1fr}
+.field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
+.field input{width:100%;border:1px solid var(--line);border-radius:7px;padding:8px 10px;font:600 14px 'IBM Plex Sans';color:var(--navy)}
+.field input:focus{outline:2px solid var(--teal);border-color:transparent}
+.field select{width:100%;border:1px solid var(--line);border-radius:7px;padding:8px 10px;font:600 13px 'IBM Plex Sans';color:var(--navy);background:#fff;cursor:pointer}
+.field input:disabled{background:#EEF2F6;color:var(--navy);font-weight:700;border-style:dashed;cursor:default}
+
+.fambox{display:none;margin-top:4px}
+.fambox .famhint{font-size:12px;color:var(--muted);margin-bottom:8px}
+table.famtbl{width:100%;border-collapse:collapse;font-size:12.5px}
+table.famtbl th{background:var(--navy-hdr);color:#fff;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:7px 10px;text-align:left}
+table.famtbl td{padding:6px 8px;border-bottom:1px solid #EDF1F5}
+table.famtbl td.fam{font-weight:700;color:var(--navy);white-space:nowrap}
+table.famtbl td .cnt{font-weight:400;color:var(--muted);font-size:11px}
+table.famtbl input{width:100%;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:600 13px 'IBM Plex Sans';color:var(--navy)}
+table.famtbl input:focus{outline:2px solid var(--teal);border-color:transparent}
+table.famtbl select{width:100%;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:600 12px 'IBM Plex Sans';color:var(--navy);background:#fff;cursor:pointer}
+
+.btnrow{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+button.primary{background:var(--navy);color:#fff;border:none;border-radius:8px;padding:10px 22px;font:600 14px 'Archivo';font-stretch:87%;cursor:pointer;letter-spacing:.02em}
+button.primary:hover{background:var(--navy-deep)}
+button.ghost{background:#fff;color:var(--navy);border:1px solid var(--line);border-radius:8px;padding:10px 16px;font:600 13px 'IBM Plex Sans';cursor:pointer}
+button.ghost:hover{border-color:var(--teal);color:var(--teal)}
+button.snapbtn{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:10px 18px;font:600 13px 'IBM Plex Sans';cursor:pointer}
+button.snapbtn:hover{background:#0E8286}
+.err{color:var(--neg);font-size:12.5px;margin-top:8px;display:none}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy-deep);color:#fff;padding:12px 22px;border-radius:10px;font-size:13.5px;box-shadow:0 8px 24px rgba(8,45,83,.35);display:none;z-index:99}
+
+.results{display:none;margin-top:26px}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--navy)}
+.kpi.nueva::before{background:var(--teal)}
+.kpi.delta::before{background:var(--fOrange)}
+.kpi .lbl{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.kpi .val{font-family:'Archivo';font-stretch:85%;font-weight:700;font-size:22px;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+.pos{color:var(--pos)} .neg{color:var(--neg)}
+
+.famsum{margin-bottom:16px;display:none}
+.famsum h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--navy);margin-bottom:8px;font-stretch:80%}
+table.sumfam{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:12.5px;font-variant-numeric:tabular-nums}
+table.sumfam th{background:var(--navy-hdr);color:#fff;font-weight:600;font-size:11px;text-transform:uppercase;padding:7px 10px;text-align:right;white-space:nowrap}
+table.sumfam th:first-child{text-align:left}
+table.sumfam td{padding:7px 10px;border-bottom:1px solid #EDF1F5;text-align:right;white-space:nowrap}
+table.sumfam td:first-child{text-align:left;font-weight:700;color:var(--navy)}
+
+.tablebar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.tablebar input{border:1px solid var(--line);border-radius:7px;padding:8px 12px;font:13px 'IBM Plex Sans';width:280px}
+.legend{display:flex;gap:16px;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.chip{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:5px;border:1px solid rgba(0,0,0,.12)}
+.chip.fija{background:var(--fija)} .chip.pct{background:var(--pct)}
+.count{font-size:12px;color:var(--muted)}
+
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:#fff;max-height:64vh}
+table.main{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+table.main thead th, table.main thead td{position:sticky;z-index:2}
+table.main thead tr.band th{top:0;height:30px;padding:6px 10px;font-family:'Archivo';font-stretch:80%;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:#fff;text-align:center}
+table.main thead tr.band .b-id{background:#EEF2F6;color:var(--muted)}
+table.main thead tr.band .b-ant{background:#0A0A0A}
+table.main thead tr.band .b-nva{background:var(--teal)}
+table.main thead tr.tot td{top:30px;height:32px;padding:6px 10px;font-weight:700;text-align:right;white-space:nowrap;background:#fff;border-bottom:1px solid #fff}
+table.main thead tr.tot.prom td{top:62px}
+table.main thead tr.tot td.txt{text-align:left;font-family:'Archivo';font-stretch:85%;font-size:11px;letter-spacing:.06em;color:var(--muted);background:#F7FAFC}
+table.main thead tr.tot td.fB{background:var(--fBlue);color:#fff}
+table.main thead tr.tot td.fO{background:var(--fOrange);color:#1B2733}
+table.main thead tr.tot td.fR{background:var(--fRed);color:#5A1215}
+table.main thead tr.cols th{top:94px;background:var(--navy-hdr);color:#fff;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;text-align:right;white-space:nowrap;border-bottom:2px solid var(--navy-deep)}
+table.main thead tr.cols th.txt{text-align:left}
+table.main tbody td{padding:6px 10px;border-bottom:1px solid #EDF1F5;text-align:right;white-space:nowrap}
+table.main tbody td.txt{text-align:left}
+table.main tbody tr:hover td:not(.rFija):not(.rPct){background:#F4FBFB}
+td.sep,th.sep{border-left:2px solid var(--line)}
+td.rFija{background:var(--fija);color:var(--fijaTxt);font-weight:700}
+td.rPct{background:var(--pct);color:var(--pctTxt);font-weight:600}
+td.negm{color:var(--neg);font-weight:700}
+td.inc{font-weight:700;color:var(--navy)}
+table.main tfoot td{padding:9px 10px;font-weight:700;background:#EEF2F6;border-top:2px solid var(--navy);text-align:right;white-space:nowrap;position:sticky;bottom:0}
+table.main tfoot td.txt{text-align:left;font-family:'Archivo';font-stretch:85%}
+
+
+/* Resumen ejecutivo (visible y para captura) */
+.exview{overflow-x:auto;margin-bottom:18px}
+.exview .exw{border:1px solid var(--line);box-shadow:0 3px 14px rgba(12,68,124,.07)}
+.exw{width:1120px;background:linear-gradient(180deg,#FFFFFF 0%,#F7FAFC 100%);border-radius:16px;padding:32px 36px 24px;font-family:'IBM Plex Sans',sans-serif;color:var(--ink)}
+.exhead{display:flex;align-items:flex-start;gap:22px}
+.exlogo{font-family:'Archivo';font-weight:800;font-size:27px;letter-spacing:.5px;white-space:nowrap;margin-top:2px}
+.exlogo span:nth-child(1){color:#E63946}.exlogo span:nth-child(2){color:#1D74C4}.exlogo span:nth-child(3){color:#F4A814}
+.exlogo span:nth-child(4){color:#1D9E75}.exlogo span:nth-child(5){color:#E86A17}.exlogo span:nth-child(6){color:#7048B6}
+.exlogo span:nth-child(7){color:#E63946}.exlogo span:nth-child(8){color:#1D74C4}.exlogo span:nth-child(9){color:#1D9E75}
+.extit h1{font-family:'Archivo';font-stretch:87%;font-weight:800;font-size:25px;color:var(--navy)}
+.extit .sub{font-size:13px;font-weight:700;color:var(--navy);margin-top:5px}
+.exesc{display:inline-block;margin-top:8px;background:var(--teal-soft);border:1px solid var(--teal);color:var(--navy);font-weight:700;font-size:12px;border-radius:14px;padding:5px 14px;line-height:1.5;max-width:640px}
+.exbadge{margin-left:auto;border-radius:12px;padding:13px 20px;text-align:center;color:#fff;min-width:190px}
+.exbadge b{display:block;font-family:'Archivo';font-stretch:85%;font-size:15px;letter-spacing:.04em}
+.exbadge span{font-size:12px;opacity:.95}
+
+.exkpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0 20px}
+.exkpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px 13px;position:relative;overflow:hidden}
+.exkpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--navy)}
+.exkpi.tGreen::before{background:#1E8449}
+.exkpi.tAmber::before{background:#E67E22}
+.exkpi.tRed::before{background:#C0392B}
+.exkpi .t{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+.exkpi .v{font-family:'Archivo';font-stretch:85%;font-weight:800;font-size:28px;color:var(--navy);margin-top:5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.exkpi.tGreen .v{color:#1E8449}
+.exkpi.tAmber .v{color:#B7791F}
+.exkpi.tRed .v{color:#C0392B}
+.exkpi .s{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.4}
+
+.expanels{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.expanel{background:#fff;border-radius:14px;padding:16px 22px 12px;border:1px solid var(--line);border-top:4px solid var(--navy)}
+.expanel.pGood{border-top-color:#1E8449;background:linear-gradient(180deg,#F4FBF6 0%,#FFFFFF 60%)}
+.expanel.pWarn{border-top-color:#E67E22;background:linear-gradient(180deg,#FEF9F2 0%,#FFFFFF 60%)}
+.expanel.pBad{border-top-color:#C0392B;background:linear-gradient(180deg,#FDF3F2 0%,#FFFFFF 60%)}
+.expanel h4{font-family:'Archivo';font-stretch:82%;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);margin-bottom:8px}
+.expanel.pGood h4{color:#1E8449}
+.expanel.pWarn h4{color:#B7791F}
+.expanel.pBad h4{color:#C0392B}
+.exrow{display:flex;justify-content:space-between;gap:14px;padding:6px 0;border-bottom:1px solid rgba(12,68,124,.07);font-size:13.5px}
+.exrow:last-child{border-bottom:none}
+.exrow span{color:#41505F}
+.exrow b{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink)}
+.exrow.hl{background:rgba(12,68,124,.045);margin:0 -10px;padding:7px 10px;border-radius:8px;border-bottom:none}
+.exrow.hl span{font-weight:700;color:var(--navy)}
+.exrow.hl b{font-size:15px;color:var(--navy)}
+.expanel.pGood .exrow.hl span, .expanel.pGood .exrow.hl b{color:#1E8449}
+.expanel.pWarn .exrow.hl span, .expanel.pWarn .exrow.hl b{color:#B7791F}
+.expanel.pBad .exrow.hl span, .expanel.pBad .exrow.hl b{color:#C0392B}
+
+.exconc{margin-top:18px;background:var(--navy-deep);color:#fff;border-radius:12px;padding:15px 22px;font-size:14px;line-height:1.6}
+.exconc b{color:#8FD6D8}
+.exfoot{margin-top:12px;font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+@media(max-width:980px){.grid-top{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.params{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">ALVACO · Inteligencia Comercial</div>
+  <h1>Herramientas de Análisis de Renta</h1>
+  <p>Pega tu tabla de equipos, captura los términos del contrato — globales, por familia, en total o por equipo — y compara la renta y el margen actual contra el escenario nuevo.</p>
+  <div class="tabs">
+    <button id="tabMx" class="on" type="button">Renta Mixta</button>
+    <button id="tabRf" type="button">Renta Fija (prorrateo)</button>
+    <button id="tabPc" type="button">Renta a Porcentaje</button>
+  </div>
+</header>
+
+<main>
+
+<!-- ═══════════════ HERRAMIENTA 1: RENTA MIXTA ═══════════════ -->
+<section class="tool act" id="toolMx">
+  <div class="grid-top">
+    <section class="card">
+      <h2>1 · Pega los datos del reporte</h2>
+      <textarea id="mxPaste" placeholder="Copia desde Excel las columnas A–V (Region, Ciudad, Cadena, Plaza, Familia … %Margen del Ingreso) con o sin encabezados, y pégalas aquí."></textarea>
+      <div class="hint">Columnas que usa el cálculo: <code>Familia</code> (E), <code>Codigo</code> (H), <code>Fx Ingreso Prom</code> (M), <code>Fx Renta Prom</code> (O) y <code>Fx Costo Producto Ave</code> (R). Renta mixta = el mayor entre Ingreso × % y la renta fija. Para un contrato que pasa de mixta a <b>renta fija pura</b>: escenario "Aumento de renta fija" y captura <b>0</b> en el % del escenario nuevo.</div>
+      <div class="err" id="mxErr"></div>
+    </section>
+
+    <section class="card">
+      <h2>2 · Escenario y parámetros</h2>
+      <div class="modes">
+        <button class="mode on" id="mxMFija" type="button">
+          <strong>Aumento de renta fija</strong>
+          <span>Sube el monto $ del contrato.</span>
+        </button>
+        <button class="mode" id="mxMPct" type="button">
+          <strong>Aumento de porcentaje</strong>
+          <span>Sube el % sobre ingresos; la fija queda como piso.</span>
+        </button>
+      </div>
+
+      <div class="scope">
+        <button id="mxSGlobal" class="on" type="button">Parámetros globales</button>
+        <button id="mxSFam" type="button">Por familia</button>
+      </div>
+
+      <div class="params" id="mxGlobalParams">
+        <div class="field" style="grid-column:1/-1">
+          <label>¿Cómo capturas la renta fija?</label>
+          <select id="mxBase">
+            <option value="total">Total de la negociación (se prorratea por equipo)</option>
+            <option value="equipo">Por equipo (cada equipo paga ese monto)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="mxLActual">Renta fija actual total ($)</label>
+          <input id="mxActual" type="number" step="0.01" placeholder="11943.13">
+        </div>
+        <div class="field">
+          <label id="mxLNueva">Nueva renta fija total ($)</label>
+          <input id="mxNueva" type="number" step="0.01" placeholder="12580">
+        </div>
+        <div class="field">
+          <label>% de renta vigente</label>
+          <input id="mxPct" type="number" step="0.1" placeholder="30" value="30">
+        </div>
+        <div class="field" id="mxPctNvoField">
+          <label>% de renta en escenario nuevo</label>
+          <input id="mxPctNvo" type="number" step="0.1" min="0" placeholder="vacío = igual · 0 = solo renta fija">
+        </div>
+      </div>
+
+      <div class="fambox" id="mxFamBox">
+        <div class="famhint">Pega primero los datos y presiona <b>Detectar familias</b>. En cada familia elige si la renta es el <b>total de la familia</b> (se prorratea) o <b>por equipo</b>, y captura sus valores.</div>
+        <table class="famtbl">
+          <thead><tr><th>Familia</th><th>La renta es</th><th>Renta actual $</th><th id="mxFamNvaHdr">Nueva renta $</th><th>% vigente</th><th id="mxFamPnHdr">% nuevo (esc. fija)</th></tr></thead>
+          <tbody id="mxFamRows"></tbody>
+        </table>
+      </div>
+
+      <div class="btnrow">
+        <button class="ghost" id="mxDetect" type="button" style="display:none">Detectar familias</button>
+        <button class="primary" id="mxCalc" type="button">Calcular escenario</button>
+        <button class="snapbtn" id="mxSnap" type="button" style="display:none">📷 Copiar tabla</button>
+        <button class="snapbtn" id="mxExec" type="button" style="display:none">📊 Resumen ejecutivo</button>
+        <button class="ghost" id="mxCsv" type="button" style="display:none">Descargar CSV</button>
+        <button class="ghost" id="mxClear" type="button">Limpiar</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="results" id="mxResults">
+    <div class="kpis">
+      <div class="kpi"><div class="lbl">Renta total actual</div><div class="val" id="mxKAntR">—</div><div class="sub">mensual</div></div>
+      <div class="kpi nueva"><div class="lbl">Renta total nueva</div><div class="val" id="mxKNvaR">—</div><div class="sub" id="mxKDeltaR">mensual</div></div>
+      <div class="kpi"><div class="lbl">Margen actual</div><div class="val" id="mxKAntM">—</div><div class="sub" id="mxKAntMp">—</div></div>
+      <div class="kpi nueva"><div class="lbl">Margen nuevo</div><div class="val" id="mxKNvaM">—</div><div class="sub" id="mxKNvaMp">—</div></div>
+      <div class="kpi delta"><div class="lbl" id="mxKIncLbl">Incremento aplicado</div><div class="val" id="mxKInc">—</div><div class="sub" id="mxKIncSub">—</div></div>
+    </div>
+
+    <div class="exview" id="mxExecView"></div>
+
+    <div class="famsum" id="mxFamSummary">
+      <h3>Resumen por familia</h3>
+      <table class="sumfam">
+        <thead><tr><th>Familia</th><th>Equipos</th><th>Renta actual</th><th>Renta nueva</th><th>% Incr.</th><th>Margen actual</th><th>Margen nuevo</th><th>Δ Margen</th><th>Pagan fija</th></tr></thead>
+        <tbody id="mxFamSumBody"></tbody>
+      </table>
+    </div>
+
+    <div class="tablebar">
+      <input id="mxFilter" type="search" placeholder="Filtrar por familia, cadena, plaza, ciudad o código…">
+      <div class="legend">
+        <span><span class="chip fija"></span>Paga renta fija (el % no alcanza el piso)</span>
+        <span><span class="chip pct"></span>Paga % de ingreso</span>
+        <span class="count" id="mxCount"></span>
+      </div>
+    </div>
+
+    <div class="tablewrap" id="mxTwrap">
+      <table class="main">
+        <thead>
+          <tr class="band">
+            <th class="b-id" colspan="7">Identificación del equipo</th>
+            <th class="b-ant sep" colspan="7">Renta Actual</th>
+            <th class="b-nva sep" colspan="7">Renta Nueva</th>
+          </tr>
+          <tr class="tot" id="mxRSuma"></tr>
+          <tr class="tot prom" id="mxRProm"></tr>
+          <tr class="cols">
+            <th class="txt">Cadena</th><th class="txt">Plaza</th><th class="txt">Ciudad</th><th class="txt">Producto</th><th class="txt">Modelo</th><th class="txt">Código</th><th>Ingreso prom.</th>
+            <th class="sep">Renta fija actual</th><th>Renta</th><th>% Renta</th><th>Costo de P.</th><th>% Costo</th><th>Margen</th><th>% Margen</th>
+            <th class="sep" id="mxHNvaFija">Renta fija nva.</th><th>Renta</th><th>% Renta</th><th>Costo de P.</th><th>Margen</th><th>% Margen</th><th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="mxTbody"></tbody>
+        <tfoot id="mxTfoot"></tfoot>
+      </table>
+    </div>
+  </section>
+</section>
+
+<!-- ═══════════════ HERRAMIENTA 2: PRORRATEO RENTA FIJA ═══════════════ -->
+<section class="tool" id="toolRf">
+  <div class="grid-top">
+    <section class="card">
+      <h2>1 · Pega los datos del reporte</h2>
+      <textarea id="rfPaste" placeholder="Copia desde Excel las columnas A–V (Region, Ciudad, Cadena, Plaza, Familia … %Margen del Ingreso) con o sin encabezados, y pégalas aquí."></textarea>
+      <div class="hint">Contratos de renta fija pura: la renta del sistema (<code>Fx Renta Prom</code>, col. O) solo define el peso de cada equipo; los montos reales los capturas tú. Usa también <code>Familia</code> (E), <code>Codigo</code> (H), <code>Fx Ingreso Prom</code> (M) y <code>Fx Costo Producto Ave</code> (R).</div>
+      <div class="err" id="rfErr"></div>
+    </section>
+
+    <section class="card">
+      <h2>2 · Rentas del contrato</h2>
+      <div class="scope">
+        <button id="rfSGlobal" class="on" type="button">Parámetros globales</button>
+        <button id="rfSFam" type="button">Por familia</button>
+      </div>
+
+      <div class="params two" id="rfGlobalParams">
+        <div class="field" style="grid-column:1/-1">
+          <label>¿Cómo capturas la renta fija?</label>
+          <select id="rfBase">
+            <option value="total">Total de la negociación (se prorratea por equipo)</option>
+            <option value="equipo">Por equipo (cada equipo paga ese monto)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="rfLActual">Renta fija actual total ($)</label>
+          <input id="rfActual" type="number" step="0.01" placeholder="La renta real vigente">
+        </div>
+        <div class="field">
+          <label id="rfLNueva">Nueva renta fija total ($)</label>
+          <input id="rfNueva" type="number" step="0.01" placeholder="La renta del contrato nuevo">
+        </div>
+        <div class="field">
+          <label>% de mantenimiento (opcional, sobre la renta)</label>
+          <input id="rfMant" type="number" step="0.1" min="0" placeholder="vacío = sin mantenimiento">
+        </div>
+        <div class="field">
+          <label>Renta con mantenimiento (calculado)</label>
+          <input id="rfPreview" type="text" disabled value="—">
+        </div>
+      </div>
+
+      <div class="fambox" id="rfFamBox">
+        <div class="famhint">Pega primero los datos y presiona <b>Detectar familias</b>. En cada familia elige si la renta es el <b>total de la familia</b> (se prorratea) o <b>por equipo</b>, y captura la actual y la nueva.</div>
+        <table class="famtbl">
+          <thead><tr><th>Familia</th><th>La renta es</th><th>Renta actual $</th><th>Nueva renta $</th><th>% mant.</th><th>Quedará (c/mant.)</th></tr></thead>
+          <tbody id="rfFamRows"></tbody>
+        </table>
+      </div>
+
+      <div class="btnrow">
+        <button class="ghost" id="rfDetect" type="button" style="display:none">Detectar familias</button>
+        <button class="primary" id="rfCalc" type="button">Calcular prorrateo</button>
+        <button class="snapbtn" id="rfSnap" type="button" style="display:none">📷 Copiar tabla</button>
+        <button class="snapbtn" id="rfExec" type="button" style="display:none">📊 Resumen ejecutivo</button>
+        <button class="ghost" id="rfCsv" type="button" style="display:none">Descargar CSV</button>
+        <button class="ghost" id="rfClear" type="button">Limpiar</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="results" id="rfResults">
+    <div class="kpis">
+      <div class="kpi"><div class="lbl">Renta actual total</div><div class="val" id="rfKAntR">—</div><div class="sub" id="rfKAntRs">mensual</div></div>
+      <div class="kpi nueva"><div class="lbl">Renta nueva total</div><div class="val" id="rfKNvaR">—</div><div class="sub" id="rfKNvaRs">mensual</div></div>
+      <div class="kpi delta"><div class="lbl">Incremento de renta fija</div><div class="val" id="rfKInc">—</div><div class="sub" id="rfKIncSub">—</div></div>
+      <div class="kpi"><div class="lbl">Margen actual</div><div class="val" id="rfKAntM">—</div><div class="sub" id="rfKAntMp">—</div></div>
+      <div class="kpi nueva"><div class="lbl">Margen nuevo</div><div class="val" id="rfKNvaM">—</div><div class="sub" id="rfKNvaMp">—</div></div>
+    </div>
+
+    <div class="exview" id="rfExecView"></div>
+
+    <div class="famsum" id="rfFamSummary">
+      <h3>Resumen por familia</h3>
+      <table class="sumfam">
+        <thead><tr><th>Familia</th><th>Equipos</th><th>Renta actual</th><th>Renta nueva</th><th>% Incr.</th><th>Margen actual</th><th>Margen nuevo</th><th>Δ Margen</th></tr></thead>
+        <tbody id="rfFamSumBody"></tbody>
+      </table>
+    </div>
+
+    <div class="tablebar">
+      <input id="rfFilter" type="search" placeholder="Filtrar por familia, cadena, plaza, ciudad o código…">
+      <span class="count" id="rfCount"></span>
+    </div>
+
+    <div class="tablewrap" id="rfTwrap">
+      <table class="main">
+        <thead>
+          <tr class="band">
+            <th class="b-id" colspan="7">Identificación del equipo</th>
+            <th class="b-ant sep" colspan="6">Renta Actual</th>
+            <th class="b-nva sep" colspan="6">Renta Nueva</th>
+          </tr>
+          <tr class="tot" id="rfRSuma"></tr>
+          <tr class="tot prom" id="rfRProm"></tr>
+          <tr class="cols">
+            <th class="txt">Cadena</th><th class="txt">Plaza</th><th class="txt">Ciudad</th><th class="txt">Producto</th><th class="txt">Modelo</th><th class="txt">Código</th><th>Ingreso prom.</th>
+            <th class="sep">Renta</th><th>% Renta</th><th>Costo de P.</th><th>% Costo</th><th>Margen</th><th>% Margen</th>
+            <th class="sep">Renta</th><th>% Renta</th><th>Incremento</th><th>Costo de P.</th><th>Margen</th><th>% Margen</th>
+          </tr>
+        </thead>
+        <tbody id="rfTbody"></tbody>
+        <tfoot id="rfTfoot"></tfoot>
+      </table>
+    </div>
+  </section>
+</section>
+
+
+<!-- ═══════════════ HERRAMIENTA 3: RENTA A PORCENTAJE ═══════════════ -->
+<section class="tool" id="toolPc">
+  <div class="grid-top">
+    <section class="card">
+      <h2>1 · Pega los datos del reporte</h2>
+      <textarea id="pcPaste" placeholder="Copia desde Excel las columnas A–V (Region, Ciudad, Cadena, Plaza, Familia … %Margen del Ingreso) con o sin encabezados, y pégalas aquí."></textarea>
+      <div class="hint">Contratos de renta a porcentaje puro (sin renta fija): la renta de cada equipo = Ingreso × %. Usa <code>Familia</code> (E), <code>Codigo</code> (H), <code>Fx Ingreso Prom</code> (M) y <code>Fx Costo Producto Ave</code> (R).</div>
+      <div class="err" id="pcErr"></div>
+    </section>
+
+    <section class="card">
+      <h2>2 · Porcentajes del contrato</h2>
+      <div class="scope">
+        <button id="pcSGlobal" class="on" type="button">Parámetros globales</button>
+        <button id="pcSFam" type="button">Por familia</button>
+      </div>
+
+      <div class="params two" id="pcGlobalParams">
+        <div class="field">
+          <label>% de renta actual</label>
+          <input id="pcActual" type="number" step="0.1" min="0" placeholder="30">
+        </div>
+        <div class="field">
+          <label>Nuevo % de renta</label>
+          <input id="pcNueva" type="number" step="0.1" min="0" placeholder="32">
+        </div>
+      </div>
+
+      <div class="fambox" id="pcFamBox">
+        <div class="famhint">Pega primero los datos y presiona <b>Detectar familias</b>. Captura el % actual y el nuevo % de cada familia.</div>
+        <table class="famtbl">
+          <thead><tr><th>Familia</th><th>% actual</th><th>Nuevo %</th></tr></thead>
+          <tbody id="pcFamRows"></tbody>
+        </table>
+      </div>
+
+      <div class="btnrow">
+        <button class="ghost" id="pcDetect" type="button" style="display:none">Detectar familias</button>
+        <button class="primary" id="pcCalc" type="button">Calcular escenario</button>
+        <button class="snapbtn" id="pcSnap" type="button" style="display:none">📷 Copiar tabla</button>
+        <button class="snapbtn" id="pcExec" type="button" style="display:none">📊 Resumen ejecutivo</button>
+        <button class="ghost" id="pcCsv" type="button" style="display:none">Descargar CSV</button>
+        <button class="ghost" id="pcClear" type="button">Limpiar</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="results" id="pcResults">
+    <div class="kpis">
+      <div class="kpi"><div class="lbl">Renta actual total</div><div class="val" id="pcKAntR">—</div><div class="sub" id="pcKAntRs">mensual</div></div>
+      <div class="kpi nueva"><div class="lbl">Renta nueva total</div><div class="val" id="pcKNvaR">—</div><div class="sub" id="pcKNvaRs">mensual</div></div>
+      <div class="kpi delta"><div class="lbl">Incremento de porcentaje</div><div class="val" id="pcKInc">—</div><div class="sub" id="pcKIncSub">—</div></div>
+      <div class="kpi"><div class="lbl">Margen actual</div><div class="val" id="pcKAntM">—</div><div class="sub" id="pcKAntMp">—</div></div>
+      <div class="kpi nueva"><div class="lbl">Margen nuevo</div><div class="val" id="pcKNvaM">—</div><div class="sub" id="pcKNvaMp">—</div></div>
+    </div>
+
+    <div class="exview" id="pcExecView"></div>
+
+    <div class="famsum" id="pcFamSummary">
+      <h3>Resumen por familia</h3>
+      <table class="sumfam">
+        <thead><tr><th>Familia</th><th>Equipos</th><th>Renta actual</th><th>Renta nueva</th><th>% Incr.</th><th>Margen actual</th><th>Margen nuevo</th><th>Δ Margen</th></tr></thead>
+        <tbody id="pcFamSumBody"></tbody>
+      </table>
+    </div>
+
+    <div class="tablebar">
+      <input id="pcFilter" type="search" placeholder="Filtrar por familia, cadena, plaza, ciudad o código…">
+      <span class="count" id="pcCount"></span>
+    </div>
+
+    <div class="tablewrap" id="pcTwrap">
+      <table class="main">
+        <thead>
+          <tr class="band">
+            <th class="b-id" colspan="7">Identificación del equipo</th>
+            <th class="b-ant sep" colspan="6">Renta Actual</th>
+            <th class="b-nva sep" colspan="6">Renta Nueva</th>
+          </tr>
+          <tr class="tot" id="pcRSuma"></tr>
+          <tr class="tot prom" id="pcRProm"></tr>
+          <tr class="cols">
+            <th class="txt">Cadena</th><th class="txt">Plaza</th><th class="txt">Ciudad</th><th class="txt">Producto</th><th class="txt">Modelo</th><th class="txt">Código</th><th>Ingreso prom.</th>
+            <th class="sep">Renta</th><th>% Renta</th><th>Costo de P.</th><th>% Costo</th><th>Margen</th><th>% Margen</th>
+            <th class="sep">Renta</th><th>% Renta</th><th>Incremento</th><th>Costo de P.</th><th>Margen</th><th>% Margen</th>
+          </tr>
+        </thead>
+        <tbody id="pcTbody"></tbody>
+        <tfoot id="pcTfoot"></tfoot>
+      </table>
+    </div>
+  </section>
+</section>
+
+</main>
+
+<div id="snapArea" style="position:fixed;left:-12000px;top:0"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════ Utilidades compartidas ═══════════ */
+const $$ = id => document.getElementById(id);
+const fmt$ = n => n==null||isNaN(n) ? '—' : n.toLocaleString('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2});
+const fmt$0 = n => n==null||isNaN(n) ? '—' : '$ '+Math.round(n).toLocaleString('es-MX');
+const fmtP = n => n==null||isNaN(n)||!isFinite(n) ? '—' : (n*100).toLocaleString('es-MX',{maximumFractionDigits:1})+'%';
+const num = s => { const v = parseFloat(String(s).replace(/[$,\s]/g,'').replace(/%$/,'')); return isNaN(v)?null:v; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(msg){ const t=$$('toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none', 2600); }
+
+function parseRows(text){
+  const out = [];
+  if(!text.trim()) return out;
+  text.trim().split(/\r?\n/).forEach(line => {
+    const c = line.split('\t');
+    if(c.length < 18) return;
+    if(/region/i.test(c[0]) && /ciudad/i.test(c[1])) return;
+    const ingreso = num(c[12]), rentaSis = num(c[14]), costo = num(c[17]);
+    if(ingreso==null || rentaSis==null) return;
+    out.push({
+      region:c[0]||'', ciudad:c[1]||'', cadena:c[2]||'', plaza:c[3]||'',
+      familia:(c[4]||'(sin familia)').trim(), producto:c[5]||'', modelo:c[6]||'', codigo:c[7]||'',
+      ingreso, rentaSis, costo: costo==null?0:costo
+    });
+  });
+  return out;
+}
+
+async function copyAsImage(el, filename){
+  if(typeof html2canvas === 'undefined'){ toast('Se requiere internet la primera vez para cargar el módulo de imagen.'); return; }
+  const prev = {mh: el.style.maxHeight, ov: el.style.overflow, w: el.style.width, br: el.style.borderRadius};
+  el.style.maxHeight='none'; el.style.overflow='visible'; el.style.width='max-content'; el.style.borderRadius='0';
+  try{
+    const canvas = await html2canvas(el, {backgroundColor:'#FFFFFF', scale:2, useCORS:true,
+      width: el.scrollWidth, height: el.scrollHeight, windowWidth: el.scrollWidth + 100, onclone: normalizarFuentes});
+    Object.assign(el.style, {maxHeight:prev.mh, overflow:prev.ov, width:prev.w, borderRadius:prev.br});
+    canvas.toBlob(async blob => {
+      if(!blob){ toast('No se pudo generar la imagen.'); return; }
+      try{
+        await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+        toast('✅ Imagen copiada — pégala con Ctrl+V donde la necesites');
+      }catch(e){
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click(); URL.revokeObjectURL(a.href);
+        toast('El navegador no permitió copiar; se descargó la imagen PNG.');
+      }
+    }, 'image/png');
+  }catch(e){
+    Object.assign(el.style, {maxHeight:prev.mh, overflow:prev.ov, w:prev.w, borderRadius:prev.br});
+    toast('No se pudo generar la imagen: '+e.message);
+  }
+}
+
+// html2canvas no soporta fuentes variables condensadas (font-stretch):
+// mide el texto angosto pero lo dibuja ancho y las letras se enciman.
+// En el CLON que usa para renderizar sustituimos la fuente; la pantalla no cambia.
+function normalizarFuentes(doc, cloneEl){
+  const root = cloneEl || doc.body;
+  const todos = [root, ...root.querySelectorAll('*')];
+  todos.forEach(n => {
+    if(!n.style) return;
+    n.style.fontStretch = 'normal';
+    n.style.fontVariationSettings = 'normal';
+    n.style.fontFamily = "'IBM Plex Sans', Arial, sans-serif";
+  });
+  // Los elementos "sticky" (encabezados y fila TOTAL) confunden al renderizador
+  // y la fila TOTAL no salía en la imagen: en el clon se vuelven estáticos.
+  root.querySelectorAll('thead th, thead td, tfoot td').forEach(n => {
+    n.style.position = 'static';
+  });
+}
+
+function uniqOr(arr, plural){
+  const u = [...new Set(arr.filter(Boolean))];
+  return u.length===1 ? u[0] : u.length+' '+plural;
+}
+function semaforo(mp){
+  if(mp>=0.35) return {cls:'on-v', color:'#1E8449', txt:'SEMÁFORO EN VERDE', sub:'Negocio sano'};
+  if(mp>=0.20) return {cls:'on-a', color:'#B7791F', txt:'SEMÁFORO EN ÁMBAR', sub:'Vigilar margen'};
+  return {cls:'on-r', color:'#C0392B', txt:'SEMÁFORO EN ROJO', sub:'Margen en riesgo'};
+}
+async function captureEl(el, filename, okMsg){
+  if(typeof html2canvas === 'undefined'){ toast('Se requiere internet la primera vez para cargar el módulo de imagen.'); return; }
+  if(!el){ toast('Primero calcula un escenario.'); return; }
+  try{
+    const canvas = await html2canvas(el, {backgroundColor:'#FFFFFF', scale:2, useCORS:true, width: el.offsetWidth, height: el.offsetHeight, onclone: normalizarFuentes});
+    canvas.toBlob(async blob => {
+      if(!blob){ toast('No se pudo generar la imagen.'); return; }
+      try{
+        await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+        toast(okMsg||'✅ Imagen copiada — pégala con Ctrl+V');
+      }catch(e){
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+        toast('El navegador no permitió copiar; se descargó la imagen PNG.');
+      }
+    }, 'image/png');
+  }catch(e){ toast('No se pudo generar la imagen: '+e.message); }
+}
+async function captureExec(html, filename){
+  if(typeof html2canvas === 'undefined'){ toast('Se requiere internet la primera vez para cargar el módulo de imagen.'); return; }
+  const area = $$('snapArea');
+  area.innerHTML = html;
+  try{
+    const el = area.firstElementChild;
+    const canvas = await html2canvas(el, {backgroundColor:'#FFFFFF', scale:2, useCORS:true, width: el.offsetWidth, height: el.offsetHeight, onclone: normalizarFuentes});
+    canvas.toBlob(async blob => {
+      if(!blob){ toast('No se pudo generar la imagen.'); return; }
+      try{
+        await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+        toast('✅ Resumen ejecutivo copiado — pégalo con Ctrl+V');
+      }catch(e){
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+        toast('El navegador no permitió copiar; se descargó la imagen PNG.');
+      }
+    }, 'image/png');
+  }catch(e){ toast('No se pudo generar la imagen: '+e.message); }
+}
+function execHTML(o){
+  const hoy = new Date().toLocaleDateString('es-MX',{month:'long',year:'numeric'});
+  return `<div class="exw">
+    <div class="exhead">
+      <div class="exlogo"><span>M</span><span>u</span><span>ñ</span><span>e</span><span>l</span><span>o</span><span>c</span><span>o</span><span>s</span></div>
+      <div class="extit">
+        <h1>${o.titulo} · Desempeño Comercial</h1>
+        <div class="sub">${o.subtitulo} | Datos a ${hoy.charAt(0).toUpperCase()+hoy.slice(1)}</div>
+        ${o.escenario ? `<div class="exesc">${o.escenario}</div>` : ''}
+      </div>
+      <div class="exbadge" style="background:${o.sem.color}"><b>${o.sem.txt}</b><span>${o.sem.sub}</span></div>
+    </div>
+    <div class="exkpis">
+      ${o.kpis.map(k=>`<div class="exkpi ${k.tone||''}"><div class="t">${k.t}</div><div class="v">${k.v}</div><div class="s">${k.s}</div></div>`).join('')}
+    </div>
+    <div class="expanels">
+      <div class="expanel">
+        <h4>Situación Actual</h4>
+        ${o.actual.map(f=>`<div class="exrow ${f[2]||''}"><span>${f[0]}</span><b>${f[1]}</b></div>`).join('')}
+      </div>
+      <div class="expanel ${o.propTone||'pGood'}">
+        <h4>Propuesta</h4>
+        ${o.prop.map(f=>`<div class="exrow ${f[2]||''}"><span>${f[0]}</span><b>${f[1]}</b></div>`).join('')}
+      </div>
+    </div>
+    <div class="exconc"><b>Conclusión:</b> ${o.conclusion}</div>
+    <div class="exfoot"><span>${o.pie||''}</span><span>ALVACO · Inteligencia Comercial</span></div>
+  </div>`;
+}
+
+function downloadCsv(headers, lines, filename){
+  const blob = new Blob(['\uFEFF'+[headers.join(','),...lines].join('\n')],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ═══════════ Menú de pestañas ═══════════ */
+const TABS = [['tabMx','toolMx'],['tabRf','toolRf'],['tabPc','toolPc']];
+TABS.forEach(([b,t]) => { $$(b).onclick = () => TABS.forEach(([b2,t2]) => {
+  $$(b2).classList.toggle('on', b2===b);
+  $$(t2).classList.toggle('act', t2===t);
+}); });
+
+/* ═══════════ HERRAMIENTA 1: RENTA MIXTA ═══════════ */
+(function(){
+  let mode='fija', scope='global', calcRows=[], fams=[], AGG=null, PARAMS=null;
+
+  function setMode(m){
+    mode = m;
+    $$('mxMFija').classList.toggle('on', m==='fija');
+    $$('mxMPct').classList.toggle('on', m==='pct');
+    const porEq = $$('mxBase').value==='equipo';
+    $$('mxLNueva').textContent = m==='fija' ? (porEq?'Nueva renta fija por equipo ($)':'Nueva renta fija total ($)') : 'Nuevo % de renta';
+    $$('mxNueva').placeholder = m==='fija' ? '12580' : '32';
+    $$('mxHNvaFija').textContent = m==='fija' ? 'Renta fija nva.' : 'Nuevo %';
+    $$('mxFamNvaHdr').textContent = m==='fija' ? 'Nueva renta $' : 'Nuevo %';
+    $$('mxPctNvoField').style.display = m==='fija' ? 'block' : 'none';
+    if(calcRows.length) compute();
+  }
+  $$('mxMFija').onclick = () => setMode('fija');
+  $$('mxMPct').onclick  = () => setMode('pct');
+
+  function syncBase(){
+    const porEq = $$('mxBase').value==='equipo';
+    $$('mxLActual').textContent = porEq ? 'Renta fija actual por equipo ($)' : 'Renta fija actual total ($)';
+    if(mode==='fija') $$('mxLNueva').textContent = porEq ? 'Nueva renta fija por equipo ($)' : 'Nueva renta fija total ($)';
+    if(calcRows.length) compute();
+  }
+  $$('mxBase').addEventListener('change', syncBase);
+
+  function setScope(s){
+    scope = s;
+    $$('mxSGlobal').classList.toggle('on', s==='global');
+    $$('mxSFam').classList.toggle('on', s==='fam');
+    $$('mxGlobalParams').style.display = s==='global' ? 'grid' : 'none';
+    $$('mxFamBox').style.display = s==='fam' ? 'block' : 'none';
+    $$('mxDetect').style.display = s==='fam' ? 'inline-block' : 'none';
+    if(s==='fam' && !$$('mxFamRows').children.length) detectFams();
+  }
+  $$('mxSGlobal').onclick = () => setScope('global');
+  $$('mxSFam').onclick = () => setScope('fam');
+
+  function detectFams(){
+    const rows = parseRows($$('mxPaste').value);
+    if(!rows.length){ $$('mxErr').textContent='Primero pega los datos para detectar las familias.'; $$('mxErr').style.display='block'; return; }
+    $$('mxErr').style.display='none';
+    const prev = {};
+    fams.forEach(f => prev[f] = {
+      a: document.querySelector(`#mxFamRows [data-fam-a="${CSS.escape(f)}"]`)?.value || '',
+      n: document.querySelector(`#mxFamRows [data-fam-n="${CSS.escape(f)}"]`)?.value || '',
+      p: document.querySelector(`#mxFamRows [data-fam-p="${CSS.escape(f)}"]`)?.value || '',
+      pn: document.querySelector(`#mxFamRows [data-fam-pn="${CSS.escape(f)}"]`)?.value || '',
+      b: document.querySelector(`#mxFamRows [data-fam-b="${CSS.escape(f)}"]`)?.value || 'total'
+    });
+    const counts = {};
+    rows.forEach(r => counts[r.familia] = (counts[r.familia]||0)+1);
+    fams = Object.keys(counts).sort();
+    $$('mxFamRows').innerHTML = fams.map(f => `
+      <tr>
+        <td class="fam">${esc(f)} <span class="cnt">(${counts[f]} eq.)</span></td>
+        <td><select data-fam-b="${esc(f)}">
+          <option value="total"${(prev[f]?.b||'total')==='total'?' selected':''}>Total familia</option>
+          <option value="equipo"${prev[f]?.b==='equipo'?' selected':''}>Por equipo</option>
+        </select></td>
+        <td><input type="number" step="0.01" data-fam-a="${esc(f)}" value="${prev[f]?.a||''}" placeholder="actual $"></td>
+        <td><input type="number" step="0.01" data-fam-n="${esc(f)}" value="${prev[f]?.n||''}" placeholder="${mode==='fija'?'nueva $':'nuevo %'}"></td>
+        <td><input type="number" step="0.1" data-fam-p="${esc(f)}" value="${prev[f]?.p||'30'}" placeholder="30"></td>
+        <td><input type="number" step="0.1" min="0" data-fam-pn="${esc(f)}" value="${prev[f]?.pn||''}" placeholder="vacío = igual · 0 = solo fija"></td>
+      </tr>`).join('');
+    toast(fams.length+' familia(s) detectada(s)');
+  }
+  $$('mxDetect').onclick = detectFams;
+
+  function compute(){
+    const rows = parseRows($$('mxPaste').value);
+    const err = $$('mxErr'); err.style.display='none';
+    if(!rows.length){ err.textContent='No se detectaron filas válidas. Verifica que pegaste las columnas A–V separadas por tabulador (copia directa desde Excel).'; err.style.display='block'; $$('mxResults').style.display='none'; return; }
+
+    let params = {};
+    if(scope==='global'){
+      const a = num($$('mxActual').value), nv = num($$('mxNueva').value), z = (num($$('mxPct').value)||0)/100;
+      if(a==null || nv==null){ err.textContent='Captura la renta fija actual y el nuevo valor (monto o %).'; err.style.display='block'; return; }
+      const znRaw = num($$('mxPctNvo').value);
+      params['__ALL__'] = {actual:a, nueva:nv, z, zn: znRaw==null ? null : znRaw/100, base: $$('mxBase').value};
+    } else {
+      if(!$$('mxFamRows').children.length) detectFams();
+      let missing = [];
+      [...new Set(rows.map(r=>r.familia))].forEach(f => {
+        const a = num(document.querySelector(`#mxFamRows [data-fam-a="${CSS.escape(f)}"]`)?.value);
+        const nv = num(document.querySelector(`#mxFamRows [data-fam-n="${CSS.escape(f)}"]`)?.value);
+        const z = (num(document.querySelector(`#mxFamRows [data-fam-p="${CSS.escape(f)}"]`)?.value)||0)/100;
+        const base = document.querySelector(`#mxFamRows [data-fam-b="${CSS.escape(f)}"]`)?.value || 'total';
+        const znRaw = num(document.querySelector(`#mxFamRows [data-fam-pn="${CSS.escape(f)}"]`)?.value);
+        if(a==null || nv==null) missing.push(f);
+        params[f] = {actual:a, nueva:nv, z, zn: znRaw==null ? null : znRaw/100, base};
+      });
+      if(missing.length){ err.textContent='Falta capturar renta actual y/o nueva de: '+missing.join(', '); err.style.display='block'; return; }
+    }
+
+    PARAMS = params;
+    const gk = r => scope==='global' ? '__ALL__' : r.familia;
+    const sums = {};
+    rows.forEach(r => { const k=gk(r); sums[k]=(sums[k]||0)+r.rentaSis; });
+
+    calcRows = rows.map(r => {
+      const P = params[gk(r)];
+      const peso = r.rentaSis/(sums[gk(r)]||1);
+      const porEquipo = P.base==='equipo';
+      const yFija = porEquipo ? P.actual : P.actual*peso;
+      const aaFija = mode==='fija' ? (porEquipo ? P.nueva : P.nueva*peso) : yFija;
+      const nuevoPct = mode==='pct' ? P.nueva/100 : null;
+      const znEff = mode==='fija' ? (P.zn!=null ? P.zn : P.z) : nuevoPct;   // % del escenario nuevo
+      const porPctAnt = r.ingreso*P.z;
+      const porPctNva = r.ingreso*znEff;
+      const pisoNvo = mode==='fija' ? aaFija : yFija;
+      const rentaAnt = Math.max(porPctAnt, yFija);
+      const rentaNva = Math.max(porPctNva, pisoNvo);
+      const mAnt = r.ingreso - r.costo - rentaAnt;
+      const mNva = r.ingreso - r.costo - rentaNva;
+      return {...r, peso, yFija, aa: mode==='fija'?aaFija:nuevoPct, rentaAnt, rentaNva,
+        fijaAnt: porPctAnt<yFija, fijaNva: porPctNva<pisoNvo,
+        pAnt: rentaAnt/r.ingreso, pNva: rentaNva/r.ingreso, pCosto: r.costo/r.ingreso,
+        mAnt, mNva, mpAnt: mAnt/r.ingreso, mpNva: mNva/r.ingreso, dRenta: rentaNva-rentaAnt,
+        zPct: P.z, nzPct: znEff};
+    });
+    render();
+  }
+
+  function render(){
+    const q = $$('mxFilter').value.trim().toLowerCase();
+    const vis = calcRows.filter(r => !q || [r.familia,r.cadena,r.plaza,r.ciudad,r.producto,r.codigo,r.modelo,r.region].join(' ').toLowerCase().includes(q));
+    const n = vis.length || 1;
+    const S = (arr,k) => arr.reduce((a,r)=>a+r[k],0);
+    const ing=S(vis,'ingreso')||1, cos=S(vis,'costo'), rA=S(vis,'rentaAnt'), rN=S(vis,'rentaNva'), mA=S(vis,'mAnt'), mN=S(vis,'mNva');
+    const yF=S(vis,'yFija'), aaF = mode==='fija' ? S(vis,'aa') : null;
+    const dR = rN-rA;
+    const nFija = vis.filter(r=>r.fijaNva).length;
+
+    $$('mxKAntR').textContent = fmt$(rA);
+    $$('mxKNvaR').textContent = fmt$(rN);
+    $$('mxKDeltaR').innerHTML = 'mensual · <b class="'+(dR>=0?'neg':'pos')+'">'+(dR>=0?'+':'')+fmt$(dR)+'</b>';
+    $$('mxKAntM').textContent = fmt$(mA);
+    $$('mxKAntMp').textContent = fmtP(mA/ing)+' del ingreso';
+    $$('mxKNvaM').textContent = fmt$(mN);
+    $$('mxKNvaMp').textContent = fmtP(mN/ing)+' del ingreso';
+    if(mode==='fija'){
+      const inc = yF>0 ? (aaF-yF)/yF : null;
+      $$('mxKIncLbl').textContent = 'Incremento de renta fija';
+      $$('mxKInc').textContent = (inc>=0?'+':'')+fmtP(inc);
+      $$('mxKInc').className = 'val '+(inc>0?'neg':'pos');
+      $$('mxKIncSub').textContent = fmt$0(yF)+' → '+fmt$0(aaF)+' de renta fija';
+    }else{
+      const zo = vis.reduce((a,r)=>a+r.ingreso*r.zPct,0)/ing;
+      const zn = vis.reduce((a,r)=>a+r.ingreso*r.nzPct,0)/ing;
+      const pts = (zn-zo)*100, rel = zo>0 ? (zn-zo)/zo : null;
+      $$('mxKIncLbl').textContent = 'Incremento de porcentaje';
+      $$('mxKInc').textContent = (pts>=0?'+':'')+pts.toLocaleString('es-MX',{maximumFractionDigits:1})+' pts';
+      $$('mxKInc').className = 'val '+(pts>0?'neg':'pos');
+      $$('mxKIncSub').textContent = fmtP(zo)+' → '+fmtP(zn)+' ('+(rel>=0?'+':'')+fmtP(rel)+' de incremento)';
+    }
+    $$('mxCount').textContent = vis.length+' de '+calcRows.length+' equipos · '+nFija+' pagando renta fija en escenario nuevo';
+
+    const famNames = [...new Set(vis.map(r=>r.familia))].sort();
+    if(famNames.length > 1 || scope==='fam'){
+      $$('mxFamSumBody').innerHTML = famNames.map(f => {
+        const g = vis.filter(r=>r.familia===f);
+        const gA=S(g,'rentaAnt'), gN=S(g,'rentaNva'), gMA=S(g,'mAnt'), gMN=S(g,'mNva');
+        const gInc = gA>0 ? (gN-gA)/gA : null;
+        return `<tr><td>${esc(f)}</td><td>${g.length}</td><td>${fmt$(gA)}</td><td>${fmt$(gN)}</td>
+          <td>${(gInc>=0?'+':'')+fmtP(gInc)}</td>
+          <td>${fmt$(gMA)}</td><td class="${gMN<0?'neg':''}">${fmt$(gMN)}</td>
+          <td class="${gMN-gMA<0?'neg':'pos'}">${(gMN-gMA>=0?'+':'')+fmt$(gMN-gMA)}</td>
+          <td>${g.filter(r=>r.fijaNva).length} de ${g.length}</td></tr>`;
+      }).join('');
+      $$('mxFamSummary').style.display='block';
+    } else $$('mxFamSummary').style.display='none';
+
+    $$('mxRSuma').innerHTML = `
+      <td class="txt" colspan="6">SUMA</td><td class="fB">${fmt$0(ing)}</td>
+      <td class="fB sep">${fmt$0(yF)}</td><td class="fB">${fmt$0(rA)}</td><td class="fO">${fmtP(rA/ing)}</td>
+      <td class="fB">${fmt$0(cos)}</td><td class="fO">${fmtP(cos/ing)}</td>
+      <td class="fR">${fmt$0(mA)}</td><td class="fO">${fmtP(mA/ing)}</td>
+      <td class="fB sep">${mode==='fija'?fmt$0(aaF):'—'}</td><td class="fB">${fmt$0(rN)}</td><td class="fO">${fmtP(rN/ing)}</td>
+      <td class="fB">${fmt$0(cos)}</td><td class="fR">${fmt$0(mN)}</td><td class="fO">${fmtP(mN/ing)}</td><td class="fO">${nFija} fija</td>`;
+    $$('mxRProm').innerHTML = `
+      <td class="txt" colspan="6">PROMEDIO</td><td class="fO">${fmt$0(ing/n)}</td>
+      <td class="fO sep">${fmt$0(yF/n)}</td><td class="fO">${fmt$0(rA/n)}</td><td class="fO">${fmtP(rA/ing)}</td>
+      <td class="fO">${fmt$0(cos/n)}</td><td class="fO">${fmtP(cos/ing)}</td>
+      <td class="fO">${fmt$0(mA/n)}</td><td class="fO">${fmtP(mA/ing)}</td>
+      <td class="fO sep">${mode==='fija'?fmt$0((aaF||0)/n):'—'}</td><td class="fO">${fmt$0(rN/n)}</td><td class="fO">${fmtP(rN/ing)}</td>
+      <td class="fO">${fmt$0(cos/n)}</td><td class="fO">${fmt$0(mN/n)}</td><td class="fO">${fmtP(mN/ing)}</td><td class="fO">—</td>`;
+
+    $$('mxTbody').innerHTML = vis.map(r => `
+      <tr>
+        <td class="txt">${esc(r.cadena)}</td><td class="txt">${esc(r.plaza)}</td><td class="txt">${esc(r.ciudad)}</td>
+        <td class="txt">${esc(r.producto)}</td><td class="txt">${esc(r.modelo)}</td><td class="txt">${esc(r.codigo)}</td><td>${fmt$(r.ingreso)}</td>
+        <td class="sep">${fmt$(r.yFija)}</td>
+        <td class="${r.fijaAnt?'rFija':'rPct'}">${fmt$(r.rentaAnt)}</td>
+        <td>${fmtP(r.pAnt)}</td><td>${fmt$(r.costo)}</td><td>${fmtP(r.pCosto)}</td>
+        <td class="${r.mAnt<0?'negm':''}">${fmt$(r.mAnt)}</td><td class="${r.mAnt<0?'negm':''}">${fmtP(r.mpAnt)}</td>
+        <td class="sep">${mode==='fija'?fmt$(r.aa):fmtP(r.aa)}</td>
+        <td class="${r.fijaNva?'rFija':'rPct'}">${fmt$(r.rentaNva)}</td>
+        <td>${fmtP(r.pNva)}</td>
+        <td>${fmt$(r.costo)}</td>
+        <td class="${r.mNva<0?'negm':''}">${fmt$(r.mNva)}</td><td class="${r.mNva<0?'negm':''}">${fmtP(r.mpNva)}</td>
+        <td class="${r.fijaNva?'rFija':'rPct'}">${r.fijaNva?'FIJA':'%'}</td>
+      </tr>`).join('');
+
+    $$('mxTfoot').innerHTML = `
+      <tr>
+        <td class="txt" colspan="6">TOTAL (${vis.length})</td><td>${fmt$(ing)}</td>
+        <td class="sep">${fmt$(yF)}</td><td>${fmt$(rA)}</td><td>${fmtP(rA/ing)}</td>
+        <td>${fmt$(cos)}</td><td>${fmtP(cos/ing)}</td>
+        <td class="${mA<0?'neg':''}">${fmt$(mA)}</td><td>${fmtP(mA/ing)}</td>
+        <td class="sep">${mode==='fija'?fmt$(aaF):'—'}</td><td>${fmt$(rN)}</td><td>${fmtP(rN/ing)}</td>
+        <td>${fmt$(cos)}</td>
+        <td class="${mN<0?'neg':''}">${fmt$(mN)}</td><td>${fmtP(mN/ing)}</td><td>${nFija}</td>
+      </tr>`;
+
+    $$('mxResults').style.display = 'block';
+    $$('mxCsv').style.display = 'inline-block';
+    $$('mxSnap').style.display = 'inline-block';
+    $$('mxExec').style.display = 'inline-block';
+
+    const zo = vis.reduce((a,r)=>a+r.ingreso*r.zPct,0)/ing;
+    const zn = vis.reduce((a,r)=>a+r.ingreso*(r.nzPct||0),0)/ing;
+    AGG = {vis, ing, cos, rA, rN, mA, mN, yF, aaF, zo, zn, nFija, n: vis.length};
+    $$('mxExecView').innerHTML = buildMxExec();
+  }
+
+  function buildMxExec(){
+    const A = AGG, ing = A.ing||1, n = A.n||1;
+    const prom = ing/n, cos = A.cos;
+    const mpA = A.mA/ing, mpN = A.mN/ing;
+    const dR = A.rN-A.rA, dM = A.mN-A.mA;
+    const sgn = v => (v>=0?'+':'−')+fmt$0(Math.abs(v)).replace('$ ','$');
+    const eq = n===1 ? '1 equipo' : n+' equipos';
+    const titulo = uniqOr(A.vis.map(r=>r.producto), 'productos');
+    const subtitulo = [uniqOr(A.vis.map(r=>r.plaza),'plazas'), uniqOr(A.vis.map(r=>r.cadena),'cadenas'), uniqOr(A.vis.map(r=>r.ciudad),'ciudades')].join(' · ');
+    const tipoNvo = (mode==='fija' && A.zn===0) ? 'Fija' : 'Mixta';
+    const caidaFuerte = dM<0 && (mpN<0.20 || (mpA-mpN)>=0.05);
+    const propTone = dM>=0 ? 'pGood' : (caidaFuerte ? 'pBad' : 'pWarn');
+
+    const kpis = [
+      {t:'Ingreso total mensual', v:fmt$0(ing), s:eq+' · Promedio por equipo: '+fmt$0(prom)},
+      {t:'Renta actual total', v:fmt$0(A.rA), s:fmtP(A.rA/ing)+' de los ingresos'},
+      {t:'Nueva renta propuesta', v:fmt$0(A.rN), s:fmtP(A.rN/ing)+' de los ingresos · '+sgn(dR)+'/mes'},
+      {t:'Impacto en margen', v:fmtP(mpA)+' → '+fmtP(mpN), s:sgn(dM)+'/mes · '+sgn(dM*12)+'/año',
+       tone: dM>=0 ? 'tGreen' : (caidaFuerte ? 'tRed' : 'tAmber')}
+    ];
+    const actual = [
+      ['Tipo de renta', scope==='fam' ? 'Mixta · términos por familia' : 'Mixta ('+fmt$0(A.yF)+' fija + '+fmtP(A.zo)+')','hl'],
+      ['Ingreso total mensual', fmt$0(ing)],
+      ['Ingreso promedio por equipo', fmt$0(prom)],
+      ['Renta pagada actual', fmt$0(A.rA)],
+      ['Renta / ingresos', fmtP(A.rA/ing)],
+      ['Margen comercial actual', fmt$0(A.mA)+' · '+fmtP(mpA),'hl']
+    ];
+    const prop = [
+      ['Tipo de renta', tipoNvo + (scope==='fam' ? ' · nuevos términos por familia' : (tipoNvo==='Mixta' ? ' ('+fmt$0(mode==='fija'?A.aaF:A.yF)+' fija + '+fmtP(A.zn)+')' : '')),'hl'],
+      ['Nueva renta total', fmt$0(A.rN)],
+      ['Incremento mensual', sgn(dR)],
+      ['Incremento anual', sgn(dR*12)],
+      ['Nueva renta / ingresos', fmtP(A.rN/ing)],
+      ['Nuevo margen comercial', fmt$0(A.mN)+' · '+fmtP(mpN),'hl']
+    ];
+    const conclusion = (n===1?'El equipo genera ':'Los '+n+' equipos generan ')+'<b>'+fmt$0(ing)+'</b> mensuales. '+
+      'Actualmente '+(n===1?'paga ':'pagan ')+'<b>'+fmt$0(A.rA)+'</b> de renta, equivalente al <b>'+fmtP(A.rA/ing)+'</b> de los ingresos, dejando un margen comercial de <b>'+fmt$0(A.mA)+' / '+fmtP(mpA)+'</b>. '+
+      'Con la nueva renta propuesta de <b>'+fmt$0(A.rN)+'</b>'+(tipoNvo==='Fija' && mode==='fija' && A.zn===0 ? ' (conversión a renta fija pura)' : '')+', la renta '+(dR>=0?'subiría':'bajaría')+' a <b>'+fmtP(A.rN/ing)+'</b> de los ingresos y el margen '+(dM>=0?'subiría':'bajaría')+' a <b>'+fmt$0(A.mN)+' / '+fmtP(mpN)+'</b>, con un impacto de <b>'+sgn(dM)+' mensuales / '+sgn(dM*12)+' anuales</b>.';
+
+    const incFija = A.yF>0 ? (A.aaF-A.yF)/A.yF : null;
+    const pctInc = (incFija!=null && isFinite(incFija)) ? ' ('+(incFija>=0?'+':'')+fmtP(incFija)+')' : '';
+    let escenario;
+    if(scope==='fam' && PARAMS){
+      const famList = Object.keys(PARAMS).sort();
+      if(mode==='fija'){
+        const det = famList.map(f => {
+          const P = PARAMS[f];
+          return esc(f)+': '+fmt$0(P.actual)+' → '+fmt$0(P.nueva)+(P.base==='equipo' ? ' por equipo' : ' total familia');
+        }).join('  ·  ');
+        escenario = 'Renta Mixta · Aumento de renta fija por familia — '+det+(A.zn===0?' · pasa a renta fija pura':'');
+      } else {
+        const det = famList.map(f => {
+          const P = PARAMS[f];
+          return esc(f)+': '+fmtP(P.z)+' → '+fmtP(P.nueva/100);
+        }).join('  ·  ');
+        escenario = 'Renta Mixta · Aumento de porcentaje por familia — '+det;
+      }
+    } else {
+      escenario = mode==='fija'
+        ? 'Renta Mixta · Aumento de renta fija: '+fmt$0(A.yF)+' → '+fmt$0(A.aaF)+pctInc+(A.zn===0?' · pasa a renta fija pura':'')
+        : 'Renta Mixta · Aumento de porcentaje: '+fmtP(A.zo)+' → '+fmtP(A.zn)+' ('+((A.zn-A.zo)>=0?'+':'')+((A.zn-A.zo)*100).toLocaleString('es-MX',{maximumFractionDigits:1})+' pts)';
+    }
+
+    return execHTML({
+      titulo: esc(titulo), subtitulo: esc(subtitulo), escenario,
+      sem: semaforo(mpA), kpis, actual, prop, propTone, conclusion,
+      pie: eq+' · '+A.nFija+' pagando renta fija en escenario nuevo'
+    });
+  }
+  $$('mxExec').onclick = () => captureEl($$('mxExecView').firstElementChild, 'resumen_ejecutivo_renta_mixta.png', '✅ Resumen ejecutivo copiado — pégalo con Ctrl+V');
+
+  $$('mxSnap').onclick = () => { if(!calcRows.length){ toast('Primero calcula un escenario.'); return; } copyAsImage($$('mxTwrap'), 'renta_mixta_actual_vs_nueva.png'); };
+
+  $$('mxCsv').onclick = () => {
+    const H = ['Familia','Region','Ciudad','Cadena','Plaza','Producto','Modelo','Codigo','Ingreso Prom','Costo Prom','Peso','Renta Fija Actual',(mode==='fija'?'Renta Fija Nva':'Nuevo %'),'Renta Actual','Paga Fija (Actual)','% Renta Actual','Margen Actual','% Margen Actual','Renta Nueva','Paga Fija (Nva)','% Renta Nva','Delta Renta','Margen Nvo','% Margen Nvo'];
+    const L = calcRows.map(r=>[r.familia,r.region,r.ciudad,r.cadena,r.plaza,r.producto,r.modelo,r.codigo,r.ingreso,r.costo,r.peso,r.yFija,r.aa,r.rentaAnt,(r.fijaAnt?'SI':'NO'),r.pAnt,r.mAnt,r.mpAnt,r.rentaNva,(r.fijaNva?'SI':'NO'),r.pNva,r.dRenta,r.mNva,r.mpNva]
+      .map(v=>typeof v==='string'?'"'+v.replace(/"/g,'""')+'"':v).join(','));
+    downloadCsv(H, L, 'renta_mixta_'+mode+'_'+scope+'.csv');
+  };
+
+  $$('mxCalc').onclick = compute;
+  $$('mxFilter').addEventListener('input', () => calcRows.length && render());
+  $$('mxPaste').addEventListener('input', () => { if(scope==='fam') $$('mxFamRows').innerHTML=''; });
+  $$('mxClear').onclick = () => { $$('mxPaste').value=''; calcRows=[]; fams=[]; $$('mxFamRows').innerHTML=''; $$('mxResults').style.display='none'; $$('mxCsv').style.display='none'; $$('mxSnap').style.display='none'; $$('mxExec').style.display='none'; $$('mxExecView').innerHTML=''; $$('mxErr').style.display='none'; };
+})();
+
+/* ═══════════ HERRAMIENTA 2: PRORRATEO RENTA FIJA ═══════════ */
+(function(){
+  let scope='global', calcRows=[], fams=[], AGG=null, PARAMS=null;
+
+  /* Vista previa en vivo de la renta con mantenimiento */
+  function previewTexto(a, nv, m){
+    if(a==null && nv==null) return '—';
+    const f = v => v==null ? '—' : fmt$0(v*(1+(m||0)));
+    return f(a)+' → '+f(nv);
+  }
+  function actualizarPreviewGlobal(){
+    const a = num($$('rfActual').value), nv = num($$('rfNueva').value);
+    const m = (num($$('rfMant').value)||0)/100;
+    $$('rfPreview').value = previewTexto(a, nv, m);
+  }
+  ['rfActual','rfNueva','rfMant'].forEach(id => $$(id).addEventListener('input', actualizarPreviewGlobal));
+
+  function actualizarPreviewsFam(){
+    document.querySelectorAll('#rfFamRows [data-fam-prev]').forEach(td => {
+      const f = td.getAttribute('data-fam-prev');
+      const a = num(document.querySelector(`#rfFamRows [data-fam-a="${CSS.escape(f)}"]`)?.value);
+      const nv = num(document.querySelector(`#rfFamRows [data-fam-n="${CSS.escape(f)}"]`)?.value);
+      const m = (num(document.querySelector(`#rfFamRows [data-fam-m="${CSS.escape(f)}"]`)?.value)||0)/100;
+      td.textContent = previewTexto(a, nv, m);
+    });
+  }
+  $$('rfFamRows').addEventListener('input', actualizarPreviewsFam);
+
+  function syncBase(){
+    const porEq = $$('rfBase').value==='equipo';
+    $$('rfLActual').textContent = porEq ? 'Renta fija actual por equipo ($)' : 'Renta fija actual total ($)';
+    $$('rfLNueva').textContent = porEq ? 'Nueva renta fija por equipo ($)' : 'Nueva renta fija total ($)';
+    if(calcRows.length) compute();
+  }
+  $$('rfBase').addEventListener('change', syncBase);
+
+  function setScope(s){
+    scope = s;
+    $$('rfSGlobal').classList.toggle('on', s==='global');
+    $$('rfSFam').classList.toggle('on', s==='fam');
+    $$('rfGlobalParams').style.display = s==='global' ? 'grid' : 'none';
+    $$('rfFamBox').style.display = s==='fam' ? 'block' : 'none';
+    $$('rfDetect').style.display = s==='fam' ? 'inline-block' : 'none';
+    if(s==='fam' && !$$('rfFamRows').children.length) detectFams();
+  }
+  $$('rfSGlobal').onclick = () => setScope('global');
+  $$('rfSFam').onclick = () => setScope('fam');
+
+  function detectFams(){
+    const rows = parseRows($$('rfPaste').value);
+    if(!rows.length){ $$('rfErr').textContent='Primero pega los datos para detectar las familias.'; $$('rfErr').style.display='block'; return; }
+    $$('rfErr').style.display='none';
+    const prev = {};
+    fams.forEach(f => prev[f] = {
+      a: document.querySelector(`#rfFamRows [data-fam-a="${CSS.escape(f)}"]`)?.value || '',
+      n: document.querySelector(`#rfFamRows [data-fam-n="${CSS.escape(f)}"]`)?.value || '',
+      b: document.querySelector(`#rfFamRows [data-fam-b="${CSS.escape(f)}"]`)?.value || 'total',
+      m: document.querySelector(`#rfFamRows [data-fam-m="${CSS.escape(f)}"]`)?.value || ''
+    });
+    const counts = {};
+    rows.forEach(r => counts[r.familia] = (counts[r.familia]||0)+1);
+    fams = Object.keys(counts).sort();
+    $$('rfFamRows').innerHTML = fams.map(f => `
+      <tr>
+        <td class="fam">${esc(f)} <span class="cnt">(${counts[f]} eq.)</span></td>
+        <td><select data-fam-b="${esc(f)}">
+          <option value="total"${(prev[f]?.b||'total')==='total'?' selected':''}>Total familia</option>
+          <option value="equipo"${prev[f]?.b==='equipo'?' selected':''}>Por equipo</option>
+        </select></td>
+        <td><input type="number" step="0.01" data-fam-a="${esc(f)}" value="${prev[f]?.a||''}" placeholder="actual $"></td>
+        <td><input type="number" step="0.01" data-fam-n="${esc(f)}" value="${prev[f]?.n||''}" placeholder="nueva $"></td>
+        <td><input type="number" step="0.1" min="0" data-fam-m="${esc(f)}" value="${prev[f]?.m||''}" placeholder="0"></td>
+        <td class="fam" data-fam-prev="${esc(f)}" style="font-size:12px;color:var(--navy)">—</td>
+      </tr>`).join('');
+    actualizarPreviewsFam();
+    toast(fams.length+' familia(s) detectada(s)');
+  }
+  $$('rfDetect').onclick = detectFams;
+
+  function compute(){
+    const rows = parseRows($$('rfPaste').value);
+    const err = $$('rfErr'); err.style.display='none';
+    if(!rows.length){ err.textContent='No se detectaron filas válidas. Verifica que pegaste las columnas A–V separadas por tabulador (copia directa desde Excel).'; err.style.display='block'; $$('rfResults').style.display='none'; return; }
+
+    let params = {};
+    if(scope==='global'){
+      const a = num($$('rfActual').value), nv = num($$('rfNueva').value);
+      if(a==null || nv==null || a<=0){ err.textContent='Captura la renta fija actual y la nueva renta fija.'; err.style.display='block'; return; }
+      params['__ALL__'] = {actual:a, nueva:nv, base: $$('rfBase').value, m: (num($$('rfMant').value)||0)/100};
+    } else {
+      if(!$$('rfFamRows').children.length) detectFams();
+      let missing = [];
+      [...new Set(rows.map(r=>r.familia))].forEach(f => {
+        const a = num(document.querySelector(`#rfFamRows [data-fam-a="${CSS.escape(f)}"]`)?.value);
+        const nv = num(document.querySelector(`#rfFamRows [data-fam-n="${CSS.escape(f)}"]`)?.value);
+        const base = document.querySelector(`#rfFamRows [data-fam-b="${CSS.escape(f)}"]`)?.value || 'total';
+        const m = (num(document.querySelector(`#rfFamRows [data-fam-m="${CSS.escape(f)}"]`)?.value)||0)/100;
+        if(a==null || nv==null) missing.push(f);
+        params[f] = {actual:a, nueva:nv, base, m};
+      });
+      if(missing.length){ err.textContent='Falta capturar renta actual y/o nueva de: '+missing.join(', '); err.style.display='block'; return; }
+    }
+
+    PARAMS = params;
+    const gk = r => scope==='global' ? '__ALL__' : r.familia;
+    const sums = {};
+    rows.forEach(r => { const k=gk(r); sums[k]=(sums[k]||0)+r.rentaSis; });
+
+    calcRows = rows.map(r => {
+      const P = params[gk(r)];
+      const peso = r.rentaSis/(sums[gk(r)]||1);
+      const porEquipo = P.base==='equipo';
+      const baseAnt = porEquipo ? P.actual : P.actual*peso;
+      const baseNva = porEquipo ? P.nueva : P.nueva*peso;
+      const mantAnt = baseAnt*(P.m||0);
+      const mantNva = baseNva*(P.m||0);
+      const rentaAnt = baseAnt + mantAnt;   // renta total con mantenimiento
+      const rentaNva = baseNva + mantNva;
+      const mAnt = r.ingreso - r.costo - rentaAnt;
+      const mNva = r.ingreso - r.costo - rentaNva;
+      return {...r, peso, baseAnt, baseNva, mantAnt, mantNva, rentaAnt, rentaNva,
+        pAnt: rentaAnt/r.ingreso, pNva: rentaNva/r.ingreso, pCosto: r.costo/r.ingreso,
+        mAnt, mNva, mpAnt: mAnt/r.ingreso, mpNva: mNva/r.ingreso,
+        dRenta: rentaNva-rentaAnt, inc: rentaAnt>0 ? (rentaNva-rentaAnt)/rentaAnt : null};
+    });
+    render();
+  }
+
+  function render(){
+    const q = $$('rfFilter').value.trim().toLowerCase();
+    const vis = calcRows.filter(r => !q || [r.familia,r.cadena,r.plaza,r.ciudad,r.producto,r.codigo,r.modelo,r.region].join(' ').toLowerCase().includes(q));
+    const n = vis.length || 1;
+    const S = (arr,k) => arr.reduce((a,r)=>a+r[k],0);
+    const ing=S(vis,'ingreso')||1, cos=S(vis,'costo'), rA=S(vis,'rentaAnt'), rN=S(vis,'rentaNva'), mA=S(vis,'mAnt'), mN=S(vis,'mNva');
+    const bA=S(vis,'baseAnt'), bN=S(vis,'baseNva'), mtA=S(vis,'mantAnt'), mtN=S(vis,'mantNva');
+    const dR = rN-rA, incG = rA>0 ? dR/rA : null;
+    const enRiesgo = vis.filter(r=>r.mNva<0).length;
+
+    $$('rfKAntR').textContent = fmt$(rA);
+    $$('rfKAntRs').textContent = fmtP(rA/ing)+' del ingreso';
+    $$('rfKNvaR').textContent = fmt$(rN);
+    $$('rfKNvaRs').textContent = fmtP(rN/ing)+' del ingreso';
+    $$('rfKInc').textContent = (incG>=0?'+':'')+fmtP(incG);
+    $$('rfKInc').className = 'val '+(incG>0?'neg':'pos');
+    $$('rfKIncSub').textContent = fmt$0(rA)+' → '+fmt$0(rN)+' ('+(dR>=0?'+':'')+fmt$(dR)+' mensuales)';
+    $$('rfKAntM').textContent = fmt$(mA);
+    $$('rfKAntMp').textContent = fmtP(mA/ing)+' del ingreso';
+    $$('rfKNvaM').textContent = fmt$(mN);
+    $$('rfKNvaMp').textContent = fmtP(mN/ing)+' del ingreso';
+    $$('rfCount').textContent = vis.length+' de '+calcRows.length+' equipos'+(enRiesgo?' · '+enRiesgo+' con margen negativo en escenario nuevo':'');
+
+    const famNames = [...new Set(vis.map(r=>r.familia))].sort();
+    if(famNames.length > 1 || scope==='fam'){
+      $$('rfFamSumBody').innerHTML = famNames.map(f => {
+        const g = vis.filter(r=>r.familia===f);
+        const gA=S(g,'rentaAnt'), gN=S(g,'rentaNva'), gMA=S(g,'mAnt'), gMN=S(g,'mNva');
+        const gInc = gA>0 ? (gN-gA)/gA : null;
+        return `<tr><td>${esc(f)}</td><td>${g.length}</td><td>${fmt$(gA)}</td><td>${fmt$(gN)}</td>
+          <td>${(gInc>=0?'+':'')+fmtP(gInc)}</td>
+          <td>${fmt$(gMA)}</td><td class="${gMN<0?'neg':''}">${fmt$(gMN)}</td>
+          <td class="${gMN-gMA<0?'neg':'pos'}">${(gMN-gMA>=0?'+':'')+fmt$(gMN-gMA)}</td></tr>`;
+      }).join('');
+      $$('rfFamSummary').style.display='block';
+    } else $$('rfFamSummary').style.display='none';
+
+    $$('rfRSuma').innerHTML = `
+      <td class="txt" colspan="6">SUMA</td><td class="fB">${fmt$0(ing)}</td>
+      <td class="fB sep">${fmt$0(rA)}</td><td class="fO">${fmtP(rA/ing)}</td>
+      <td class="fB">${fmt$0(cos)}</td><td class="fO">${fmtP(cos/ing)}</td>
+      <td class="fR">${fmt$0(mA)}</td><td class="fO">${fmtP(mA/ing)}</td>
+      <td class="fB sep">${fmt$0(rN)}</td><td class="fO">${fmtP(rN/ing)}</td>
+      <td class="fO">${(incG>=0?'+':'')+fmtP(incG)}</td>
+      <td class="fB">${fmt$0(cos)}</td><td class="fR">${fmt$0(mN)}</td><td class="fO">${fmtP(mN/ing)}</td>`;
+    $$('rfRProm').innerHTML = `
+      <td class="txt" colspan="6">PROMEDIO</td><td class="fO">${fmt$0(ing/n)}</td>
+      <td class="fO sep">${fmt$0(rA/n)}</td><td class="fO">${fmtP(rA/ing)}</td>
+      <td class="fO">${fmt$0(cos/n)}</td><td class="fO">${fmtP(cos/ing)}</td>
+      <td class="fO">${fmt$0(mA/n)}</td><td class="fO">${fmtP(mA/ing)}</td>
+      <td class="fO sep">${fmt$0(rN/n)}</td><td class="fO">${fmtP(rN/ing)}</td>
+      <td class="fO">${(incG>=0?'+':'')+fmtP(incG)}</td>
+      <td class="fO">${fmt$0(cos/n)}</td><td class="fO">${fmt$0(mN/n)}</td><td class="fO">${fmtP(mN/ing)}</td>`;
+
+    $$('rfTbody').innerHTML = vis.map(r => `
+      <tr>
+        <td class="txt">${esc(r.cadena)}</td><td class="txt">${esc(r.plaza)}</td><td class="txt">${esc(r.ciudad)}</td>
+        <td class="txt">${esc(r.producto)}</td><td class="txt">${esc(r.modelo)}</td><td class="txt">${esc(r.codigo)}</td><td>${fmt$(r.ingreso)}</td>
+        <td class="sep">${fmt$(r.rentaAnt)}</td><td>${fmtP(r.pAnt)}</td>
+        <td>${fmt$(r.costo)}</td><td>${fmtP(r.pCosto)}</td>
+        <td class="${r.mAnt<0?'negm':''}">${fmt$(r.mAnt)}</td><td class="${r.mAnt<0?'negm':''}">${fmtP(r.mpAnt)}</td>
+        <td class="sep">${fmt$(r.rentaNva)}</td><td>${fmtP(r.pNva)}</td>
+        <td class="inc">${(r.inc>=0?'+':'')+fmtP(r.inc)}</td>
+        <td>${fmt$(r.costo)}</td>
+        <td class="${r.mNva<0?'negm':''}">${fmt$(r.mNva)}</td><td class="${r.mNva<0?'negm':''}">${fmtP(r.mpNva)}</td>
+      </tr>`).join('');
+
+    $$('rfTfoot').innerHTML = `
+      <tr>
+        <td class="txt" colspan="6">TOTAL (${vis.length})</td><td>${fmt$(ing)}</td>
+        <td class="sep">${fmt$(rA)}</td><td>${fmtP(rA/ing)}</td>
+        <td>${fmt$(cos)}</td><td>${fmtP(cos/ing)}</td>
+        <td class="${mA<0?'neg':''}">${fmt$(mA)}</td><td>${fmtP(mA/ing)}</td>
+        <td class="sep">${fmt$(rN)}</td><td>${fmtP(rN/ing)}</td>
+        <td>${(incG>=0?'+':'')+fmtP(incG)}</td>
+        <td>${fmt$(cos)}</td>
+        <td class="${mN<0?'neg':''}">${fmt$(mN)}</td><td>${fmtP(mN/ing)}</td>
+      </tr>`;
+
+    $$('rfResults').style.display = 'block';
+    $$('rfCsv').style.display = 'inline-block';
+    $$('rfSnap').style.display = 'inline-block';
+    $$('rfExec').style.display = 'inline-block';
+
+    AGG = {vis, ing, cos, rA, rN, mA, mN, incG, bA, bN, mtA, mtN, n: vis.length, enRiesgo};
+    $$('rfExecView').innerHTML = buildRfExec();
+  }
+
+  function buildRfExec(){
+    const A = AGG, ing = A.ing||1, n = A.n||1;
+    const prom = ing/n;
+    const mpA = A.mA/ing, mpN = A.mN/ing;
+    const dR = A.rN-A.rA, dM = A.mN-A.mA;
+    const sgn = v => (v>=0?'+':'−')+fmt$0(Math.abs(v)).replace('$ ','$');
+    const eq = n===1 ? '1 equipo' : n+' equipos';
+    const titulo = uniqOr(A.vis.map(r=>r.producto), 'productos');
+    const subtitulo = [uniqOr(A.vis.map(r=>r.plaza),'plazas'), uniqOr(A.vis.map(r=>r.cadena),'cadenas'), uniqOr(A.vis.map(r=>r.ciudad),'ciudades')].join(' · ');
+    const caidaFuerte = dM<0 && (mpN<0.20 || (mpA-mpN)>=0.05);
+    const propTone = dM>=0 ? 'pGood' : (caidaFuerte ? 'pBad' : 'pWarn');
+
+    const kpis = [
+      {t:'Ingreso total mensual', v:fmt$0(ing), s:eq+' · Promedio por equipo: '+fmt$0(prom)},
+      {t:'Renta actual total', v:fmt$0(A.rA), s:fmtP(A.rA/ing)+' de los ingresos'},
+      {t:'Nueva renta propuesta', v:fmt$0(A.rN), s:fmtP(A.rN/ing)+' de los ingresos · '+sgn(dR)+'/mes'+(A.incG!=null&&isFinite(A.incG)?' · '+(A.incG>=0?'+':'')+fmtP(A.incG):'')},
+      {t:'Impacto en margen', v:fmtP(mpA)+' → '+fmtP(mpN), s:sgn(dM)+'/mes · '+sgn(dM*12)+'/año',
+       tone: dM>=0 ? 'tGreen' : (caidaFuerte ? 'tRed' : 'tAmber')}
+    ];
+    const conMant = (A.mtA||0)>0 || (A.mtN||0)>0;
+    const actual = [
+      ['Tipo de renta','Fija','hl'],
+      ['Ingreso total mensual', fmt$0(ing)],
+      ['Ingreso promedio por equipo', fmt$0(prom)],
+      ...(conMant ? [['Renta fija', fmt$0(A.bA)], ['Mantenimiento', fmt$0(A.mtA)]] : []),
+      ['Renta pagada actual'+(conMant?' (con mant.)':''), fmt$0(A.rA)],
+      ['Renta / ingresos', fmtP(A.rA/ing)],
+      ['Margen comercial actual', fmt$0(A.mA)+' · '+fmtP(mpA),'hl']
+    ];
+    const prop = [
+      ['Tipo de renta','Fija','hl'],
+      ...(conMant ? [['Nueva renta fija', fmt$0(A.bN)], ['Mantenimiento', fmt$0(A.mtN)]] : []),
+      ['Nueva renta total'+(conMant?' (con mant.)':''), fmt$0(A.rN)+(A.incG!=null&&isFinite(A.incG)?' ('+(A.incG>=0?'+':'')+fmtP(A.incG)+')':'')],
+      ['% de incremento', (A.incG!=null&&isFinite(A.incG)?(A.incG>=0?'+':'')+fmtP(A.incG):'—'),'hl'],
+      ['Incremento mensual', sgn(dR)],
+      ['Incremento anual', sgn(dR*12)],
+      ['Nueva renta / ingresos', fmtP(A.rN/ing)],
+      ['Nuevo margen comercial', fmt$0(A.mN)+' · '+fmtP(mpN),'hl']
+    ];
+    const conclusion = (n===1?'El equipo genera ':'Los '+n+' equipos generan ')+'<b>'+fmt$0(ing)+'</b> mensuales. '+
+      'Actualmente '+(n===1?'paga ':'pagan ')+'<b>'+fmt$0(A.rA)+'</b> de renta fija, equivalente al <b>'+fmtP(A.rA/ing)+'</b> de los ingresos, dejando un margen comercial de <b>'+fmt$0(A.mA)+' / '+fmtP(mpA)+'</b>. '+
+      'Con la nueva renta propuesta de <b>'+fmt$0(A.rN)+'</b> ('+(A.incG>=0?'+':'')+fmtP(A.incG)+'), la renta '+(dR>=0?'subiría':'bajaría')+' a <b>'+fmtP(A.rN/ing)+'</b> de los ingresos y el margen '+(dM>=0?'subiría':'bajaría')+' a <b>'+fmt$0(A.mN)+' / '+fmtP(mpN)+'</b>, con un impacto de <b>'+sgn(dM)+' mensuales / '+sgn(dM*12)+' anuales</b>.';
+
+    let escenario;
+    if(scope==='fam' && PARAMS){
+      const det = Object.keys(PARAMS).sort().map(f => {
+        const P = PARAMS[f];
+        return esc(f)+': '+fmt$0(P.actual)+' → '+fmt$0(P.nueva)+(P.base==='equipo' ? ' por equipo' : ' total familia');
+      }).join('  ·  ');
+      escenario = 'Renta Fija · Aumento por familia — '+det;
+    } else {
+      const pctInc = (A.incG!=null && isFinite(A.incG)) ? ' ('+(A.incG>=0?'+':'')+fmtP(A.incG)+')' : '';
+      escenario = 'Renta Fija · Aumento de renta fija: '+fmt$0(A.rA)+' → '+fmt$0(A.rN)+pctInc;
+    }
+
+    return execHTML({
+      titulo: esc(titulo), subtitulo: esc(subtitulo), escenario,
+      sem: semaforo(mpA), kpis, actual, prop, propTone, conclusion,
+      pie: eq+(A.enRiesgo?' · '+A.enRiesgo+' con margen negativo en escenario nuevo':'')
+    });
+  }
+  $$('rfExec').onclick = () => captureEl($$('rfExecView').firstElementChild, 'resumen_ejecutivo_renta_fija.png', '✅ Resumen ejecutivo copiado — pégalo con Ctrl+V');
+
+  $$('rfSnap').onclick = () => { if(!calcRows.length){ toast('Primero calcula un escenario.'); return; } copyAsImage($$('rfTwrap'), 'prorrateo_renta_fija.png'); };
+
+  $$('rfCsv').onclick = () => {
+    const H = ['Familia','Region','Ciudad','Cadena','Plaza','Producto','Modelo','Codigo','Ingreso Prom','Costo Prom','Peso','Renta Fija Actual','Mant Actual','Renta Actual Total','% Renta Actual','Margen Actual','% Margen Actual','Renta Fija Nva','Mant Nva','Renta Nueva Total','% Renta Nva','% Incremento','Margen Nvo','% Margen Nvo'];
+    const L = calcRows.map(r=>[r.familia,r.region,r.ciudad,r.cadena,r.plaza,r.producto,r.modelo,r.codigo,r.ingreso,r.costo,r.peso,r.baseAnt,r.mantAnt,r.rentaAnt,r.pAnt,r.mAnt,r.mpAnt,r.baseNva,r.mantNva,r.rentaNva,r.pNva,r.inc,r.mNva,r.mpNva]
+      .map(v=>typeof v==='string'?'"'+v.replace(/"/g,'""')+'"':v).join(','));
+    downloadCsv(H, L, 'prorrateo_renta_fija_'+scope+'.csv');
+  };
+
+  $$('rfCalc').onclick = compute;
+  $$('rfFilter').addEventListener('input', () => calcRows.length && render());
+  $$('rfPaste').addEventListener('input', () => { if(scope==='fam') $$('rfFamRows').innerHTML=''; });
+  $$('rfClear').onclick = () => { $$('rfPaste').value=''; calcRows=[]; fams=[]; $$('rfFamRows').innerHTML=''; $$('rfResults').style.display='none'; $$('rfCsv').style.display='none'; $$('rfSnap').style.display='none'; $$('rfExec').style.display='none'; $$('rfExecView').innerHTML=''; $$('rfErr').style.display='none'; };
+})();
+
+/* ═══════════ HERRAMIENTA 3: RENTA A PORCENTAJE ═══════════ */
+(function(){
+  let scope='global', calcRows=[], fams=[], AGG=null, PARAMS=null;
+
+  function setScope(sc){
+    scope = sc;
+    $$('pcSGlobal').classList.toggle('on', sc==='global');
+    $$('pcSFam').classList.toggle('on', sc==='fam');
+    $$('pcGlobalParams').style.display = sc==='global' ? 'grid' : 'none';
+    $$('pcFamBox').style.display = sc==='fam' ? 'block' : 'none';
+    $$('pcDetect').style.display = sc==='fam' ? 'inline-block' : 'none';
+    if(sc==='fam' && !$$('pcFamRows').children.length) detectFams();
+  }
+  $$('pcSGlobal').onclick = () => setScope('global');
+  $$('pcSFam').onclick = () => setScope('fam');
+
+  function detectFams(){
+    const rows = parseRows($$('pcPaste').value);
+    if(!rows.length){ $$('pcErr').textContent='Primero pega los datos para detectar las familias.'; $$('pcErr').style.display='block'; return; }
+    $$('pcErr').style.display='none';
+    const prev = {};
+    fams.forEach(f => prev[f] = {
+      a: document.querySelector(`#pcFamRows [data-fam-a="${CSS.escape(f)}"]`)?.value || '',
+      n: document.querySelector(`#pcFamRows [data-fam-n="${CSS.escape(f)}"]`)?.value || ''
+    });
+    const counts = {};
+    rows.forEach(r => counts[r.familia] = (counts[r.familia]||0)+1);
+    fams = Object.keys(counts).sort();
+    $$('pcFamRows').innerHTML = fams.map(f => `
+      <tr>
+        <td class="fam">${esc(f)} <span class="cnt">(${counts[f]} eq.)</span></td>
+        <td><input type="number" step="0.1" min="0" data-fam-a="${esc(f)}" value="${prev[f]?.a||''}" placeholder="% actual"></td>
+        <td><input type="number" step="0.1" min="0" data-fam-n="${esc(f)}" value="${prev[f]?.n||''}" placeholder="nuevo %"></td>
+      </tr>`).join('');
+    toast(fams.length+' familia(s) detectada(s)');
+  }
+  $$('pcDetect').onclick = detectFams;
+
+  function compute(){
+    const rows = parseRows($$('pcPaste').value);
+    const err = $$('pcErr'); err.style.display='none';
+    if(!rows.length){ err.textContent='No se detectaron filas válidas. Verifica que pegaste las columnas A–V separadas por tabulador (copia directa desde Excel).'; err.style.display='block'; $$('pcResults').style.display='none'; return; }
+
+    let params = {};
+    if(scope==='global'){
+      const a = num($$('pcActual').value), nv = num($$('pcNueva').value);
+      if(a==null || nv==null){ err.textContent='Captura el % de renta actual y el nuevo %.'; err.style.display='block'; return; }
+      params['__ALL__'] = {za: a/100, zn: nv/100};
+    } else {
+      if(!$$('pcFamRows').children.length) detectFams();
+      let missing = [];
+      [...new Set(rows.map(r=>r.familia))].forEach(f => {
+        const a = num(document.querySelector(`#pcFamRows [data-fam-a="${CSS.escape(f)}"]`)?.value);
+        const nv = num(document.querySelector(`#pcFamRows [data-fam-n="${CSS.escape(f)}"]`)?.value);
+        if(a==null || nv==null) missing.push(f);
+        params[f] = {za: a==null?null:a/100, zn: nv==null?null:nv/100};
+      });
+      if(missing.length){ err.textContent='Falta capturar % actual y/o nuevo de: '+missing.join(', '); err.style.display='block'; return; }
+    }
+
+    PARAMS = params;
+    const gk = r => scope==='global' ? '__ALL__' : r.familia;
+
+    calcRows = rows.map(r => {
+      const P = params[gk(r)];
+      const rentaAnt = r.ingreso*P.za;
+      const rentaNva = r.ingreso*P.zn;
+      const mAnt = r.ingreso - r.costo - rentaAnt;
+      const mNva = r.ingreso - r.costo - rentaNva;
+      return {...r, rentaAnt, rentaNva,
+        pAnt: P.za, pNva: P.zn, pCosto: r.costo/r.ingreso,
+        mAnt, mNva, mpAnt: mAnt/r.ingreso, mpNva: mNva/r.ingreso,
+        inc: rentaAnt>0 ? (rentaNva-rentaAnt)/rentaAnt : null,
+        zPct: P.za, nzPct: P.zn};
+    });
+    render();
+  }
+
+  function render(){
+    const q = $$('pcFilter').value.trim().toLowerCase();
+    const vis = calcRows.filter(r => !q || [r.familia,r.cadena,r.plaza,r.ciudad,r.producto,r.codigo,r.modelo,r.region].join(' ').toLowerCase().includes(q));
+    const n = vis.length || 1;
+    const S = (arr,k) => arr.reduce((a,r)=>a+r[k],0);
+    const ing=S(vis,'ingreso')||1, cos=S(vis,'costo'), rA=S(vis,'rentaAnt'), rN=S(vis,'rentaNva'), mA=S(vis,'mAnt'), mN=S(vis,'mNva');
+    const dR = rN-rA, incG = rA>0 ? dR/rA : null;
+    const zo = vis.reduce((a,r)=>a+r.ingreso*r.zPct,0)/ing;
+    const zn = vis.reduce((a,r)=>a+r.ingreso*r.nzPct,0)/ing;
+    const pts = (zn-zo)*100;
+    const enRiesgo = vis.filter(r=>r.mNva<0).length;
+
+    $$('pcKAntR').textContent = fmt$(rA);
+    $$('pcKAntRs').textContent = fmtP(rA/ing)+' del ingreso';
+    $$('pcKNvaR').textContent = fmt$(rN);
+    $$('pcKNvaRs').textContent = fmtP(rN/ing)+' del ingreso';
+    $$('pcKInc').textContent = (pts>=0?'+':'')+pts.toLocaleString('es-MX',{maximumFractionDigits:1})+' pts';
+    $$('pcKInc').className = 'val '+(pts>0?'neg':'pos');
+    $$('pcKIncSub').textContent = fmtP(zo)+' → '+fmtP(zn)+(incG!=null&&isFinite(incG)?' ('+(incG>=0?'+':'')+fmtP(incG)+' de incremento)':'');
+    $$('pcKAntM').textContent = fmt$(mA);
+    $$('pcKAntMp').textContent = fmtP(mA/ing)+' del ingreso';
+    $$('pcKNvaM').textContent = fmt$(mN);
+    $$('pcKNvaMp').textContent = fmtP(mN/ing)+' del ingreso';
+    $$('pcCount').textContent = vis.length+' de '+calcRows.length+' equipos'+(enRiesgo?' · '+enRiesgo+' con margen negativo en escenario nuevo':'');
+
+    const famNames = [...new Set(vis.map(r=>r.familia))].sort();
+    if(famNames.length > 1 || scope==='fam'){
+      $$('pcFamSumBody').innerHTML = famNames.map(f => {
+        const g = vis.filter(r=>r.familia===f);
+        const gA=S(g,'rentaAnt'), gN=S(g,'rentaNva'), gMA=S(g,'mAnt'), gMN=S(g,'mNva');
+        const gInc = gA>0 ? (gN-gA)/gA : null;
+        return `<tr><td>${esc(f)}</td><td>${g.length}</td><td>${fmt$(gA)}</td><td>${fmt$(gN)}</td>
+          <td>${(gInc>=0?'+':'')+fmtP(gInc)}</td>
+          <td>${fmt$(gMA)}</td><td class="${gMN<0?'neg':''}">${fmt$(gMN)}</td>
+          <td class="${gMN-gMA<0?'neg':'pos'}">${(gMN-gMA>=0?'+':'')+fmt$(gMN-gMA)}</td></tr>`;
+      }).join('');
+      $$('pcFamSummary').style.display='block';
+    } else $$('pcFamSummary').style.display='none';
+
+    $$('pcRSuma').innerHTML = `
+      <td class="txt" colspan="6">SUMA</td><td class="fB">${fmt$0(ing)}</td>
+      <td class="fB sep">${fmt$0(rA)}</td><td class="fO">${fmtP(rA/ing)}</td>
+      <td class="fB">${fmt$0(cos)}</td><td class="fO">${fmtP(cos/ing)}</td>
+      <td class="fR">${fmt$0(mA)}</td><td class="fO">${fmtP(mA/ing)}</td>
+      <td class="fB sep">${fmt$0(rN)}</td><td class="fO">${fmtP(rN/ing)}</td>
+      <td class="fO">${incG!=null&&isFinite(incG)?(incG>=0?'+':'')+fmtP(incG):'—'}</td>
+      <td class="fB">${fmt$0(cos)}</td><td class="fR">${fmt$0(mN)}</td><td class="fO">${fmtP(mN/ing)}</td>`;
+    $$('pcRProm').innerHTML = `
+      <td class="txt" colspan="6">PROMEDIO</td><td class="fO">${fmt$0(ing/n)}</td>
+      <td class="fO sep">${fmt$0(rA/n)}</td><td class="fO">${fmtP(rA/ing)}</td>
+      <td class="fO">${fmt$0(cos/n)}</td><td class="fO">${fmtP(cos/ing)}</td>
+      <td class="fO">${fmt$0(mA/n)}</td><td class="fO">${fmtP(mA/ing)}</td>
+      <td class="fO sep">${fmt$0(rN/n)}</td><td class="fO">${fmtP(rN/ing)}</td>
+      <td class="fO">${incG!=null&&isFinite(incG)?(incG>=0?'+':'')+fmtP(incG):'—'}</td>
+      <td class="fO">${fmt$0(cos/n)}</td><td class="fO">${fmt$0(mN/n)}</td><td class="fO">${fmtP(mN/ing)}</td>`;
+
+    $$('pcTbody').innerHTML = vis.map(r => `
+      <tr>
+        <td class="txt">${esc(r.cadena)}</td><td class="txt">${esc(r.plaza)}</td><td class="txt">${esc(r.ciudad)}</td>
+        <td class="txt">${esc(r.producto)}</td><td class="txt">${esc(r.modelo)}</td><td class="txt">${esc(r.codigo)}</td><td>${fmt$(r.ingreso)}</td>
+        <td class="sep">${fmt$(r.rentaAnt)}</td><td>${fmtP(r.pAnt)}</td>
+        <td>${fmt$(r.costo)}</td><td>${fmtP(r.pCosto)}</td>
+        <td class="${r.mAnt<0?'negm':''}">${fmt$(r.mAnt)}</td><td class="${r.mAnt<0?'negm':''}">${fmtP(r.mpAnt)}</td>
+        <td class="sep">${fmt$(r.rentaNva)}</td><td>${fmtP(r.pNva)}</td>
+        <td class="inc">${r.inc!=null&&isFinite(r.inc)?(r.inc>=0?'+':'')+fmtP(r.inc):'—'}</td>
+        <td>${fmt$(r.costo)}</td>
+        <td class="${r.mNva<0?'negm':''}">${fmt$(r.mNva)}</td><td class="${r.mNva<0?'negm':''}">${fmtP(r.mpNva)}</td>
+      </tr>`).join('');
+
+    $$('pcTfoot').innerHTML = `
+      <tr>
+        <td class="txt" colspan="6">TOTAL (${vis.length})</td><td>${fmt$(ing)}</td>
+        <td class="sep">${fmt$(rA)}</td><td>${fmtP(rA/ing)}</td>
+        <td>${fmt$(cos)}</td><td>${fmtP(cos/ing)}</td>
+        <td class="${mA<0?'neg':''}">${fmt$(mA)}</td><td>${fmtP(mA/ing)}</td>
+        <td class="sep">${fmt$(rN)}</td><td>${fmtP(rN/ing)}</td>
+        <td>${incG!=null&&isFinite(incG)?(incG>=0?'+':'')+fmtP(incG):'—'}</td>
+        <td>${fmt$(cos)}</td>
+        <td class="${mN<0?'neg':''}">${fmt$(mN)}</td><td>${fmtP(mN/ing)}</td>
+      </tr>`;
+
+    $$('pcResults').style.display = 'block';
+    $$('pcCsv').style.display = 'inline-block';
+    $$('pcSnap').style.display = 'inline-block';
+    $$('pcExec').style.display = 'inline-block';
+
+    AGG = {vis, ing, cos, rA, rN, mA, mN, zo, zn, incG, n: vis.length, enRiesgo};
+    $$('pcExecView').innerHTML = buildPcExec();
+  }
+
+  function buildPcExec(){
+    const A = AGG, ing = A.ing||1, n = A.n||1;
+    const prom = ing/n;
+    const mpA = A.mA/ing, mpN = A.mN/ing;
+    const dR = A.rN-A.rA, dM = A.mN-A.mA;
+    const sgn = v => (v>=0?'+':'−')+fmt$0(Math.abs(v)).replace('$ ','$');
+    const eq = n===1 ? '1 equipo' : n+' equipos';
+    const titulo = uniqOr(A.vis.map(r=>r.producto), 'productos');
+    const subtitulo = [uniqOr(A.vis.map(r=>r.plaza),'plazas'), uniqOr(A.vis.map(r=>r.cadena),'cadenas'), uniqOr(A.vis.map(r=>r.ciudad),'ciudades')].join(' · ');
+    const caidaFuerte = dM<0 && (mpN<0.20 || (mpA-mpN)>=0.05);
+    const propTone = dM>=0 ? 'pGood' : (caidaFuerte ? 'pBad' : 'pWarn');
+    const pts = (A.zn-A.zo)*100;
+
+    const kpis = [
+      {t:'Ingreso total mensual', v:fmt$0(ing), s:eq+' · Promedio por equipo: '+fmt$0(prom)},
+      {t:'Renta actual total', v:fmt$0(A.rA), s:fmtP(A.rA/ing)+' de los ingresos'},
+      {t:'Nueva renta propuesta', v:fmt$0(A.rN), s:fmtP(A.rN/ing)+' de los ingresos · '+sgn(dR)+'/mes'},
+      {t:'Impacto en margen', v:fmtP(mpA)+' → '+fmtP(mpN), s:sgn(dM)+'/mes · '+sgn(dM*12)+'/año',
+       tone: dM>=0 ? 'tGreen' : (caidaFuerte ? 'tRed' : 'tAmber')}
+    ];
+    const actual = [
+      ['Tipo de renta', scope==='fam' ? 'Porcentaje · % por familia' : 'Porcentaje ('+fmtP(A.zo)+' de los ingresos)','hl'],
+      ['Ingreso total mensual', fmt$0(ing)],
+      ['Ingreso promedio por equipo', fmt$0(prom)],
+      ['Renta pagada actual', fmt$0(A.rA)],
+      ['Renta / ingresos', fmtP(A.rA/ing)],
+      ['Margen comercial actual', fmt$0(A.mA)+' · '+fmtP(mpA),'hl']
+    ];
+    const prop = [
+      ['Tipo de renta', scope==='fam' ? 'Porcentaje · nuevos % por familia' : 'Porcentaje ('+fmtP(A.zn)+' de los ingresos)','hl'],
+      ['Nueva renta total', fmt$0(A.rN)+(A.incG!=null&&isFinite(A.incG)?' ('+(A.incG>=0?'+':'')+fmtP(A.incG)+')':'')],
+      ['Incremento mensual', sgn(dR)],
+      ['Incremento anual', sgn(dR*12)],
+      ['Nueva renta / ingresos', fmtP(A.rN/ing)],
+      ['Nuevo margen comercial', fmt$0(A.mN)+' · '+fmtP(mpN),'hl']
+    ];
+    const conclusion = (n===1?'El equipo genera ':'Los '+n+' equipos generan ')+'<b>'+fmt$0(ing)+'</b> mensuales. '+
+      'Actualmente '+(n===1?'paga ':'pagan ')+'<b>'+fmt$0(A.rA)+'</b> de renta a porcentaje, equivalente al <b>'+fmtP(A.rA/ing)+'</b> de los ingresos, dejando un margen comercial de <b>'+fmt$0(A.mA)+' / '+fmtP(mpA)+'</b>. '+
+      'Con el nuevo porcentaje, la renta '+(dR>=0?'subiría':'bajaría')+' a <b>'+fmt$0(A.rN)+' / '+fmtP(A.rN/ing)+'</b> de los ingresos y el margen '+(dM>=0?'subiría':'bajaría')+' a <b>'+fmt$0(A.mN)+' / '+fmtP(mpN)+'</b>, con un impacto de <b>'+sgn(dM)+' mensuales / '+sgn(dM*12)+' anuales</b>.';
+
+    let escenario;
+    if(scope==='fam' && PARAMS){
+      const det = Object.keys(PARAMS).sort().map(f => esc(f)+': '+fmtP(PARAMS[f].za)+' → '+fmtP(PARAMS[f].zn)).join('  ·  ');
+      escenario = 'Renta a Porcentaje · Aumento por familia — '+det;
+    } else {
+      escenario = 'Renta a Porcentaje · Aumento de porcentaje: '+fmtP(A.zo)+' → '+fmtP(A.zn)+' ('+(pts>=0?'+':'')+pts.toLocaleString('es-MX',{maximumFractionDigits:1})+' pts)';
+    }
+
+    return execHTML({
+      titulo: esc(titulo), subtitulo: esc(subtitulo), escenario,
+      sem: semaforo(mpA), kpis, actual, prop, propTone, conclusion,
+      pie: eq+(A.enRiesgo?' · '+A.enRiesgo+' con margen negativo en escenario nuevo':'')
+    });
+  }
+  $$('pcExec').onclick = () => captureEl($$('pcExecView').firstElementChild, 'resumen_ejecutivo_renta_porcentaje.png', '✅ Resumen ejecutivo copiado — pégalo con Ctrl+V');
+
+  $$('pcSnap').onclick = () => { if(!calcRows.length){ toast('Primero calcula un escenario.'); return; } copyAsImage($$('pcTwrap'), 'renta_porcentaje_actual_vs_nueva.png'); };
+
+  $$('pcCsv').onclick = () => {
+    const H = ['Familia','Region','Ciudad','Cadena','Plaza','Producto','Modelo','Codigo','Ingreso Prom','Costo Prom','% Actual','Renta Actual','Margen Actual','% Margen Actual','Nuevo %','Renta Nueva','% Incremento','Margen Nvo','% Margen Nvo'];
+    const L = calcRows.map(r=>[r.familia,r.region,r.ciudad,r.cadena,r.plaza,r.producto,r.modelo,r.codigo,r.ingreso,r.costo,r.pAnt,r.rentaAnt,r.mAnt,r.mpAnt,r.pNva,r.rentaNva,r.inc,r.mNva,r.mpNva]
+      .map(v=>typeof v==='string'?'"'+v.replace(/"/g,'""')+'"':v).join(','));
+    downloadCsv(H, L, 'renta_porcentaje_'+scope+'.csv');
+  };
+
+  $$('pcCalc').onclick = compute;
+  $$('pcFilter').addEventListener('input', () => calcRows.length && render());
+  $$('pcPaste').addEventListener('input', () => { if(scope==='fam') $$('pcFamRows').innerHTML=''; });
+  $$('pcClear').onclick = () => { $$('pcPaste').value=''; calcRows=[]; fams=[]; $$('pcFamRows').innerHTML=''; $$('pcResults').style.display='none'; $$('pcCsv').style.display='none'; $$('pcSnap').style.display='none'; $$('pcExec').style.display='none'; $$('pcExecView').innerHTML=''; $$('pcErr').style.display='none'; };
+})();
+</script>
+</body>
+</html>

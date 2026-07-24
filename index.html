@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menú de Dashboards · ALVACO Inteligencia Comercial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Inter:wght@400;500;600&family=Luckiest+Guy&display=swap" rel="stylesheet">
+<!-- Bootstrap 5 (antes de style.css para no pisar tu diseño) -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Animate.css: animaciones listas por clase -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+<!-- Estilos y lógica del portal en archivos separados: style.css y script.js -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <button class="btn-menu-flotante" id="btnMenu" title="Ocultar / mostrar menú" aria-label="Ocultar o mostrar menú">
+    <img src="img/logo-alvaco-transparente.png" alt="Menú ALVACO">
+  </button>
+
+  <!-- ==================== SIDEBAR ==================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-text">
+        <h1>ALVACO</h1>
+        <p>Dashboards IC</p>
+      </div>
+    </div>
+
+    <nav class="side-nav" id="sideNav"></nav>
+
+    <div class="side-carousel" id="sideCarousel"></div>
+
+    <div class="side-footer">
+      <img src="img/logo-munelocos-transparente.png" alt="Muñelocos" class="footer-logo">
+    </div>
+  </aside>
+
+  <!-- ==================== MAIN ==================== -->
+  <main class="main">
+    <div class="hero animate__animated animate__fadeInDown">
+      <div class="hero-content">
+        <p class="hero-kicker">Comercialización · Inteligencia Comercial</p>
+        <h2>Dashboards</h2>
+        <p class="subtitle" id="heroFecha"> Selecciona el dashboard que necesites para visualizar</p>
+        <div class="hero-chips" id="heroChips"></div>
+      </div>
+      <div class="hero-side">
+        <div class="hero-reloj" aria-label="Hora actual">
+          <span id="relojHora">--:--</span><span class="reloj-seg" id="relojSeg">--</span>
+        </div>
+        <div class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+          <input type="text" id="searchInput" placeholder="Buscar dashboards…" aria-label="Buscar dashboards">
+          <button class="search-clear" id="searchClear" title="Limpiar búsqueda" aria-label="Limpiar búsqueda">✕</button>
+          <kbd class="search-kbd">Ctrl K</kbd>
+          <p class="search-count" id="searchCount"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="recientes" id="recientes"></div>
+
+    <!-- Banner del área Inteligencia Comercial (visible solo en la sección IC) -->
+    <div class="ic-banner" id="icBanner">
+      <div class="ic-banner-icono">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+      </div>
+      <div class="ic-banner-texto">
+        <h3>Inteligencia Comercial</h3>
+        <p>Área exclusiva del equipo IC · herramientas y archivos internos</p>
+      </div>
+      <span class="ic-banner-user" id="icBannerUser"></span>
+      <button class="ic-banner-salir" id="icBannerPass" title="Cambiar mi contraseña IC">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        Cambiar contraseña
+      </button>
+      <button class="ic-banner-salir" id="icBannerSalir" title="Cerrar sesión IC">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar sesión
+      </button>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="empty-state" id="emptyState">
+      <h3>Sin resultados</h3>
+      <p>No hay dashboards que coincidan con tu búsqueda o filtro.</p>
+    </div>
+
+    <div class="footer"> © ALVACO ENTERPRISES· Inteligencia Comercial</div>
+  </main>
+</div>
+
+<!-- ==================== VISOR NO EDITABLE ==================== -->
+<div class="visor-overlay" id="visorOverlay" role="dialog" aria-modal="true" aria-labelledby="visorTitle">
+  <div class="visor-topbar">
+    <button class="visor-btn" id="visorBack" title="Volver al menú" aria-label="Volver al menú">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+    </button>
+    <img src="img/logo-alvaco-transparente.png" alt="ALVACO" class="visor-logo">
+    <div class="visor-title">
+      <div>
+        <p class="visor-kicker">Inteligencia Comercial</p>
+        <h3 id="visorTitle">Dashboard</h3>
+      </div>
+      <span class="badge rounded-pill visor-badge-cat" id="visorCategoria">Categoría</span>
+      <span class="visor-pill" id="visorPill">Solo lectura</span>
+    </div>
+    <div class="visor-reloj" aria-label="Hora actual">
+      <span id="visorHora">--:--</span>
+    </div>
+    <div class="visor-zoom" role="group" aria-label="Zoom del dashboard">
+      <button class="visor-btn" id="zoomMenos" title="Alejar" aria-label="Alejar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+      </button>
+      <button class="visor-zoom-nivel" id="zoomNivel" title="Restablecer zoom (100%)" aria-label="Restablecer zoom">100%</button>
+      <button class="visor-btn" id="zoomMas" title="Acercar" aria-label="Acercar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
+      </button>
+    </div>
+    <button class="visor-btn" id="visorRefresh" title="Recargar dashboard" aria-label="Recargar dashboard">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+    </button>
+    <button class="visor-btn" id="visorFullscreen" title="Pantalla completa" aria-label="Pantalla completa">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+    </button>
+  </div>
+  <div class="visor-body">
+    <div class="visor-marco" id="visorMarco">
+      <div class="visor-loader" id="visorLoader">
+        <div class="spinner-border text-primary visor-spinner" role="status" aria-hidden="true"></div>
+        <p class="visor-loader-titulo" id="visorLoaderTitulo">Cargando dashboard…</p>
+        <div class="skeleton-panel">
+          <div class="sk sk-kpi"></div><div class="sk sk-kpi"></div><div class="sk sk-kpi"></div>
+          <div class="sk sk-chart"></div><div class="sk sk-chart"></div>
+        </div>
+      </div>
+      <iframe id="visorFrame" title="Visor de contenido" allowfullscreen
+              allow="geolocation; microphone; camera; clipboard-write"></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== LOGIN INTELIGENCIA COMERCIAL ==================== -->
+<div class="ic-login-overlay" id="icLoginOverlay" role="dialog" aria-modal="true" aria-labelledby="icLoginTitulo">
+  <div class="ic-login-card animate__animated animate__zoomIn animate__faster">
+    <div class="ic-login-head">
+      <div class="ic-banner-icono">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+      </div>
+      <div>
+        <h3 id="icLoginTitulo">Acceso IC</h3>
+        <p>Área exclusiva · Inteligencia Comercial</p>
+      </div>
+    </div>
+    <div class="ic-login-body">
+      <div class="ic-login-error" id="icLoginError">Correo o contraseña incorrectos.</div>
+      <label for="icLoginCorreo">Correo corporativo</label>
+      <input type="email" id="icLoginCorreo" placeholder="nombre@alvaco.com.mx" autocomplete="username">
+      <label for="icLoginPass">Contraseña</label>
+      <input type="password" id="icLoginPass" placeholder="••••••••••" autocomplete="current-password">
+      <div class="ic-login-acciones">
+        <button class="ic-btn-cancelar" id="icLoginCancelar">Cancelar</button>
+        <button class="ic-btn-entrar" id="icLoginEntrar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Entrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== CAMBIO DE CONTRASEÑA IC ==================== -->
+<div class="ic-login-overlay" id="icPassOverlay" role="dialog" aria-modal="true" aria-labelledby="icPassTitulo">
+  <div class="ic-login-card animate__animated animate__zoomIn animate__faster">
+    <div class="ic-login-head">
+      <div class="ic-banner-icono">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+      </div>
+      <div>
+        <h3 id="icPassTitulo">Cambiar contraseña</h3>
+        <p id="icPassSubtitulo">Tu contraseña personal · este navegador</p>
+      </div>
+    </div>
+    <div class="ic-login-body" id="icPassForm">
+      <div class="ic-login-error" id="icPassError">Revisa los datos.</div>
+      <label for="icPassActual">Contraseña actual</label>
+      <input type="password" id="icPassActual" placeholder="Tu contraseña actual o la del equipo" autocomplete="current-password">
+      <label for="icPassNueva">Nueva contraseña</label>
+      <input type="password" id="icPassNueva" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+      <label for="icPassConfirma">Confirmar nueva contraseña</label>
+      <input type="password" id="icPassConfirma" placeholder="Repite la nueva contraseña" autocomplete="new-password">
+      <div class="ic-login-acciones">
+        <button class="ic-btn-cancelar" id="icPassCancelar">Cancelar</button>
+        <button class="ic-btn-entrar" id="icPassGuardar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Guardar
+        </button>
+      </div>
+    </div>
+    <div class="ic-login-body ic-pass-exito" id="icPassExito">
+      <div class="ic-pass-check">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      </div>
+      <h4>Contraseña actualizada en este equipo</h4>
+      <p>Para que tu nueva contraseña funcione también en <strong>cualquier otro equipo</strong>, envíale este código al administrador del portal (David) para registrarla:</p>
+      <div class="ic-pass-codigo" id="icPassCodigo" title="Clic para copiar"></div>
+      <div class="ic-login-acciones">
+        <button class="ic-btn-cancelar" id="icPassCopiar">Copiar código</button>
+        <button class="ic-btn-entrar" id="icPassListo">Listo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TOAST BOOTSTRAP ==================== -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="toastFav" class="toast align-items-center border-0" role="status">
+    <div class="d-flex">
+      <div class="toast-body" id="toastFavTexto">Agregado a favoritos</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCRIPTS ==================== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="script.js"></script>
+</body>
+</html>
