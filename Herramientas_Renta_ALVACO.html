@@ -196,6 +196,9 @@ table.main tfoot td.txt{text-align:left;font-family:'Archivo';font-stretch:85%}
     <button id="tabMx" class="on" type="button">Renta Mixta</button>
     <button id="tabRf" type="button">Renta Fija (prorrateo)</button>
     <button id="tabPc" type="button">Renta a Porcentaje</button>
+    <button id="tabCa" type="button">Centroamérica (USD)</button>
+    <button id="tabDx" type="button">¿Qué se paga? (Mixta)</button>
+    <button id="tabDf" type="button">¿Cómo está? (Fija)</button>
   </div>
 </header>
 
@@ -529,6 +532,334 @@ table.main tfoot td.txt{text-align:left;font-family:'Archivo';font-stretch:85%}
   </section>
 </section>
 
+
+<!-- ═══════════════ HERRAMIENTA 4: CENTROAMÉRICA (RENTA FIJA EN USD) ═══════════════ -->
+<section class="tool" id="toolCa">
+  <div class="grid-top">
+    <section class="card">
+      <h2>1 · Pega los datos del reporte (formato Centroamérica)</h2>
+      <textarea id="caPaste" placeholder="Copia desde Excel las columnas: REGION, Ciudad, Cadena, Cliente, Plaza, Modelo, Producto, Codigo, Promedio de INGRESOS MXN SIN IVA, Promedio de COSTO MXN SIN IVA, Promedio de RENTAS MXN SIN IVA, Margen comercial — con o sin encabezados."></textarea>
+      <div class="hint">Los ingresos, costos y rentas del reporte vienen en <code>MXN sin IVA</code>. La renta del contrato la capturas en <code>USD</code> y la herramienta la convierte a pesos con el tipo de cambio que indiques. La columna de rentas MXN define el peso de cada equipo para el prorrateo.</div>
+      <div class="err" id="caErr"></div>
+    </section>
+
+    <section class="card">
+      <h2>2 · Rentas del contrato (en USD)</h2>
+      <div class="scope">
+        <button id="caSGlobal" class="on" type="button">Parámetros globales</button>
+        <button id="caSFam" type="button">Por producto</button>
+      </div>
+
+      <div class="params" id="caGlobalParams">
+        <div class="field" style="grid-column:1/-1">
+          <label>¿Cómo capturas la renta fija?</label>
+          <select id="caBase">
+            <option value="total">Total de la negociación (se prorratea por equipo)</option>
+            <option value="equipo">Por equipo (cada equipo paga ese monto)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="caLActual">Renta fija actual total (USD)</label>
+          <input id="caActual" type="number" step="0.01" placeholder="600">
+        </div>
+        <div class="field">
+          <label id="caLNueva">Nueva renta fija total (USD)</label>
+          <input id="caNueva" type="number" step="0.01" placeholder="660">
+        </div>
+        <div class="field">
+          <label>Tipo de cambio (MXN por USD)</label>
+          <input id="caTC" type="number" step="0.01" min="0" placeholder="18.50">
+        </div>
+        <div class="field">
+          <label>% de mantenimiento (opcional, sobre la renta)</label>
+          <input id="caMant" type="number" step="0.1" min="0" placeholder="vacío = sin mantenimiento">
+        </div>
+        <div class="field">
+          <label>Renta en MXN (calculado)</label>
+          <input id="caPreview" type="text" disabled value="—">
+        </div>
+      </div>
+
+      <div class="fambox" id="caFamBox">
+        <div class="famhint">Pega primero los datos y presiona <b>Detectar productos</b>. En cada producto elige si la renta USD es el <b>total</b> (se prorratea) o <b>por equipo</b>, y captura sus valores. El tipo de cambio se captura arriba de la tabla.</div>
+        <div class="params two" style="margin-bottom:10px">
+          <div class="field">
+            <label>Tipo de cambio (MXN por USD)</label>
+            <input id="caTCFam" type="number" step="0.01" min="0" placeholder="18.50">
+          </div>
+        </div>
+        <table class="famtbl">
+          <thead><tr><th>Producto</th><th>La renta es</th><th>Actual USD</th><th>Nueva USD</th><th>% mant.</th><th>Quedará en MXN</th></tr></thead>
+          <tbody id="caFamRows"></tbody>
+        </table>
+      </div>
+
+      <div class="btnrow">
+        <button class="ghost" id="caDetect" type="button" style="display:none">Detectar productos</button>
+        <button class="primary" id="caCalc" type="button">Calcular escenario</button>
+        <button class="snapbtn" id="caSnap" type="button" style="display:none">📷 Copiar tabla</button>
+        <button class="snapbtn" id="caExec" type="button" style="display:none">📊 Resumen ejecutivo</button>
+        <button class="ghost" id="caCsv" type="button" style="display:none">Descargar CSV</button>
+        <button class="ghost" id="caClear" type="button">Limpiar</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="results" id="caResults">
+    <div class="kpis">
+      <div class="kpi"><div class="lbl">Renta actual total</div><div class="val" id="caKAntR">—</div><div class="sub" id="caKAntRs">—</div></div>
+      <div class="kpi nueva"><div class="lbl">Renta nueva total</div><div class="val" id="caKNvaR">—</div><div class="sub" id="caKNvaRs">—</div></div>
+      <div class="kpi delta"><div class="lbl">Incremento de renta fija</div><div class="val" id="caKInc">—</div><div class="sub" id="caKIncSub">—</div></div>
+      <div class="kpi"><div class="lbl">Margen actual</div><div class="val" id="caKAntM">—</div><div class="sub" id="caKAntMp">—</div></div>
+      <div class="kpi nueva"><div class="lbl">Margen nuevo</div><div class="val" id="caKNvaM">—</div><div class="sub" id="caKNvaMp">—</div></div>
+    </div>
+
+    <div class="exview" id="caExecView"></div>
+
+    <div class="famsum" id="caFamSummary">
+      <h3>Resumen por producto</h3>
+      <table class="sumfam">
+        <thead><tr><th>Producto</th><th>Equipos</th><th>Renta actual</th><th>Renta nueva</th><th>% Incr.</th><th>Margen actual</th><th>Margen nuevo</th><th>Δ Margen</th></tr></thead>
+        <tbody id="caFamSumBody"></tbody>
+      </table>
+    </div>
+
+    <div class="tablebar">
+      <input id="caFilter" type="search" placeholder="Filtrar por ciudad, cadena, cliente, plaza, producto o código…">
+      <span class="count" id="caCount"></span>
+    </div>
+
+    <div class="tablewrap" id="caTwrap">
+      <table class="main">
+        <thead>
+          <tr class="band">
+            <th class="b-id" colspan="8">Identificación del equipo</th>
+            <th class="b-ant sep" colspan="6">Renta Actual (MXN)</th>
+            <th class="b-nva sep" colspan="6">Renta Nueva (MXN)</th>
+          </tr>
+          <tr class="tot" id="caRSuma"></tr>
+          <tr class="tot prom" id="caRProm"></tr>
+          <tr class="cols">
+            <th class="txt">Ciudad</th><th class="txt">Cadena</th><th class="txt">Cliente</th><th class="txt">Plaza</th><th class="txt">Producto</th><th class="txt">Modelo</th><th class="txt">Código</th><th>Ingreso prom.</th>
+            <th class="sep">Renta</th><th>% Renta</th><th>Costo de P.</th><th>% Costo</th><th>Margen</th><th>% Margen</th>
+            <th class="sep">Renta</th><th>% Renta</th><th>Incremento</th><th>Costo de P.</th><th>Margen</th><th>% Margen</th>
+          </tr>
+        </thead>
+        <tbody id="caTbody"></tbody>
+        <tfoot id="caTfoot"></tfoot>
+      </table>
+    </div>
+  </section>
+</section>
+
+
+<!-- ═══════════════ HERRAMIENTA 5: DIAGNÓSTICO DE RENTA MIXTA (SIN AUMENTO) ═══════════════ -->
+<section class="tool" id="toolDx">
+  <div class="grid-top">
+    <section class="card">
+      <h2>1 · Pega los datos del reporte</h2>
+      <textarea id="dxPaste" placeholder="Copia desde Excel las columnas A–V (Region, Ciudad, Cadena, Plaza, Familia … %Margen del Ingreso) con o sin encabezados, y pégalas aquí."></textarea>
+      <div class="hint">Diagnóstico de renta mixta <b>sin aumento</b>: captura la renta fija y el % del contrato vigente y te dice, equipo por equipo, si se paga la <b>renta fija</b> (el % no alcanza el piso) o el <b>porcentaje</b> del ingreso.</div>
+      <div class="err" id="dxErr"></div>
+    </section>
+
+    <section class="card">
+      <h2>2 · Términos del contrato</h2>
+      <div class="scope">
+        <button id="dxSGlobal" class="on" type="button">Parámetros globales</button>
+        <button id="dxSFam" type="button">Por familia</button>
+      </div>
+
+      <div class="params" id="dxGlobalParams">
+        <div class="field" style="grid-column:1/-1">
+          <label>¿Cómo capturas la renta fija?</label>
+          <select id="dxBase">
+            <option value="total">Total de la negociación (se prorratea por equipo)</option>
+            <option value="equipo">Por equipo (cada equipo tiene ese piso)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="dxLActual">Renta fija del contrato ($)</label>
+          <input id="dxActual" type="number" step="0.01" placeholder="11943.13">
+        </div>
+        <div class="field">
+          <label>% de renta del contrato</label>
+          <input id="dxPct" type="number" step="0.1" min="0" placeholder="30" value="30">
+        </div>
+      </div>
+
+      <div class="fambox" id="dxFamBox">
+        <div class="famhint">Pega primero los datos y presiona <b>Detectar familias</b>. En cada familia elige si la renta fija es el <b>total de la familia</b> (se prorratea) o <b>por equipo</b>, y captura la fija y el %.</div>
+        <table class="famtbl">
+          <thead><tr><th>Familia</th><th>La renta es</th><th>Renta fija $</th><th>% de renta</th></tr></thead>
+          <tbody id="dxFamRows"></tbody>
+        </table>
+      </div>
+
+      <div class="btnrow">
+        <button class="ghost" id="dxDetect" type="button" style="display:none">Detectar familias</button>
+        <button class="primary" id="dxCalc" type="button">Diagnosticar</button>
+        <button class="snapbtn" id="dxSnap" type="button" style="display:none">📷 Copiar tabla</button>
+        <button class="snapbtn" id="dxExec" type="button" style="display:none">📊 Resumen ejecutivo</button>
+        <button class="ghost" id="dxCsv" type="button" style="display:none">Descargar CSV</button>
+        <button class="ghost" id="dxClear" type="button">Limpiar</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="results" id="dxResults">
+    <div class="kpis">
+      <div class="kpi"><div class="lbl">Ingreso total mensual</div><div class="val" id="dxKIng">—</div><div class="sub" id="dxKIngS">—</div></div>
+      <div class="kpi"><div class="lbl">Renta pagada total</div><div class="val" id="dxKRenta">—</div><div class="sub" id="dxKRentaS">—</div></div>
+      <div class="kpi delta"><div class="lbl">Pagan renta fija</div><div class="val" id="dxKFija">—</div><div class="sub">el % no alcanza el piso</div></div>
+      <div class="kpi nueva"><div class="lbl">Pagan porcentaje</div><div class="val" id="dxKPct">—</div><div class="sub">el % supera el piso</div></div>
+      <div class="kpi"><div class="lbl">Margen comercial</div><div class="val" id="dxKMarg">—</div><div class="sub" id="dxKMargS">—</div></div>
+    </div>
+
+    <div class="exview" id="dxExecView"></div>
+
+    <div class="famsum" id="dxFamSummary">
+      <h3>Resumen por familia</h3>
+      <table class="sumfam">
+        <thead><tr><th>Familia</th><th>Equipos</th><th>Renta pagada</th><th>% Renta</th><th>Pagan fija</th><th>Pagan %</th><th>Margen</th><th>% Margen</th></tr></thead>
+        <tbody id="dxFamSumBody"></tbody>
+      </table>
+    </div>
+
+    <div class="tablebar">
+      <input id="dxFilter" type="search" placeholder="Filtrar por familia, cadena, plaza, ciudad o código…">
+      <div class="legend">
+        <span><span class="chip fija"></span>Paga renta fija (el % no alcanza el piso)</span>
+        <span><span class="chip pct"></span>Paga % de ingreso</span>
+        <span class="count" id="dxCount"></span>
+      </div>
+    </div>
+
+    <div class="tablewrap" id="dxTwrap">
+      <table class="main">
+        <thead>
+          <tr class="band">
+            <th class="b-id" colspan="7">Identificación del equipo</th>
+            <th class="b-nva sep" colspan="9">Renta Mixta — ¿Qué se paga?</th>
+          </tr>
+          <tr class="tot" id="dxRSuma"></tr>
+          <tr class="tot prom" id="dxRProm"></tr>
+          <tr class="cols">
+            <th class="txt">Cadena</th><th class="txt">Plaza</th><th class="txt">Ciudad</th><th class="txt">Producto</th><th class="txt">Modelo</th><th class="txt">Código</th><th>Ingreso prom.</th>
+            <th class="sep">Renta fija (piso)</th><th>Renta por %</th><th>Renta pagada</th><th>% Renta</th><th>Estado</th><th>Costo de P.</th><th>% Costo</th><th>Margen</th><th>% Margen</th>
+          </tr>
+        </thead>
+        <tbody id="dxTbody"></tbody>
+        <tfoot id="dxTfoot"></tfoot>
+      </table>
+    </div>
+  </section>
+</section>
+
+
+<!-- ═══════════════ HERRAMIENTA 6: DIAGNÓSTICO DE RENTA FIJA (SIN AUMENTO) ═══════════════ -->
+<section class="tool" id="toolDf">
+  <div class="grid-top">
+    <section class="card">
+      <h2>1 · Pega los datos del reporte</h2>
+      <textarea id="dfPaste" placeholder="Copia desde Excel las columnas A–V (Region, Ciudad, Cadena, Plaza, Familia … %Margen del Ingreso) con o sin encabezados, y pégalas aquí."></textarea>
+      <div class="hint">Diagnóstico de renta fija <b>sin aumento</b>: captura la renta fija real del contrato (y su mantenimiento si aplica) y te muestra cómo está hoy cada equipo — % de renta sobre ingresos, margen y cuáles operan en números rojos.</div>
+      <div class="err" id="dfErr"></div>
+    </section>
+
+    <section class="card">
+      <h2>2 · Renta del contrato</h2>
+      <div class="scope">
+        <button id="dfSGlobal" class="on" type="button">Parámetros globales</button>
+        <button id="dfSFam" type="button">Por familia</button>
+      </div>
+
+      <div class="params" id="dfGlobalParams">
+        <div class="field" style="grid-column:1/-1">
+          <label>¿Cómo capturas la renta fija?</label>
+          <select id="dfBase">
+            <option value="total">Total de la negociación (se prorratea por equipo)</option>
+            <option value="equipo">Por equipo (cada equipo paga ese monto)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="dfLActual">Renta fija del contrato ($)</label>
+          <input id="dfActual" type="number" step="0.01" placeholder="22761">
+        </div>
+        <div class="field">
+          <label>% de mantenimiento (opcional, sobre la renta)</label>
+          <input id="dfMant" type="number" step="0.1" min="0" placeholder="vacío = sin mantenimiento">
+        </div>
+        <div class="field">
+          <label>Renta con mantenimiento (calculado)</label>
+          <input id="dfPreview" type="text" disabled value="—">
+        </div>
+      </div>
+
+      <div class="fambox" id="dfFamBox">
+        <div class="famhint">Pega primero los datos y presiona <b>Detectar familias</b>. En cada familia elige si la renta es el <b>total de la familia</b> (se prorratea) o <b>por equipo</b>, y captura la fija y su % de mantenimiento.</div>
+        <table class="famtbl">
+          <thead><tr><th>Familia</th><th>La renta es</th><th>Renta fija $</th><th>% mant.</th><th>Quedará (c/mant.)</th></tr></thead>
+          <tbody id="dfFamRows"></tbody>
+        </table>
+      </div>
+
+      <div class="btnrow">
+        <button class="ghost" id="dfDetect" type="button" style="display:none">Detectar familias</button>
+        <button class="primary" id="dfCalc" type="button">Diagnosticar</button>
+        <button class="snapbtn" id="dfSnap" type="button" style="display:none">📷 Copiar tabla</button>
+        <button class="snapbtn" id="dfExec" type="button" style="display:none">📊 Resumen ejecutivo</button>
+        <button class="ghost" id="dfCsv" type="button" style="display:none">Descargar CSV</button>
+        <button class="ghost" id="dfClear" type="button">Limpiar</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="results" id="dfResults">
+    <div class="kpis">
+      <div class="kpi"><div class="lbl">Ingreso total mensual</div><div class="val" id="dfKIng">—</div><div class="sub" id="dfKIngS">—</div></div>
+      <div class="kpi"><div class="lbl">Renta pagada total</div><div class="val" id="dfKRenta">—</div><div class="sub" id="dfKRentaS">—</div></div>
+      <div class="kpi nueva"><div class="lbl">Margen comercial</div><div class="val" id="dfKMarg">—</div><div class="sub" id="dfKMargS">—</div></div>
+      <div class="kpi delta"><div class="lbl">Equipos con margen negativo</div><div class="val" id="dfKRiesgo">—</div><div class="sub">la renta supera lo que dejan</div></div>
+      <div class="kpi"><div class="lbl">Renta promedio por equipo</div><div class="val" id="dfKProm">—</div><div class="sub" id="dfKPromS">—</div></div>
+    </div>
+
+    <div class="exview" id="dfExecView"></div>
+
+    <div class="famsum" id="dfFamSummary">
+      <h3>Resumen por familia</h3>
+      <table class="sumfam">
+        <thead><tr><th>Familia</th><th>Equipos</th><th>Ingreso</th><th>Renta pagada</th><th>% Renta</th><th>Margen</th><th>% Margen</th><th>En negativo</th></tr></thead>
+        <tbody id="dfFamSumBody"></tbody>
+      </table>
+    </div>
+
+    <div class="tablebar">
+      <input id="dfFilter" type="search" placeholder="Filtrar por familia, cadena, plaza, ciudad o código…">
+      <span class="count" id="dfCount"></span>
+    </div>
+
+    <div class="tablewrap" id="dfTwrap">
+      <table class="main">
+        <thead>
+          <tr class="band">
+            <th class="b-id" colspan="7">Identificación del equipo</th>
+            <th class="b-ant sep" colspan="7">Renta Fija — Situación actual</th>
+          </tr>
+          <tr class="tot" id="dfRSuma"></tr>
+          <tr class="tot prom" id="dfRProm"></tr>
+          <tr class="cols">
+            <th class="txt">Cadena</th><th class="txt">Plaza</th><th class="txt">Ciudad</th><th class="txt">Producto</th><th class="txt">Modelo</th><th class="txt">Código</th><th>Ingreso prom.</th>
+            <th class="sep">Renta fija</th><th>% Renta</th><th>Costo de P.</th><th>% Costo</th><th>Margen</th><th>% Margen</th><th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="dfTbody"></tbody>
+        <tfoot id="dfTfoot"></tfoot>
+      </table>
+    </div>
+  </section>
+</section>
+
 </main>
 
 <div id="snapArea" style="position:fixed;left:-12000px;top:0"></div>
@@ -694,7 +1025,7 @@ function downloadCsv(headers, lines, filename){
 }
 
 /* ═══════════ Menú de pestañas ═══════════ */
-const TABS = [['tabMx','toolMx'],['tabRf','toolRf'],['tabPc','toolPc']];
+const TABS = [['tabMx','toolMx'],['tabRf','toolRf'],['tabPc','toolPc'],['tabCa','toolCa'],['tabDx','toolDx'],['tabDf','toolDf']];
 TABS.forEach(([b,t]) => { $$(b).onclick = () => TABS.forEach(([b2,t2]) => {
   $$(b2).classList.toggle('on', b2===b);
   $$(t2).classList.toggle('act', t2===t);
@@ -1545,6 +1876,810 @@ TABS.forEach(([b,t]) => { $$(b).onclick = () => TABS.forEach(([b2,t2]) => {
   $$('pcFilter').addEventListener('input', () => calcRows.length && render());
   $$('pcPaste').addEventListener('input', () => { if(scope==='fam') $$('pcFamRows').innerHTML=''; });
   $$('pcClear').onclick = () => { $$('pcPaste').value=''; calcRows=[]; fams=[]; $$('pcFamRows').innerHTML=''; $$('pcResults').style.display='none'; $$('pcCsv').style.display='none'; $$('pcSnap').style.display='none'; $$('pcExec').style.display='none'; $$('pcExecView').innerHTML=''; $$('pcErr').style.display='none'; };
+})();
+
+/* ═══════════ HERRAMIENTA 4: CENTROAMÉRICA (RENTA FIJA EN USD) ═══════════ */
+(function(){
+  let scope='global', calcRows=[], fams=[], AGG=null, PARAMS=null, TC=null;
+  const fmtUSD = n => n==null||isNaN(n) ? '—' : 'USD '+n.toLocaleString('en-US',{maximumFractionDigits:2});
+
+  /* Parser del formato Centroamérica (12 columnas, montos MXN sin IVA) */
+  function parseCA(text){
+    const out = [];
+    if(!text.trim()) return out;
+    text.trim().split(/\r?\n/).forEach(line => {
+      const c = line.split('\t');
+      if(c.length < 11) return;
+      if(/region/i.test(c[0]) && /ciudad/i.test(c[1])) return;
+      const ingreso = num(c[8]), costo = num(c[9]), rentaSis = num(c[10]);
+      if(ingreso==null || rentaSis==null) return;
+      out.push({
+        region:c[0]||'', ciudad:c[1]||'', cadena:c[2]||'', cliente:c[3]||'', plaza:c[4]||'',
+        modelo:c[5]||'', producto:(c[6]||'(sin producto)').trim(), codigo:c[7]||'',
+        ingreso, costo: costo==null?0:costo, rentaSis
+      });
+    });
+    return out;
+  }
+
+  /* Vista previa en vivo: USD → MXN con mantenimiento */
+  function previewTexto(a, nv, tc, m){
+    if((a==null && nv==null) || !tc) return '—';
+    const f = v => v==null ? '—' : fmt$0(v*tc*(1+(m||0)));
+    return f(a)+' → '+f(nv);
+  }
+  function actualizarPreviewGlobal(){
+    const a = num($$('caActual').value), nv = num($$('caNueva').value);
+    const tc = num($$('caTC').value);
+    const m = (num($$('caMant').value)||0)/100;
+    $$('caPreview').value = previewTexto(a, nv, tc, m);
+  }
+  ['caActual','caNueva','caTC','caMant'].forEach(id => $$(id).addEventListener('input', actualizarPreviewGlobal));
+
+  function actualizarPreviewsFam(){
+    const tc = num($$('caTCFam').value);
+    document.querySelectorAll('#caFamRows [data-fam-prev]').forEach(td => {
+      const f = td.getAttribute('data-fam-prev');
+      const a = num(document.querySelector(`#caFamRows [data-fam-a="${CSS.escape(f)}"]`)?.value);
+      const nv = num(document.querySelector(`#caFamRows [data-fam-n="${CSS.escape(f)}"]`)?.value);
+      const m = (num(document.querySelector(`#caFamRows [data-fam-m="${CSS.escape(f)}"]`)?.value)||0)/100;
+      td.textContent = previewTexto(a, nv, tc, m);
+    });
+  }
+  $$('caFamRows').addEventListener('input', actualizarPreviewsFam);
+  $$('caTCFam').addEventListener('input', actualizarPreviewsFam);
+
+  function setScope(sc){
+    scope = sc;
+    $$('caSGlobal').classList.toggle('on', sc==='global');
+    $$('caSFam').classList.toggle('on', sc==='fam');
+    $$('caGlobalParams').style.display = sc==='global' ? 'grid' : 'none';
+    $$('caFamBox').style.display = sc==='fam' ? 'block' : 'none';
+    $$('caDetect').style.display = sc==='fam' ? 'inline-block' : 'none';
+    if(sc==='fam' && !$$('caFamRows').children.length) detectFams();
+  }
+  $$('caSGlobal').onclick = () => setScope('global');
+  $$('caSFam').onclick = () => setScope('fam');
+
+  function detectFams(){
+    const rows = parseCA($$('caPaste').value);
+    if(!rows.length){ $$('caErr').textContent='Primero pega los datos para detectar los productos.'; $$('caErr').style.display='block'; return; }
+    $$('caErr').style.display='none';
+    const prev = {};
+    fams.forEach(f => prev[f] = {
+      a: document.querySelector(`#caFamRows [data-fam-a="${CSS.escape(f)}"]`)?.value || '',
+      n: document.querySelector(`#caFamRows [data-fam-n="${CSS.escape(f)}"]`)?.value || '',
+      b: document.querySelector(`#caFamRows [data-fam-b="${CSS.escape(f)}"]`)?.value || 'total',
+      m: document.querySelector(`#caFamRows [data-fam-m="${CSS.escape(f)}"]`)?.value || ''
+    });
+    const counts = {};
+    rows.forEach(r => counts[r.producto] = (counts[r.producto]||0)+1);
+    fams = Object.keys(counts).sort();
+    $$('caFamRows').innerHTML = fams.map(f => `
+      <tr>
+        <td class="fam">${esc(f)} <span class="cnt">(${counts[f]} eq.)</span></td>
+        <td><select data-fam-b="${esc(f)}">
+          <option value="total"${(prev[f]?.b||'total')==='total'?' selected':''}>Total producto</option>
+          <option value="equipo"${prev[f]?.b==='equipo'?' selected':''}>Por equipo</option>
+        </select></td>
+        <td><input type="number" step="0.01" data-fam-a="${esc(f)}" value="${prev[f]?.a||''}" placeholder="actual USD"></td>
+        <td><input type="number" step="0.01" data-fam-n="${esc(f)}" value="${prev[f]?.n||''}" placeholder="nueva USD"></td>
+        <td><input type="number" step="0.1" min="0" data-fam-m="${esc(f)}" value="${prev[f]?.m||''}" placeholder="0"></td>
+        <td class="fam" data-fam-prev="${esc(f)}" style="font-size:12px;color:var(--navy)">—</td>
+      </tr>`).join('');
+    actualizarPreviewsFam();
+    toast(fams.length+' producto(s) detectado(s)');
+  }
+  $$('caDetect').onclick = detectFams;
+
+  function compute(){
+    const rows = parseCA($$('caPaste').value);
+    const err = $$('caErr'); err.style.display='none';
+    if(!rows.length){ err.textContent='No se detectaron filas válidas. Verifica que pegaste las columnas del formato Centroamérica separadas por tabulador (copia directa desde Excel).'; err.style.display='block'; $$('caResults').style.display='none'; return; }
+
+    const tc = num(scope==='global' ? $$('caTC').value : $$('caTCFam').value);
+    if(!tc || tc<=0){ err.textContent='Captura el tipo de cambio (MXN por USD).'; err.style.display='block'; return; }
+    TC = tc;
+
+    let params = {};
+    if(scope==='global'){
+      const a = num($$('caActual').value), nv = num($$('caNueva').value);
+      const m = (num($$('caMant').value)||0)/100;
+      if(a==null || nv==null){ err.textContent='Captura la renta fija actual y la nueva renta fija en USD.'; err.style.display='block'; return; }
+      params['__ALL__'] = {actual:a, nueva:nv, base: $$('caBase').value, m};
+    } else {
+      if(!$$('caFamRows').children.length) detectFams();
+      let missing = [];
+      [...new Set(rows.map(r=>r.producto))].forEach(f => {
+        const a = num(document.querySelector(`#caFamRows [data-fam-a="${CSS.escape(f)}"]`)?.value);
+        const nv = num(document.querySelector(`#caFamRows [data-fam-n="${CSS.escape(f)}"]`)?.value);
+        const base = document.querySelector(`#caFamRows [data-fam-b="${CSS.escape(f)}"]`)?.value || 'total';
+        const m = (num(document.querySelector(`#caFamRows [data-fam-m="${CSS.escape(f)}"]`)?.value)||0)/100;
+        if(a==null || nv==null) missing.push(f);
+        params[f] = {actual:a, nueva:nv, base, m};
+      });
+      if(missing.length){ err.textContent='Falta capturar renta USD actual y/o nueva de: '+missing.join(', '); err.style.display='block'; return; }
+    }
+
+    PARAMS = params;
+    const gk = r => scope==='global' ? '__ALL__' : r.producto;
+    const sums = {};
+    rows.forEach(r => { const k=gk(r); sums[k]=(sums[k]||0)+r.rentaSis; });
+
+    calcRows = rows.map(r => {
+      const P = params[gk(r)];
+      const peso = r.rentaSis/(sums[gk(r)]||1);
+      const porEquipo = P.base==='equipo';
+      const usdAnt = porEquipo ? P.actual : P.actual*peso;   // USD por equipo
+      const usdNva = porEquipo ? P.nueva : P.nueva*peso;
+      const rentaAnt = usdAnt*tc*(1+(P.m||0));               // MXN con mantenimiento
+      const rentaNva = usdNva*tc*(1+(P.m||0));
+      const mAnt = r.ingreso - r.costo - rentaAnt;
+      const mNva = r.ingreso - r.costo - rentaNva;
+      return {...r, peso, usdAnt, usdNva, rentaAnt, rentaNva,
+        pAnt: rentaAnt/r.ingreso, pNva: rentaNva/r.ingreso, pCosto: r.costo/r.ingreso,
+        mAnt, mNva, mpAnt: mAnt/r.ingreso, mpNva: mNva/r.ingreso,
+        inc: rentaAnt>0 ? (rentaNva-rentaAnt)/rentaAnt : null};
+    });
+    render();
+  }
+
+  function render(){
+    const q = $$('caFilter').value.trim().toLowerCase();
+    const vis = calcRows.filter(r => !q || [r.ciudad,r.cadena,r.cliente,r.plaza,r.producto,r.codigo,r.modelo,r.region].join(' ').toLowerCase().includes(q));
+    const n = vis.length || 1;
+    const S = (arr,k) => arr.reduce((a,r)=>a+r[k],0);
+    const ing=S(vis,'ingreso')||1, cos=S(vis,'costo'), rA=S(vis,'rentaAnt'), rN=S(vis,'rentaNva'), mA=S(vis,'mAnt'), mN=S(vis,'mNva');
+    const uA=S(vis,'usdAnt'), uN=S(vis,'usdNva');
+    const dR = rN-rA, incG = rA>0 ? dR/rA : null;
+    const enRiesgo = vis.filter(r=>r.mNva<0).length;
+
+    $$('caKAntR').textContent = fmt$(rA);
+    $$('caKAntRs').textContent = fmtUSD(uA)+' · '+fmtP(rA/ing)+' del ingreso';
+    $$('caKNvaR').textContent = fmt$(rN);
+    $$('caKNvaRs').textContent = fmtUSD(uN)+' · '+fmtP(rN/ing)+' del ingreso';
+    $$('caKInc').textContent = incG!=null&&isFinite(incG)?(incG>=0?'+':'')+fmtP(incG):'—';
+    $$('caKInc').className = 'val '+(incG>0?'neg':'pos');
+    $$('caKIncSub').textContent = fmtUSD(uA)+' → '+fmtUSD(uN)+' · TC '+fmt$(TC);
+    $$('caKAntM').textContent = fmt$(mA);
+    $$('caKAntMp').textContent = fmtP(mA/ing)+' del ingreso';
+    $$('caKNvaM').textContent = fmt$(mN);
+    $$('caKNvaMp').textContent = fmtP(mN/ing)+' del ingreso';
+    $$('caCount').textContent = vis.length+' de '+calcRows.length+' equipos'+(enRiesgo?' · '+enRiesgo+' con margen negativo en escenario nuevo':'');
+
+    const famNames = [...new Set(vis.map(r=>r.producto))].sort();
+    if(famNames.length > 1 || scope==='fam'){
+      $$('caFamSumBody').innerHTML = famNames.map(f => {
+        const g = vis.filter(r=>r.producto===f);
+        const gA=S(g,'rentaAnt'), gN=S(g,'rentaNva'), gMA=S(g,'mAnt'), gMN=S(g,'mNva');
+        const gInc = gA>0 ? (gN-gA)/gA : null;
+        return `<tr><td>${esc(f)}</td><td>${g.length}</td><td>${fmt$(gA)}</td><td>${fmt$(gN)}</td>
+          <td>${(gInc>=0?'+':'')+fmtP(gInc)}</td>
+          <td>${fmt$(gMA)}</td><td class="${gMN<0?'neg':''}">${fmt$(gMN)}</td>
+          <td class="${gMN-gMA<0?'neg':'pos'}">${(gMN-gMA>=0?'+':'')+fmt$(gMN-gMA)}</td></tr>`;
+      }).join('');
+      $$('caFamSummary').style.display='block';
+    } else $$('caFamSummary').style.display='none';
+
+    $$('caRSuma').innerHTML = `
+      <td class="txt" colspan="7">SUMA</td><td class="fB">${fmt$0(ing)}</td>
+      <td class="fB sep">${fmt$0(rA)}</td><td class="fO">${fmtP(rA/ing)}</td>
+      <td class="fB">${fmt$0(cos)}</td><td class="fO">${fmtP(cos/ing)}</td>
+      <td class="fR">${fmt$0(mA)}</td><td class="fO">${fmtP(mA/ing)}</td>
+      <td class="fB sep">${fmt$0(rN)}</td><td class="fO">${fmtP(rN/ing)}</td>
+      <td class="fO">${incG!=null&&isFinite(incG)?(incG>=0?'+':'')+fmtP(incG):'—'}</td>
+      <td class="fB">${fmt$0(cos)}</td><td class="fR">${fmt$0(mN)}</td><td class="fO">${fmtP(mN/ing)}</td>`;
+    $$('caRProm').innerHTML = `
+      <td class="txt" colspan="7">PROMEDIO</td><td class="fO">${fmt$0(ing/n)}</td>
+      <td class="fO sep">${fmt$0(rA/n)}</td><td class="fO">${fmtP(rA/ing)}</td>
+      <td class="fO">${fmt$0(cos/n)}</td><td class="fO">${fmtP(cos/ing)}</td>
+      <td class="fO">${fmt$0(mA/n)}</td><td class="fO">${fmtP(mA/ing)}</td>
+      <td class="fO sep">${fmt$0(rN/n)}</td><td class="fO">${fmtP(rN/ing)}</td>
+      <td class="fO">${incG!=null&&isFinite(incG)?(incG>=0?'+':'')+fmtP(incG):'—'}</td>
+      <td class="fO">${fmt$0(cos/n)}</td><td class="fO">${fmt$0(mN/n)}</td><td class="fO">${fmtP(mN/ing)}</td>`;
+
+    $$('caTbody').innerHTML = vis.map(r => `
+      <tr>
+        <td class="txt">${esc(r.ciudad)}</td><td class="txt">${esc(r.cadena)}</td><td class="txt">${esc(r.cliente)}</td><td class="txt">${esc(r.plaza)}</td>
+        <td class="txt">${esc(r.producto)}</td><td class="txt">${esc(r.modelo)}</td><td class="txt">${esc(r.codigo)}</td><td>${fmt$(r.ingreso)}</td>
+        <td class="sep">${fmt$(r.rentaAnt)}</td><td>${fmtP(r.pAnt)}</td>
+        <td>${fmt$(r.costo)}</td><td>${fmtP(r.pCosto)}</td>
+        <td class="${r.mAnt<0?'negm':''}">${fmt$(r.mAnt)}</td><td class="${r.mAnt<0?'negm':''}">${fmtP(r.mpAnt)}</td>
+        <td class="sep">${fmt$(r.rentaNva)}</td><td>${fmtP(r.pNva)}</td>
+        <td class="inc">${r.inc!=null&&isFinite(r.inc)?(r.inc>=0?'+':'')+fmtP(r.inc):'—'}</td>
+        <td>${fmt$(r.costo)}</td>
+        <td class="${r.mNva<0?'negm':''}">${fmt$(r.mNva)}</td><td class="${r.mNva<0?'negm':''}">${fmtP(r.mpNva)}</td>
+      </tr>`).join('');
+
+    $$('caTfoot').innerHTML = `
+      <tr>
+        <td class="txt" colspan="7">TOTAL (${vis.length})</td><td>${fmt$(ing)}</td>
+        <td class="sep">${fmt$(rA)}</td><td>${fmtP(rA/ing)}</td>
+        <td>${fmt$(cos)}</td><td>${fmtP(cos/ing)}</td>
+        <td class="${mA<0?'neg':''}">${fmt$(mA)}</td><td>${fmtP(mA/ing)}</td>
+        <td class="sep">${fmt$(rN)}</td><td>${fmtP(rN/ing)}</td>
+        <td>${incG!=null&&isFinite(incG)?(incG>=0?'+':'')+fmtP(incG):'—'}</td>
+        <td>${fmt$(cos)}</td>
+        <td class="${mN<0?'neg':''}">${fmt$(mN)}</td><td>${fmtP(mN/ing)}</td>
+      </tr>`;
+
+    $$('caResults').style.display = 'block';
+    $$('caCsv').style.display = 'inline-block';
+    $$('caSnap').style.display = 'inline-block';
+    $$('caExec').style.display = 'inline-block';
+
+    AGG = {vis, ing, cos, rA, rN, mA, mN, uA, uN, incG, n: vis.length, enRiesgo};
+    $$('caExecView').innerHTML = buildCaExec();
+  }
+
+  function buildCaExec(){
+    const A = AGG, ing = A.ing||1, n = A.n||1;
+    const prom = ing/n;
+    const mpA = A.mA/ing, mpN = A.mN/ing;
+    const dR = A.rN-A.rA, dM = A.mN-A.mA;
+    const sgn = v => (v>=0?'+':'−')+fmt$0(Math.abs(v)).replace('$ ','$');
+    const eq = n===1 ? '1 equipo' : n+' equipos';
+    const titulo = uniqOr(A.vis.map(r=>r.producto), 'productos');
+    const subtitulo = [uniqOr(A.vis.map(r=>r.plaza),'plazas'), uniqOr(A.vis.map(r=>r.cadena),'cadenas'), uniqOr(A.vis.map(r=>r.ciudad),'países/ciudades')].join(' · ');
+    const caidaFuerte = dM<0 && (mpN<0.20 || (mpA-mpN)>=0.05);
+    const propTone = dM>=0 ? 'pGood' : (caidaFuerte ? 'pBad' : 'pWarn');
+
+    const kpis = [
+      {t:'Ingreso total mensual', v:fmt$0(ing), s:eq+' · Promedio por equipo: '+fmt$0(prom)},
+      {t:'Renta actual total', v:fmt$0(A.rA), s:fmtUSD(A.uA)+' · '+fmtP(A.rA/ing)+' de los ingresos'},
+      {t:'Nueva renta propuesta', v:fmt$0(A.rN), s:fmtUSD(A.uN)+' · '+fmtP(A.rN/ing)+' de los ingresos · '+sgn(dR)+'/mes'+(A.incG!=null&&isFinite(A.incG)?' · '+(A.incG>=0?'+':'')+fmtP(A.incG):'')},
+      {t:'Impacto en margen', v:fmtP(mpA)+' → '+fmtP(mpN), s:sgn(dM)+'/mes · '+sgn(dM*12)+'/año',
+       tone: dM>=0 ? 'tGreen' : (caidaFuerte ? 'tRed' : 'tAmber')}
+    ];
+    const actual = [
+      ['Tipo de renta','Fija (USD)','hl'],
+      ['Ingreso total mensual', fmt$0(ing)],
+      ['Ingreso promedio por equipo', fmt$0(prom)],
+      ['Renta en contrato (USD)', fmtUSD(A.uA)],
+      ['Renta pagada actual (MXN)', fmt$0(A.rA)],
+      ['Renta / ingresos', fmtP(A.rA/ing)],
+      ['Margen comercial actual', fmt$0(A.mA)+' · '+fmtP(mpA),'hl']
+    ];
+    const prop = [
+      ['Tipo de renta','Fija (USD)','hl'],
+      ['Nueva renta (USD)', fmtUSD(A.uN)],
+      ['Nueva renta total (MXN)', fmt$0(A.rN)],
+      ['% de incremento', (A.incG!=null&&isFinite(A.incG)?(A.incG>=0?'+':'')+fmtP(A.incG):'—'),'hl'],
+      ['Incremento mensual', sgn(dR)],
+      ['Incremento anual', sgn(dR*12)],
+      ['Nueva renta / ingresos', fmtP(A.rN/ing)],
+      ['Nuevo margen comercial', fmt$0(A.mN)+' · '+fmtP(mpN),'hl']
+    ];
+    const conclusion = (n===1?'El equipo genera ':'Los '+n+' equipos generan ')+'<b>'+fmt$0(ing)+'</b> mensuales. '+
+      'Actualmente '+(n===1?'paga ':'pagan ')+'<b>'+fmtUSD(A.uA)+'</b> de renta fija (<b>'+fmt$0(A.rA)+'</b> al tipo de cambio de '+fmt$(TC)+'), equivalente al <b>'+fmtP(A.rA/ing)+'</b> de los ingresos, dejando un margen comercial de <b>'+fmt$0(A.mA)+' / '+fmtP(mpA)+'</b>. '+
+      'Con la nueva renta de <b>'+fmtUSD(A.uN)+'</b> (<b>'+fmt$0(A.rN)+'</b>), la renta '+(dR>=0?'subiría':'bajaría')+' a <b>'+fmtP(A.rN/ing)+'</b> de los ingresos y el margen '+(dM>=0?'subiría':'bajaría')+' a <b>'+fmt$0(A.mN)+' / '+fmtP(mpN)+'</b>, con un impacto de <b>'+sgn(dM)+' mensuales / '+sgn(dM*12)+' anuales</b>.';
+
+    let escenario;
+    if(scope==='fam' && PARAMS){
+      const det = Object.keys(PARAMS).sort().map(f => {
+        const P = PARAMS[f];
+        return esc(f)+': '+fmtUSD(P.actual)+' → '+fmtUSD(P.nueva)+(P.base==='equipo' ? ' por equipo' : ' total');
+      }).join('  ·  ');
+      escenario = 'Renta Fija Centroamérica (USD) · TC '+fmt$(TC)+' · Aumento por producto — '+det;
+    } else {
+      const pctInc = (A.incG!=null && isFinite(A.incG)) ? ' ('+(A.incG>=0?'+':'')+fmtP(A.incG)+')' : '';
+      escenario = 'Renta Fija Centroamérica (USD) · Aumento: '+fmtUSD(A.uA)+' → '+fmtUSD(A.uN)+pctInc+' · TC '+fmt$(TC);
+    }
+
+    return execHTML({
+      titulo: esc(titulo), subtitulo: esc(subtitulo), escenario,
+      sem: semaforo(mpA), kpis, actual, prop, propTone, conclusion,
+      pie: eq+(A.enRiesgo?' · '+A.enRiesgo+' con margen negativo en escenario nuevo':'')
+    });
+  }
+  $$('caExec').onclick = () => captureEl($$('caExecView').firstElementChild, 'resumen_ejecutivo_centroamerica.png', '✅ Resumen ejecutivo copiado — pégalo con Ctrl+V');
+
+  $$('caSnap').onclick = () => { if(!calcRows.length){ toast('Primero calcula un escenario.'); return; } copyAsImage($$('caTwrap'), 'centroamerica_renta_actual_vs_nueva.png'); };
+
+  $$('caCsv').onclick = () => {
+    const H = ['Region','Ciudad','Cadena','Cliente','Plaza','Producto','Modelo','Codigo','Ingreso MXN','Costo MXN','Peso','Renta Actual USD','Renta Actual MXN','% Renta Actual','Margen Actual','% Margen Actual','Renta Nueva USD','Renta Nueva MXN','% Renta Nva','% Incremento','Margen Nvo','% Margen Nvo','Tipo de Cambio'];
+    const L = calcRows.map(r=>[r.region,r.ciudad,r.cadena,r.cliente,r.plaza,r.producto,r.modelo,r.codigo,r.ingreso,r.costo,r.peso,r.usdAnt,r.rentaAnt,r.pAnt,r.mAnt,r.mpAnt,r.usdNva,r.rentaNva,r.pNva,r.inc,r.mNva,r.mpNva,TC]
+      .map(v=>typeof v==='string'?'"'+v.replace(/"/g,'""')+'"':v).join(','));
+    downloadCsv(H, L, 'centroamerica_renta_fija_'+scope+'.csv');
+  };
+
+  $$('caCalc').onclick = compute;
+  $$('caFilter').addEventListener('input', () => calcRows.length && render());
+  $$('caPaste').addEventListener('input', () => { if(scope==='fam') $$('caFamRows').innerHTML=''; });
+  $$('caClear').onclick = () => { $$('caPaste').value=''; calcRows=[]; fams=[]; $$('caFamRows').innerHTML=''; $$('caResults').style.display='none'; $$('caCsv').style.display='none'; $$('caSnap').style.display='none'; $$('caExec').style.display='none'; $$('caExecView').innerHTML=''; $$('caErr').style.display='none'; $$('caPreview').value='—'; };
+})();
+
+/* ═══════════ HERRAMIENTA 5: DIAGNÓSTICO DE RENTA MIXTA ═══════════ */
+(function(){
+  let scope='global', calcRows=[], fams=[], AGG=null, PARAMS=null;
+
+  function setScope(sc){
+    scope = sc;
+    $$('dxSGlobal').classList.toggle('on', sc==='global');
+    $$('dxSFam').classList.toggle('on', sc==='fam');
+    $$('dxGlobalParams').style.display = sc==='global' ? 'grid' : 'none';
+    $$('dxFamBox').style.display = sc==='fam' ? 'block' : 'none';
+    $$('dxDetect').style.display = sc==='fam' ? 'inline-block' : 'none';
+    if(sc==='fam' && !$$('dxFamRows').children.length) detectFams();
+  }
+  $$('dxSGlobal').onclick = () => setScope('global');
+  $$('dxSFam').onclick = () => setScope('fam');
+  $$('dxBase').addEventListener('change', () => {
+    $$('dxLActual').textContent = $$('dxBase').value==='equipo' ? 'Renta fija por equipo ($)' : 'Renta fija del contrato ($)';
+    if(calcRows.length) compute();
+  });
+
+  function detectFams(){
+    const rows = parseRows($$('dxPaste').value);
+    if(!rows.length){ $$('dxErr').textContent='Primero pega los datos para detectar las familias.'; $$('dxErr').style.display='block'; return; }
+    $$('dxErr').style.display='none';
+    const prev = {};
+    fams.forEach(f => prev[f] = {
+      a: document.querySelector(`#dxFamRows [data-fam-a="${CSS.escape(f)}"]`)?.value || '',
+      p: document.querySelector(`#dxFamRows [data-fam-p="${CSS.escape(f)}"]`)?.value || '',
+      b: document.querySelector(`#dxFamRows [data-fam-b="${CSS.escape(f)}"]`)?.value || 'total'
+    });
+    const counts = {};
+    rows.forEach(r => counts[r.familia] = (counts[r.familia]||0)+1);
+    fams = Object.keys(counts).sort();
+    $$('dxFamRows').innerHTML = fams.map(f => `
+      <tr>
+        <td class="fam">${esc(f)} <span class="cnt">(${counts[f]} eq.)</span></td>
+        <td><select data-fam-b="${esc(f)}">
+          <option value="total"${(prev[f]?.b||'total')==='total'?' selected':''}>Total familia</option>
+          <option value="equipo"${prev[f]?.b==='equipo'?' selected':''}>Por equipo</option>
+        </select></td>
+        <td><input type="number" step="0.01" data-fam-a="${esc(f)}" value="${prev[f]?.a||''}" placeholder="fija $"></td>
+        <td><input type="number" step="0.1" min="0" data-fam-p="${esc(f)}" value="${prev[f]?.p||'30'}" placeholder="30"></td>
+      </tr>`).join('');
+    toast(fams.length+' familia(s) detectada(s)');
+  }
+  $$('dxDetect').onclick = detectFams;
+
+  function compute(){
+    const rows = parseRows($$('dxPaste').value);
+    const err = $$('dxErr'); err.style.display='none';
+    if(!rows.length){ err.textContent='No se detectaron filas válidas. Verifica que pegaste las columnas A–V separadas por tabulador (copia directa desde Excel).'; err.style.display='block'; $$('dxResults').style.display='none'; return; }
+
+    let params = {};
+    if(scope==='global'){
+      const a = num($$('dxActual').value), z = (num($$('dxPct').value)||0)/100;
+      if(a==null){ err.textContent='Captura la renta fija del contrato.'; err.style.display='block'; return; }
+      params['__ALL__'] = {fija:a, z, base: $$('dxBase').value};
+    } else {
+      if(!$$('dxFamRows').children.length) detectFams();
+      let missing = [];
+      [...new Set(rows.map(r=>r.familia))].forEach(f => {
+        const a = num(document.querySelector(`#dxFamRows [data-fam-a="${CSS.escape(f)}"]`)?.value);
+        const z = (num(document.querySelector(`#dxFamRows [data-fam-p="${CSS.escape(f)}"]`)?.value)||0)/100;
+        const base = document.querySelector(`#dxFamRows [data-fam-b="${CSS.escape(f)}"]`)?.value || 'total';
+        if(a==null) missing.push(f);
+        params[f] = {fija:a, z, base};
+      });
+      if(missing.length){ err.textContent='Falta capturar la renta fija de: '+missing.join(', '); err.style.display='block'; return; }
+    }
+
+    PARAMS = params;
+    const gk = r => scope==='global' ? '__ALL__' : r.familia;
+    const sums = {};
+    rows.forEach(r => { const k=gk(r); sums[k]=(sums[k]||0)+r.rentaSis; });
+
+    calcRows = rows.map(r => {
+      const P = params[gk(r)];
+      const peso = r.rentaSis/(sums[gk(r)]||1);
+      const piso = P.base==='equipo' ? P.fija : P.fija*peso;   // renta fija prorrateada o directa
+      const porPct = r.ingreso*P.z;                            // renta por porcentaje
+      const pagaFija = porPct < piso;
+      const renta = Math.max(porPct, piso);
+      const margen = r.ingreso - r.costo - renta;
+      return {...r, peso, piso, porPct, renta, pagaFija,
+        pRenta: renta/r.ingreso, pCosto: r.costo/r.ingreso,
+        margen, mp: margen/r.ingreso, zPct: P.z};
+    });
+    render();
+  }
+
+  function render(){
+    const q = $$('dxFilter').value.trim().toLowerCase();
+    const vis = calcRows.filter(r => !q || [r.familia,r.cadena,r.plaza,r.ciudad,r.producto,r.codigo,r.modelo,r.region].join(' ').toLowerCase().includes(q));
+    const n = vis.length || 1;
+    const S = (arr,k) => arr.reduce((a,r)=>a+r[k],0);
+    const ing=S(vis,'ingreso')||1, cos=S(vis,'costo'), pisoT=S(vis,'piso'), pctT=S(vis,'porPct'), rT=S(vis,'renta'), mT=S(vis,'margen');
+    const nFija = vis.filter(r=>r.pagaFija).length, nPct = vis.length - nFija;
+
+    $$('dxKIng').textContent = fmt$0(ing);
+    $$('dxKIngS').textContent = (vis.length===1?'1 equipo':vis.length+' equipos')+' · Promedio: '+fmt$0(ing/n);
+    $$('dxKRenta').textContent = fmt$(rT);
+    $$('dxKRentaS').textContent = fmtP(rT/ing)+' de los ingresos';
+    $$('dxKFija').textContent = nFija+' de '+vis.length;
+    $$('dxKPct').textContent = nPct+' de '+vis.length;
+    $$('dxKMarg').textContent = fmt$(mT);
+    $$('dxKMargS').textContent = fmtP(mT/ing)+' del ingreso';
+    $$('dxCount').textContent = vis.length+' de '+calcRows.length+' equipos · '+nFija+' pagando renta fija';
+
+    const famNames = [...new Set(vis.map(r=>r.familia))].sort();
+    if(famNames.length > 1 || scope==='fam'){
+      $$('dxFamSumBody').innerHTML = famNames.map(f => {
+        const g = vis.filter(r=>r.familia===f);
+        const gR=S(g,'renta'), gI=S(g,'ingreso')||1, gM=S(g,'margen'), gF=g.filter(r=>r.pagaFija).length;
+        return `<tr><td>${esc(f)}</td><td>${g.length}</td><td>${fmt$(gR)}</td><td>${fmtP(gR/gI)}</td>
+          <td>${gF} de ${g.length}</td><td>${g.length-gF} de ${g.length}</td>
+          <td class="${gM<0?'neg':''}">${fmt$(gM)}</td><td>${fmtP(gM/gI)}</td></tr>`;
+      }).join('');
+      $$('dxFamSummary').style.display='block';
+    } else $$('dxFamSummary').style.display='none';
+
+    $$('dxRSuma').innerHTML = `
+      <td class="txt" colspan="6">SUMA</td><td class="fB">${fmt$0(ing)}</td>
+      <td class="fB sep">${fmt$0(pisoT)}</td><td class="fB">${fmt$0(pctT)}</td><td class="fB">${fmt$0(rT)}</td>
+      <td class="fO">${fmtP(rT/ing)}</td><td class="fO">${nFija} fija</td>
+      <td class="fB">${fmt$0(cos)}</td><td class="fO">${fmtP(cos/ing)}</td>
+      <td class="fR">${fmt$0(mT)}</td><td class="fO">${fmtP(mT/ing)}</td>`;
+    $$('dxRProm').innerHTML = `
+      <td class="txt" colspan="6">PROMEDIO</td><td class="fO">${fmt$0(ing/n)}</td>
+      <td class="fO sep">${fmt$0(pisoT/n)}</td><td class="fO">${fmt$0(pctT/n)}</td><td class="fO">${fmt$0(rT/n)}</td>
+      <td class="fO">${fmtP(rT/ing)}</td><td class="fO">—</td>
+      <td class="fO">${fmt$0(cos/n)}</td><td class="fO">${fmtP(cos/ing)}</td>
+      <td class="fO">${fmt$0(mT/n)}</td><td class="fO">${fmtP(mT/ing)}</td>`;
+
+    $$('dxTbody').innerHTML = vis.map(r => `
+      <tr>
+        <td class="txt">${esc(r.cadena)}</td><td class="txt">${esc(r.plaza)}</td><td class="txt">${esc(r.ciudad)}</td>
+        <td class="txt">${esc(r.producto)}</td><td class="txt">${esc(r.modelo)}</td><td class="txt">${esc(r.codigo)}</td><td>${fmt$(r.ingreso)}</td>
+        <td class="sep">${fmt$(r.piso)}</td>
+        <td>${fmt$(r.porPct)}</td>
+        <td class="${r.pagaFija?'rFija':'rPct'}" title="${r.pagaFija?'Se paga la renta fija: el % no alcanza el piso':'Se paga el % de ingreso'}">${fmt$(r.renta)}</td>
+        <td>${fmtP(r.pRenta)}</td>
+        <td class="${r.pagaFija?'rFija':'rPct'}">${r.pagaFija?'FIJA':'%'}</td>
+        <td>${fmt$(r.costo)}</td><td>${fmtP(r.pCosto)}</td>
+        <td class="${r.margen<0?'negm':''}">${fmt$(r.margen)}</td><td class="${r.margen<0?'negm':''}">${fmtP(r.mp)}</td>
+      </tr>`).join('');
+
+    $$('dxTfoot').innerHTML = `
+      <tr>
+        <td class="txt" colspan="6">TOTAL (${vis.length})</td><td>${fmt$(ing)}</td>
+        <td class="sep">${fmt$(pisoT)}</td><td>${fmt$(pctT)}</td><td>${fmt$(rT)}</td>
+        <td>${fmtP(rT/ing)}</td><td>${nFija} fija · ${nPct} %</td>
+        <td>${fmt$(cos)}</td><td>${fmtP(cos/ing)}</td>
+        <td class="${mT<0?'neg':''}">${fmt$(mT)}</td><td>${fmtP(mT/ing)}</td>
+      </tr>`;
+
+    $$('dxResults').style.display = 'block';
+    $$('dxCsv').style.display = 'inline-block';
+    $$('dxSnap').style.display = 'inline-block';
+    $$('dxExec').style.display = 'inline-block';
+
+    AGG = {vis, ing, cos, pisoT, pctT, rT, mT, nFija, nPct, n: vis.length};
+    $$('dxExecView').innerHTML = buildDxExec();
+  }
+
+  function buildDxExec(){
+    const A = AGG, ing = A.ing||1, n = A.n||1;
+    const mp = A.mT/ing;
+    const eq = n===1 ? '1 equipo' : n+' equipos';
+    const titulo = uniqOr(A.vis.map(r=>r.producto), 'productos');
+    const subtitulo = [uniqOr(A.vis.map(r=>r.plaza),'plazas'), uniqOr(A.vis.map(r=>r.cadena),'cadenas'), uniqOr(A.vis.map(r=>r.ciudad),'ciudades')].join(' · ');
+    const zRep = A.vis.reduce((a,r)=>a+r.ingreso*r.zPct,0)/ing;
+    const propTone = mp>=0.35 ? 'pGood' : (mp>=0.20 ? 'pWarn' : 'pBad');
+    const quePaga = A.nFija===n ? 'Se paga la RENTA FIJA en todos los equipos'
+                  : A.nFija===0 ? 'Se paga el PORCENTAJE en todos los equipos'
+                  : 'Mixto: '+A.nFija+' pagan la fija y '+A.nPct+' el porcentaje';
+
+    const kpis = [
+      {t:'Ingreso total mensual', v:fmt$0(ing), s:eq+' · Promedio por equipo: '+fmt$0(ing/n)},
+      {t:'Renta pagada total', v:fmt$0(A.rT), s:fmtP(A.rT/ing)+' de los ingresos'},
+      {t:'¿Qué se paga?', v:A.nFija===n?'FIJA':(A.nFija===0?'%':A.nFija+' fija · '+A.nPct+' %'), s:quePaga,
+       tone: A.nFija===n ? 'tAmber' : 'tGreen'},
+      {t:'Margen comercial', v:fmt$0(A.mT)+' · '+fmtP(mp), s:'del ingreso mensual',
+       tone: mp>=0.35 ? 'tGreen' : (mp>=0.20 ? 'tAmber' : 'tRed')}
+    ];
+    const actual = [
+      ['Tipo de renta', scope==='fam' ? 'Mixta · términos por familia' : 'Mixta ('+fmt$0(A.pisoT)+' fija + '+fmtP(zRep)+')','hl'],
+      ['Renta fija (piso)', fmt$0(A.pisoT)],
+      ['Renta por porcentaje (teórica)', fmt$0(A.pctT)],
+      ['Regla del contrato','Se paga el mayor de los dos'],
+      ['Ingreso total mensual', fmt$0(ing)]
+    ];
+    const prop = [
+      ['¿Qué se paga?', quePaga,'hl'],
+      ['Renta pagada total', fmt$0(A.rT)],
+      ['Renta / ingresos', fmtP(A.rT/ing)],
+      ['Equipos en renta fija', A.nFija+' de '+n],
+      ['Equipos en porcentaje', A.nPct+' de '+n],
+      ['Margen comercial', fmt$0(A.mT)+' · '+fmtP(mp),'hl']
+    ];
+    const conclusion = (n===1?'El equipo genera ':'Los '+n+' equipos generan ')+'<b>'+fmt$0(ing)+'</b> mensuales bajo renta mixta'+
+      (scope==='fam'?' con términos por familia':' de <b>'+fmt$0(A.pisoT)+'</b> fija + <b>'+fmtP(zRep)+'</b>')+'. '+
+      quePaga.charAt(0).toUpperCase()+quePaga.slice(1).toLowerCase()+', con una renta pagada de <b>'+fmt$0(A.rT)+'</b> (<b>'+fmtP(A.rT/ing)+'</b> de los ingresos) y un margen comercial de <b>'+fmt$0(A.mT)+' / '+fmtP(mp)+'</b>.';
+
+    let escenario;
+    if(scope==='fam' && PARAMS){
+      const det = Object.keys(PARAMS).sort().map(f => {
+        const P = PARAMS[f];
+        return esc(f)+': '+fmt$0(P.fija)+(P.base==='equipo'?' por equipo':' total')+' + '+fmtP(P.z);
+      }).join('  ·  ');
+      escenario = 'Renta Mixta · Diagnóstico (sin aumento) — '+det;
+    } else {
+      const P = PARAMS && PARAMS['__ALL__'];
+      escenario = 'Renta Mixta · Diagnóstico (sin aumento): '+fmt$0(P?P.fija:A.pisoT)+(P&&P.base==='equipo'?' por equipo':'')+' fija + '+fmtP(zRep);
+    }
+
+    return execHTML({
+      titulo: esc(titulo), subtitulo: esc(subtitulo), escenario,
+      sem: semaforo(mp), kpis, actual, prop, propTone, conclusion,
+      pie: eq+' · '+A.nFija+' en renta fija · '+A.nPct+' en porcentaje'
+    });
+  }
+  $$('dxExec').onclick = () => captureEl($$('dxExecView').firstElementChild, 'diagnostico_renta_mixta.png', '✅ Resumen ejecutivo copiado — pégalo con Ctrl+V');
+
+  $$('dxSnap').onclick = () => { if(!calcRows.length){ toast('Primero calcula el diagnóstico.'); return; } copyAsImage($$('dxTwrap'), 'diagnostico_renta_mixta_tabla.png'); };
+
+  $$('dxCsv').onclick = () => {
+    const H = ['Familia','Region','Ciudad','Cadena','Plaza','Producto','Modelo','Codigo','Ingreso Prom','Costo Prom','Peso','Renta Fija (piso)','Renta por %','Renta Pagada','Paga Fija','% Renta','Margen','% Margen'];
+    const L = calcRows.map(r=>[r.familia,r.region,r.ciudad,r.cadena,r.plaza,r.producto,r.modelo,r.codigo,r.ingreso,r.costo,r.peso,r.piso,r.porPct,r.renta,(r.pagaFija?'SI':'NO'),r.pRenta,r.margen,r.mp]
+      .map(v=>typeof v==='string'?'"'+v.replace(/"/g,'""')+'"':v).join(','));
+    downloadCsv(H, L, 'diagnostico_renta_mixta_'+scope+'.csv');
+  };
+
+  $$('dxCalc').onclick = compute;
+  $$('dxFilter').addEventListener('input', () => calcRows.length && render());
+  $$('dxPaste').addEventListener('input', () => { if(scope==='fam') $$('dxFamRows').innerHTML=''; });
+  $$('dxClear').onclick = () => { $$('dxPaste').value=''; calcRows=[]; fams=[]; $$('dxFamRows').innerHTML=''; $$('dxResults').style.display='none'; $$('dxCsv').style.display='none'; $$('dxSnap').style.display='none'; $$('dxExec').style.display='none'; $$('dxExecView').innerHTML=''; $$('dxErr').style.display='none'; };
+})();
+
+/* ═══════════ HERRAMIENTA 6: DIAGNÓSTICO DE RENTA FIJA (SIN AUMENTO) ═══════════ */
+(function(){
+  let scope='global', calcRows=[], fams=[], AGG=null, PARAMS=null;
+
+  /* Vista previa en vivo de la renta con mantenimiento */
+  function previewTexto(a, m){
+    if(a==null) return '—';
+    return fmt$0(a*(1+(m||0)));
+  }
+  function actualizarPreviewGlobal(){
+    const a = num($$('dfActual').value);
+    const m = (num($$('dfMant').value)||0)/100;
+    $$('dfPreview').value = previewTexto(a, m);
+  }
+  ['dfActual','dfMant'].forEach(id => $$(id).addEventListener('input', actualizarPreviewGlobal));
+
+  function actualizarPreviewsFam(){
+    document.querySelectorAll('#dfFamRows [data-fam-prev]').forEach(td => {
+      const f = td.getAttribute('data-fam-prev');
+      const a = num(document.querySelector(`#dfFamRows [data-fam-a="${CSS.escape(f)}"]`)?.value);
+      const m = (num(document.querySelector(`#dfFamRows [data-fam-m="${CSS.escape(f)}"]`)?.value)||0)/100;
+      td.textContent = previewTexto(a, m);
+    });
+  }
+  $$('dfFamRows').addEventListener('input', actualizarPreviewsFam);
+
+  function setScope(sc){
+    scope = sc;
+    $$('dfSGlobal').classList.toggle('on', sc==='global');
+    $$('dfSFam').classList.toggle('on', sc==='fam');
+    $$('dfGlobalParams').style.display = sc==='global' ? 'grid' : 'none';
+    $$('dfFamBox').style.display = sc==='fam' ? 'block' : 'none';
+    $$('dfDetect').style.display = sc==='fam' ? 'inline-block' : 'none';
+    if(sc==='fam' && !$$('dfFamRows').children.length) detectFams();
+  }
+  $$('dfSGlobal').onclick = () => setScope('global');
+  $$('dfSFam').onclick = () => setScope('fam');
+  $$('dfBase').addEventListener('change', () => {
+    $$('dfLActual').textContent = $$('dfBase').value==='equipo' ? 'Renta fija por equipo ($)' : 'Renta fija del contrato ($)';
+    if(calcRows.length) compute();
+  });
+
+  function detectFams(){
+    const rows = parseRows($$('dfPaste').value);
+    if(!rows.length){ $$('dfErr').textContent='Primero pega los datos para detectar las familias.'; $$('dfErr').style.display='block'; return; }
+    $$('dfErr').style.display='none';
+    const prev = {};
+    fams.forEach(f => prev[f] = {
+      a: document.querySelector(`#dfFamRows [data-fam-a="${CSS.escape(f)}"]`)?.value || '',
+      m: document.querySelector(`#dfFamRows [data-fam-m="${CSS.escape(f)}"]`)?.value || '',
+      b: document.querySelector(`#dfFamRows [data-fam-b="${CSS.escape(f)}"]`)?.value || 'total'
+    });
+    const counts = {};
+    rows.forEach(r => counts[r.familia] = (counts[r.familia]||0)+1);
+    fams = Object.keys(counts).sort();
+    $$('dfFamRows').innerHTML = fams.map(f => `
+      <tr>
+        <td class="fam">${esc(f)} <span class="cnt">(${counts[f]} eq.)</span></td>
+        <td><select data-fam-b="${esc(f)}">
+          <option value="total"${(prev[f]?.b||'total')==='total'?' selected':''}>Total familia</option>
+          <option value="equipo"${prev[f]?.b==='equipo'?' selected':''}>Por equipo</option>
+        </select></td>
+        <td><input type="number" step="0.01" data-fam-a="${esc(f)}" value="${prev[f]?.a||''}" placeholder="fija $"></td>
+        <td><input type="number" step="0.1" min="0" data-fam-m="${esc(f)}" value="${prev[f]?.m||''}" placeholder="0"></td>
+        <td class="fam" data-fam-prev="${esc(f)}" style="font-size:12px;color:var(--navy)">—</td>
+      </tr>`).join('');
+    actualizarPreviewsFam();
+    toast(fams.length+' familia(s) detectada(s)');
+  }
+  $$('dfDetect').onclick = detectFams;
+
+  function compute(){
+    const rows = parseRows($$('dfPaste').value);
+    const err = $$('dfErr'); err.style.display='none';
+    if(!rows.length){ err.textContent='No se detectaron filas válidas. Verifica que pegaste las columnas A–V separadas por tabulador (copia directa desde Excel).'; err.style.display='block'; $$('dfResults').style.display='none'; return; }
+
+    let params = {};
+    if(scope==='global'){
+      const a = num($$('dfActual').value);
+      const m = (num($$('dfMant').value)||0)/100;
+      if(a==null){ err.textContent='Captura la renta fija del contrato.'; err.style.display='block'; return; }
+      params['__ALL__'] = {fija:a, m, base: $$('dfBase').value};
+    } else {
+      if(!$$('dfFamRows').children.length) detectFams();
+      let missing = [];
+      [...new Set(rows.map(r=>r.familia))].forEach(f => {
+        const a = num(document.querySelector(`#dfFamRows [data-fam-a="${CSS.escape(f)}"]`)?.value);
+        const m = (num(document.querySelector(`#dfFamRows [data-fam-m="${CSS.escape(f)}"]`)?.value)||0)/100;
+        const base = document.querySelector(`#dfFamRows [data-fam-b="${CSS.escape(f)}"]`)?.value || 'total';
+        if(a==null) missing.push(f);
+        params[f] = {fija:a, m, base};
+      });
+      if(missing.length){ err.textContent='Falta capturar la renta fija de: '+missing.join(', '); err.style.display='block'; return; }
+    }
+
+    PARAMS = params;
+    const gk = r => scope==='global' ? '__ALL__' : r.familia;
+    const sums = {};
+    rows.forEach(r => { const k=gk(r); sums[k]=(sums[k]||0)+r.rentaSis; });
+
+    calcRows = rows.map(r => {
+      const P = params[gk(r)];
+      const peso = r.rentaSis/(sums[gk(r)]||1);
+      const base = P.base==='equipo' ? P.fija : P.fija*peso;
+      const renta = base*(1+(P.m||0));                        // con mantenimiento
+      const margen = r.ingreso - r.costo - renta;
+      return {...r, peso, renta, margen,
+        pRenta: renta/r.ingreso, pCosto: r.costo/r.ingreso, mp: margen/r.ingreso};
+    });
+    render();
+  }
+
+  function render(){
+    const q = $$('dfFilter').value.trim().toLowerCase();
+    const vis = calcRows.filter(r => !q || [r.familia,r.cadena,r.plaza,r.ciudad,r.producto,r.codigo,r.modelo,r.region].join(' ').toLowerCase().includes(q));
+    const n = vis.length || 1;
+    const S = (arr,k) => arr.reduce((a,r)=>a+r[k],0);
+    const ing=S(vis,'ingreso')||1, cos=S(vis,'costo'), rT=S(vis,'renta'), mT=S(vis,'margen');
+    const enRiesgo = vis.filter(r=>r.margen<0).length;
+
+    $$('dfKIng').textContent = fmt$0(ing);
+    $$('dfKIngS').textContent = (vis.length===1?'1 equipo':vis.length+' equipos')+' · Promedio: '+fmt$0(ing/n);
+    $$('dfKRenta').textContent = fmt$(rT);
+    $$('dfKRentaS').textContent = fmtP(rT/ing)+' de los ingresos';
+    $$('dfKMarg').textContent = fmt$(mT);
+    $$('dfKMargS').textContent = fmtP(mT/ing)+' del ingreso';
+    $$('dfKRiesgo').textContent = enRiesgo+' de '+vis.length;
+    $$('dfKRiesgo').className = 'val '+(enRiesgo>0?'neg':'pos');
+    $$('dfKProm').textContent = fmt$(rT/n);
+    $$('dfKPromS').textContent = 'mensual por equipo';
+    $$('dfCount').textContent = vis.length+' de '+calcRows.length+' equipos'+(enRiesgo?' · '+enRiesgo+' con margen negativo':'');
+
+    const famNames = [...new Set(vis.map(r=>r.familia))].sort();
+    if(famNames.length > 1 || scope==='fam'){
+      $$('dfFamSumBody').innerHTML = famNames.map(f => {
+        const g = vis.filter(r=>r.familia===f);
+        const gI=S(g,'ingreso')||1, gR=S(g,'renta'), gM=S(g,'margen'), gN=g.filter(r=>r.margen<0).length;
+        return `<tr><td>${esc(f)}</td><td>${g.length}</td><td>${fmt$(gI)}</td><td>${fmt$(gR)}</td>
+          <td>${fmtP(gR/gI)}</td>
+          <td class="${gM<0?'neg':''}">${fmt$(gM)}</td><td>${fmtP(gM/gI)}</td>
+          <td class="${gN>0?'neg':''}">${gN>0? gN+' de '+g.length : '—'}</td></tr>`;
+      }).join('');
+      $$('dfFamSummary').style.display='block';
+    } else $$('dfFamSummary').style.display='none';
+
+    $$('dfRSuma').innerHTML = `
+      <td class="txt" colspan="6">SUMA</td><td class="fB">${fmt$0(ing)}</td>
+      <td class="fB sep">${fmt$0(rT)}</td><td class="fO">${fmtP(rT/ing)}</td>
+      <td class="fB">${fmt$0(cos)}</td><td class="fO">${fmtP(cos/ing)}</td>
+      <td class="fR">${fmt$0(mT)}</td><td class="fO">${fmtP(mT/ing)}</td><td class="fO">${enRiesgo} en rojo</td>`;
+    $$('dfRProm').innerHTML = `
+      <td class="txt" colspan="6">PROMEDIO</td><td class="fO">${fmt$0(ing/n)}</td>
+      <td class="fO sep">${fmt$0(rT/n)}</td><td class="fO">${fmtP(rT/ing)}</td>
+      <td class="fO">${fmt$0(cos/n)}</td><td class="fO">${fmtP(cos/ing)}</td>
+      <td class="fO">${fmt$0(mT/n)}</td><td class="fO">${fmtP(mT/ing)}</td><td class="fO">—</td>`;
+
+    $$('dfTbody').innerHTML = vis.map(r => `
+      <tr>
+        <td class="txt">${esc(r.cadena)}</td><td class="txt">${esc(r.plaza)}</td><td class="txt">${esc(r.ciudad)}</td>
+        <td class="txt">${esc(r.producto)}</td><td class="txt">${esc(r.modelo)}</td><td class="txt">${esc(r.codigo)}</td><td>${fmt$(r.ingreso)}</td>
+        <td class="sep">${fmt$(r.renta)}</td>
+        <td class="${r.pRenta>1?'negm':''}">${fmtP(r.pRenta)}</td>
+        <td>${fmt$(r.costo)}</td><td>${fmtP(r.pCosto)}</td>
+        <td class="${r.margen<0?'negm':''}">${fmt$(r.margen)}</td><td class="${r.margen<0?'negm':''}">${fmtP(r.mp)}</td>
+        <td class="${r.margen<0?'rFija':'rPct'}">${r.margen<0?'RIESGO':'OK'}</td>
+      </tr>`).join('');
+
+    $$('dfTfoot').innerHTML = `
+      <tr>
+        <td class="txt" colspan="6">TOTAL (${vis.length})</td><td>${fmt$(ing)}</td>
+        <td class="sep">${fmt$(rT)}</td><td>${fmtP(rT/ing)}</td>
+        <td>${fmt$(cos)}</td><td>${fmtP(cos/ing)}</td>
+        <td class="${mT<0?'neg':''}">${fmt$(mT)}</td><td>${fmtP(mT/ing)}</td>
+        <td>${enRiesgo>0? enRiesgo+' en riesgo':'OK'}</td>
+      </tr>`;
+
+    $$('dfResults').style.display = 'block';
+    $$('dfCsv').style.display = 'inline-block';
+    $$('dfSnap').style.display = 'inline-block';
+    $$('dfExec').style.display = 'inline-block';
+
+    AGG = {vis, ing, cos, rT, mT, enRiesgo, n: vis.length};
+    $$('dfExecView').innerHTML = buildDfExec();
+  }
+
+  function buildDfExec(){
+    const A = AGG, ing = A.ing||1, n = A.n||1;
+    const mp = A.mT/ing;
+    const eq = n===1 ? '1 equipo' : n+' equipos';
+    const titulo = uniqOr(A.vis.map(r=>r.producto), 'productos');
+    const subtitulo = [uniqOr(A.vis.map(r=>r.plaza),'plazas'), uniqOr(A.vis.map(r=>r.cadena),'cadenas'), uniqOr(A.vis.map(r=>r.ciudad),'ciudades')].join(' · ');
+    const propTone = mp>=0.35 ? 'pGood' : (mp>=0.20 ? 'pWarn' : 'pBad');
+    const P = PARAMS && PARAMS['__ALL__'];
+    const conMant = scope==='global' ? (P&&P.m>0) : Object.values(PARAMS||{}).some(x=>x.m>0);
+
+    const kpis = [
+      {t:'Ingreso total mensual', v:fmt$0(ing), s:eq+' · Promedio por equipo: '+fmt$0(ing/n)},
+      {t:'Renta pagada total', v:fmt$0(A.rT), s:fmtP(A.rT/ing)+' de los ingresos'},
+      {t:'Margen comercial', v:fmt$0(A.mT)+' · '+fmtP(mp), s:'del ingreso mensual',
+       tone: mp>=0.35 ? 'tGreen' : (mp>=0.20 ? 'tAmber' : 'tRed')},
+      {t:'Equipos con margen negativo', v:A.enRiesgo+' de '+n, s:A.enRiesgo>0?'la renta supera lo que dejan':'todos los equipos son rentables',
+       tone: A.enRiesgo>0 ? 'tRed' : 'tGreen'}
+    ];
+    const actual = [
+      ['Tipo de renta','Fija','hl'],
+      ['Renta fija del contrato', scope==='fam' ? 'Por familia' : fmt$0(P.fija)+(P.base==='equipo'?' por equipo':' total')],
+      ...(conMant ? [['Mantenimiento','Incluido en la renta pagada']] : []),
+      ['Ingreso total mensual', fmt$0(ing)],
+      ['Ingreso promedio por equipo', fmt$0(ing/n)]
+    ];
+    const prop = [
+      ['Situación actual', A.enRiesgo>0 ? A.enRiesgo+' equipo(s) en números rojos' : 'Operación rentable','hl'],
+      ['Renta pagada total', fmt$0(A.rT)],
+      ['Renta / ingresos', fmtP(A.rT/ing)],
+      ['Renta promedio por equipo', fmt$0(A.rT/n)],
+      ['Equipos con margen negativo', A.enRiesgo+' de '+n],
+      ['Margen comercial', fmt$0(A.mT)+' · '+fmtP(mp),'hl']
+    ];
+    const conclusion = (n===1?'El equipo genera ':'Los '+n+' equipos generan ')+'<b>'+fmt$0(ing)+'</b> mensuales y pagan <b>'+fmt$0(A.rT)+'</b> de renta fija'+(conMant?' (mantenimiento incluido)':'')+', equivalente al <b>'+fmtP(A.rT/ing)+'</b> de los ingresos, dejando un margen comercial de <b>'+fmt$0(A.mT)+' / '+fmtP(mp)+'</b>. '+
+      (A.enRiesgo>0 ? '<b>'+A.enRiesgo+' equipo(s)</b> operan con margen negativo: su renta prorrateada supera lo que generan y conviene revisarlos (reubicación, retiro o renegociación).' : 'Todos los equipos operan con margen positivo bajo la renta actual.');
+
+    let escenario;
+    if(scope==='fam' && PARAMS){
+      const det = Object.keys(PARAMS).sort().map(f => {
+        const X = PARAMS[f];
+        return esc(f)+': '+fmt$0(X.fija)+(X.base==='equipo'?' por equipo':' total')+(X.m>0?' +'+fmtP(X.m)+' mant.':'');
+      }).join('  ·  ');
+      escenario = 'Renta Fija · Diagnóstico (sin aumento) — '+det;
+    } else {
+      escenario = 'Renta Fija · Diagnóstico (sin aumento): '+fmt$0(P.fija)+(P.base==='equipo'?' por equipo':'')+(P.m>0?' + '+fmtP(P.m)+' de mantenimiento':'');
+    }
+
+    return execHTML({
+      titulo: esc(titulo), subtitulo: esc(subtitulo), escenario,
+      sem: semaforo(mp), kpis, actual, prop, propTone, conclusion,
+      pie: eq+(A.enRiesgo?' · '+A.enRiesgo+' con margen negativo':' · todos rentables')
+    });
+  }
+  $$('dfExec').onclick = () => captureEl($$('dfExecView').firstElementChild, 'diagnostico_renta_fija.png', '✅ Resumen ejecutivo copiado — pégalo con Ctrl+V');
+
+  $$('dfSnap').onclick = () => { if(!calcRows.length){ toast('Primero calcula el diagnóstico.'); return; } copyAsImage($$('dfTwrap'), 'diagnostico_renta_fija_tabla.png'); };
+
+  $$('dfCsv').onclick = () => {
+    const H = ['Familia','Region','Ciudad','Cadena','Plaza','Producto','Modelo','Codigo','Ingreso Prom','Costo Prom','Peso','Renta Fija','% Renta','Margen','% Margen','En Riesgo'];
+    const L = calcRows.map(r=>[r.familia,r.region,r.ciudad,r.cadena,r.plaza,r.producto,r.modelo,r.codigo,r.ingreso,r.costo,r.peso,r.renta,r.pRenta,r.margen,r.mp,(r.margen<0?'SI':'NO')]
+      .map(v=>typeof v==='string'?'"'+v.replace(/"/g,'""')+'"':v).join(','));
+    downloadCsv(H, L, 'diagnostico_renta_fija_'+scope+'.csv');
+  };
+
+  $$('dfCalc').onclick = compute;
+  $$('dfFilter').addEventListener('input', () => calcRows.length && render());
+  $$('dfPaste').addEventListener('input', () => { if(scope==='fam') $$('dfFamRows').innerHTML=''; });
+  $$('dfClear').onclick = () => { $$('dfPaste').value=''; calcRows=[]; fams=[]; $$('dfFamRows').innerHTML=''; $$('dfResults').style.display='none'; $$('dfCsv').style.display='none'; $$('dfSnap').style.display='none'; $$('dfExec').style.display='none'; $$('dfExecView').innerHTML=''; $$('dfErr').style.display='none'; $$('dfPreview').value='—'; };
 })();
 </script>
 </body>
