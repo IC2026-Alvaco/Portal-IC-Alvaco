@@ -108,10 +108,10 @@ const DASHBOARDS = [
     nombre: "Reporte Inventario",
     descripcion: "Consulta y filtrado del inventario de equipos por plaza, cadena y estatus.",
     categoria: "Herramientas IC",
-    color: "blue",
+    color: "red",
     tipo: "web",     /* ← herramienta HTML propia */
     soloIC: true,    /* ← EXCLUSIVO EQUIPO IC */
-    imagen: "img/maquina_sin_fondo.png",
+    imagen: "img/oso otto real.png",
     embed: "Reporte_Inventario.html",
     url: "Reporte_Inventario.html"
   },
