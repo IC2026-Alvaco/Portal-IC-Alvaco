@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte de Inventario</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{--azul:#1f4e79;--azul2:#2e6da4;--gris:#f4f6f8;--borde:#d8dee6;--verde:#1e7e34;}
+  *{box-sizing:border-box;}
+  body{font-family:'Segoe UI',Arial,sans-serif;margin:0;background:var(--gris);color:#222;}
+  header{background:var(--azul);color:#fff;padding:18px 24px;}
+  header h1{margin:0;font-size:20px;}
+  header p{margin:4px 0 0;font-size:13px;opacity:.85;}
+  .wrap{max-width:900px;margin:24px auto;padding:0 16px;}
+  .card{background:#fff;border:1px solid var(--borde);border-radius:10px;padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  #drop{border:2px dashed var(--azul2);border-radius:10px;padding:40px;text-align:center;cursor:pointer;transition:.2s;color:#555;}
+  #drop.over{background:#eaf2fb;border-color:var(--azul);}
+  #drop strong{color:var(--azul);}
+  .row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:14px;}
+  label{font-size:13px;font-weight:600;color:#444;}
+  input[type=date]{padding:7px 10px;border:1px solid var(--borde);border-radius:6px;font-size:14px;}
+  .btn{background:var(--azul);color:#fff;border:none;padding:9px 16px;border-radius:6px;font-size:14px;cursor:pointer;}
+  .btn:hover{background:var(--azul2);}
+  .btn.alt{background:#fff;color:var(--azul);border:1px solid var(--azul);}
+  .btn.green{background:var(--verde);}
+  .hidden{display:none;}
+  .msg{font-size:14px;line-height:1.55;}
+  table{border-collapse:collapse;width:100%;margin-top:10px;font-size:13px;}
+  th,td{border:1px solid var(--borde);padding:6px 9px;}
+  th{background:var(--azul);color:#fff;text-align:left;}
+  td.num,th.num{text-align:right;}
+  tr.prodrow td:first-child{font-weight:700;}
+  tr.total td{font-weight:700;background:#eaf2fb;}
+  .err{color:#b00020;font-size:13px;margin-top:10px;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 18px;border-radius:6px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;}
+  .toast.show{opacity:1;}
+  .pill{display:inline-block;background:#eaf2fb;color:var(--azul);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;margin-right:6px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Reporte de Inventario</h1>
+  <p>Carga el Excel y se genera el mensaje con el resumen (estatus Disponible y Nuevo).</p>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <div id="drop">
+      <p style="font-size:34px;margin:0">📊</p>
+      <p>Arrastra aquí el archivo <strong>.xlsx</strong> o <strong>haz clic para seleccionarlo</strong></p>
+      <p style="font-size:12px;color:#888">Debe contener columnas: PRODUCTO, MODELO y ESTATUS REAL</p>
+    </div>
+    <input type="file" id="file" accept=".xlsx,.xls" class="hidden">
+    <div class="row">
+      <label>Fecha de actualización:
+        <input type="date" id="fecha">
+      </label>
+      <span id="info"></span>
+    </div>
+    <div id="error" class="err"></div>
+  </div>
+
+  <div id="resultado" class="card hidden">
+    <div class="row" style="justify-content:flex-end;margin-bottom:6px">
+      <button class="btn alt" id="copyTexto">📋 Copiar texto</button>
+      <button class="btn alt" id="copyHtml">📋 Copiar con formato (Outlook/Gmail)</button>
+      <button class="btn green" id="descargar">⬇️ Descargar Excel</button>
+    </div>
+    <div id="mensaje" class="msg"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let lastPivot = null;
+
+// fecha por defecto = hoy
+(function(){ $('fecha').valueAsDate = new Date(); })();
+
+const drop = $('drop'), fileInput = $('file');
+drop.addEventListener('click', ()=>fileInput.click());
+drop.addEventListener('dragover', e=>{e.preventDefault();drop.classList.add('over');});
+drop.addEventListener('dragleave', ()=>drop.classList.remove('over'));
+drop.addEventListener('drop', e=>{
+  e.preventDefault();drop.classList.remove('over');
+  if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e=>{ if(e.target.files.length) handleFile(e.target.files[0]); });
+$('fecha').addEventListener('change', ()=>{ if(lastPivot) render(); });
+
+function norm(s){ return (s==null?'':String(s)).trim(); }
+function up(s){ return norm(s).toUpperCase(); }
+
+function handleFile(file){
+  $('error').textContent='';
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      procesar(rows, file.name);
+    }catch(err){
+      $('error').textContent = 'No se pudo leer el archivo: '+err.message;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function procesar(rows, nombre){
+  if(!rows.length){ $('error').textContent='El archivo está vacío.'; return; }
+  // localizar encabezados
+  const hdr = rows[0].map(h=>up(h));
+  const findCol = (...keys)=> hdr.findIndex(h=> keys.some(k=> h.includes(k)));
+  const iProd = findCol('PRODUCTO');
+  const iMod  = findCol('MODELO');
+  const iEst  = findCol('ESTATUS','ESTADO');
+  if(iProd<0||iMod<0||iEst<0){
+    $('error').textContent='No se encontraron las columnas PRODUCTO, MODELO o ESTATUS REAL.';
+    return;
+  }
+  const piv = {}; // prod -> mod -> {DISPONIBLE, NUEVO}
+  let gd=0, gn=0, totalFilas=0;
+  for(let r=1;r<rows.length;r++){
+    const row = rows[r];
+    if(!row || norm(row[iProd])==='' && norm(row[iMod])==='') continue;
+    const est = up(row[iEst]);
+    if(est!=='DISPONIBLE' && est!=='NUEVO') continue;
+    const prod = norm(row[iProd]) || '(Sin producto)';
+    const mod  = norm(row[iMod])  || '(Sin modelo)';
+    piv[prod] = piv[prod] || {};
+    piv[prod][mod] = piv[prod][mod] || {DISPONIBLE:0, NUEVO:0};
+    piv[prod][mod][est]++;
+    if(est==='DISPONIBLE') gd++; else gn++;
+    totalFilas++;
+  }
+  if(totalFilas===0){
+    $('error').textContent='No se encontraron filas con estatus DISPONIBLE o NUEVO.';
+    return;
+  }
+  lastPivot = {piv, gd, gn, nombre};
+  $('info').innerHTML = '<span class="pill">Archivo: '+nombre+'</span><span class="pill">'+(gd+gn)+' unidades</span>';
+  render();
+}
+
+function fechaTexto(){
+  const v = $('fecha').value;
+  if(!v) return '';
+  const [y,m,d] = v.split('-');
+  return d+'/'+m+'/'+y;
+}
+
+function render(){
+  const {piv, gd, gn} = lastPivot;
+  const prods = Object.keys(piv).sort((a,b)=>a.localeCompare(b,'es'));
+  let filas='';
+  for(const p of prods){
+    const mods = Object.keys(piv[p]).sort((a,b)=>a.localeCompare(b,'es'));
+    mods.forEach((m,idx)=>{
+      const d = piv[p][m].DISPONIBLE, n = piv[p][m].NUEVO, t = d+n;
+      filas += '<tr class="prodrow">'+
+        '<td>'+(idx===0?escapa(p):'')+'</td>'+
+        '<td>'+escapa(m)+'</td>'+
+        '<td class="num">'+(d||'–')+'</td>'+
+        '<td class="num">'+(n||'–')+'</td>'+
+        '<td class="num">'+t+'</td></tr>';
+    });
+  }
+  filas += '<tr class="total"><td>TOTAL GENERAL</td><td></td><td class="num">'+gd+'</td><td class="num">'+gn+'</td><td class="num">'+(gd+gn)+'</td></tr>';
+
+  const tabla = '<table><thead><tr><th>Producto</th><th>Modelo</th>'+
+    '<th class="num">Disponible</th><th class="num">Nuevo</th><th class="num">Total</th></tr></thead><tbody>'+filas+'</tbody></table>';
+
+  $('mensaje').innerHTML =
+    '<p><strong>Asunto:</strong> Reporte de Inventarios Actualizado</p>'+
+    '<p>Buen día,</p>'+
+    '<p>El inventario ya se encuentra actualizado al <strong>'+fechaTexto()+'</strong>. '+
+    'A continuación el resumen por producto y modelo (estatus Disponible y Nuevo):</p>'+
+    tabla+
+    '<p>Quedo atento a cualquier duda.</p>'+
+    '<p>Saludos,<br>David Castillo</p>';
+
+  $('resultado').classList.remove('hidden');
+}
+
+function escapa(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1800); }
+
+// Copiar texto plano
+$('copyTexto').addEventListener('click', ()=>{
+  const tmp = $('mensaje').cloneNode(true);
+  // convertir tabla a texto tabulado
+  let txt = $('mensaje').innerText;
+  navigator.clipboard.writeText(txt).then(()=>toast('Texto copiado'));
+});
+
+// Copiar con formato HTML (para pegar en Outlook/Gmail)
+$('copyHtml').addEventListener('click', async ()=>{
+  const html = $('mensaje').innerHTML;
+  try{
+    await navigator.clipboard.write([new ClipboardItem({
+      'text/html': new Blob([html],{type:'text/html'}),
+      'text/plain': new Blob([$('mensaje').innerText],{type:'text/plain'})
+    })]);
+    toast('Copiado con formato');
+  }catch(e){
+    navigator.clipboard.writeText($('mensaje').innerText).then(()=>toast('Copiado como texto'));
+  }
+});
+
+// Descargar Excel con el resumen
+$('descargar').addEventListener('click', ()=>{
+  const {piv, gd, gn} = lastPivot;
+  const data = [['Producto','Modelo','Disponible','Nuevo','Total']];
+  const prods = Object.keys(piv).sort((a,b)=>a.localeCompare(b,'es'));
+  for(const p of prods){
+    const mods = Object.keys(piv[p]).sort((a,b)=>a.localeCompare(b,'es'));
+    mods.forEach((m,idx)=>{
+      const d=piv[p][m].DISPONIBLE,n=piv[p][m].NUEVO;
+      data.push([idx===0?p:'',m,d,n,d+n]);
+    });
+  }
+  data.push(['TOTAL GENERAL','',gd,gn,gd+gn]);
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[{wch:24},{wch:30},{wch:11},{wch:9},{wch:9}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Resumen');
+  XLSX.writeFile(wb,'Resumen_Inventario_'+($('fecha').value||'')+'.xlsx');
+});
+</script>
+</body>
+</html>
