@@ -96,7 +96,7 @@ const DASHBOARDS = [
     url: ""
   },
   {
-    nombre: "Altec",
+    nombre: "Instalaciones",
     descripcion: "Instalaciones de equipos.",
     categoria: "Instalaciones",
     color: "green",
@@ -113,7 +113,20 @@ const DASHBOARDS = [
     embed: "https://app.powerbi.com/reportEmbed?reportId=96e39bfc-73e5-4fe7-bc95-902ac7e9c95b&autoAuth=true&ctid=923eb367-abae-4010-9989-b7cf33fb74a7",
     url: "https://app.powerbi.com/links/_THlr15aY4?ctid=923eb367-abae-4010-9989-b7cf33fb74a7&pbi_source=linkShare"
   },
-  
+  {
+    nombre: "Tiendas Neto",
+    descripcion: "Ingreso, renta y equipos por estado, plaza y precio de juego.",
+    categoria: "Ingresos",
+    color: "red",
+    imagen: "img/maquina_sin_fondo.png",
+    /* ── DESACTIVADO TEMPORALMENTE ──
+       Para reactivarlo, restaura estas dos líneas:
+       embed: "https://app.powerbi.com/reportEmbed?reportId=c89958f5-bfbe-4950-a686-8974525da509&autoAuth=true&ctid=923eb367-abae-4010-9989-b7cf33fb74a7",
+       url: "https://app.powerbi.com/links/GdfBrn1uXa?ctid=923eb367-abae-4010-9989-b7cf33fb74a7&pbi_source=linkShare"
+    */
+    embed: "",
+    url: ""
+  },
   {
     nombre: "Análisis de Renta",
     descripcion: "Simula escenarios de renta mixta y prorrateo de renta fija: compara renta y margen actual vs. nuevo.",
@@ -173,16 +186,6 @@ const DASHBOARDS = [
     imagen: "img/oso_constructor_transparente.png",
     embed: "https://apps.powerapps.com/play/e/default-923eb367-abae-4010-9989-b7cf33fb74a7/a/37998833-3d4f-485d-9e16-0f4a8d37e341?tenantId=923eb367-abae-4010-9989-b7cf33fb74a7&source=portal-ic&hideNavBar=true",
     url: "https://apps.powerapps.com/play/e/default-923eb367-abae-4010-9989-b7cf33fb74a7/a/37998833-3d4f-485d-9e16-0f4a8d37e341?tenantId=923eb367-abae-4010-9989-b7cf33fb74a7"
-  },
-  {
-    nombre: "Tiendas Neto",
-    descripcion: "Ingreso, renta y equipos por estado, plaza y precio de juego.",
-    categoria: "Ingresos",
-    color: "red",
-    soloIC: true,
-    imagen: "img/maquina_sin_fondo.png",
-    embed: "https://app.powerbi.com/reportEmbed?reportId=c89958f5-bfbe-4950-a686-8974525da509&autoAuth=true&ctid=923eb367-abae-4010-9989-b7cf33fb74a7",
-    url: "https://app.powerbi.com/links/GdfBrn1uXa?ctid=923eb367-abae-4010-9989-b7cf33fb74a7&pbi_source=linkShare"
   }
   /* Agrega más dashboards copiando la estructura anterior.
      La última entrada NO lleva coma al final.               */
@@ -281,6 +284,14 @@ const PERFIL_FOTOS = {
   /* Rutas manuales (tienen prioridad):
      "david.castillo@alvaco.com.mx": "img/perfiles/david.jpg", */
 };
+
+/* Foto del perfil de Microsoft 365 (la del correo).
+   El portal la pide a Outlook con la sesión que ya tiene abierta
+   el navegador. Si el equipo bloquea cookies de terceros o no hay
+   sesión de M365, no pasa nada: cae al archivo local y, si tampoco
+   existe, a las iniciales. Ponlo en false para no intentarlo.   */
+const PERFIL_FOTO_M365 = true;
+const PERFIL_M365_URL  = 'https://outlook.office.com/owa/service.svc/s/GetPersonaPhoto?email={correo}&UA=0&size=HR648x648';
 const PERFIL_PALETA = ['#2D7DD2','#17A2A6','#22A55B','#E8A020','#7C4DD2','#E2486B'];
 
 /* ---------- 4) COLORES DEL SALUDO ----------
@@ -661,7 +672,7 @@ function errorPortal(msg){
 
 /* Freno tras varios intentos fallidos (aguanta recargas de página) */
 const PORTAL_INTENTOS_MAX = 5;
-const PORTAL_ESPERA_SEG   = 60;
+const PORTAL_ESPERA_SEG   = 120;
 
 function portalBloqueoRestante(){
   try {
@@ -824,12 +835,32 @@ function pfColor(correo){
 function pfEsIC(correo){
   return IC_EMAILS.map(e => e.toLowerCase().trim()).includes((correo || '').toLowerCase());
 }
+/* Orden en que se busca la foto: ruta manual · archivo local ·
+   Microsoft 365. Si ninguna carga, quedan las iniciales.       */
+function pfFuentesFoto(correo){
+  const fuentes = [];
+  if (PERFIL_FOTOS[correo]) fuentes.push(PERFIL_FOTOS[correo]);
+  if (PERFIL_FOTO_AUTO)  fuentes.push(PERFIL_RUTA_FOTOS + pfUser(correo) + '.png');
+  if (PERFIL_FOTO_M365)  fuentes.push(PERFIL_M365_URL.replace('{correo}', encodeURIComponent(correo)));
+  return fuentes;
+}
+
+/* Al fallar una fuente, prueba la siguiente; al agotarlas, se quita */
+function pfSiguienteFoto(img){
+  let fuentes = [];
+  try { fuentes = JSON.parse(img.dataset.fuentes); } catch(e){}
+  const i = parseInt(img.dataset.i || '0', 10) + 1;
+  if (i < fuentes.length){ img.dataset.i = i; img.src = fuentes[i]; }
+  else img.remove();
+}
+
 function pfAvatar(correo, extra){
-  const src = PERFIL_FOTOS[correo] ||
-    (PERFIL_FOTO_AUTO ? PERFIL_RUTA_FOTOS + pfUser(correo) + '.png' : '');
+  const fuentes = pfFuentesFoto(correo);
+  const datos = JSON.stringify(fuentes).replace(/"/g, '&quot;');
   return `<span class="avatar ${extra || ''}" style="--av:${pfColor(correo)}">
       <span class="avatar-ini">${pfIniciales(correo)}</span>
-      ${src ? `<img src="${src}" alt="" onerror="this.remove()">` : ''}
+      ${fuentes.length ? `<img src="${fuentes[0]}" alt="" referrerpolicy="no-referrer"
+         data-fuentes="${datos}" data-i="0" onerror="pfSiguienteFoto(this)">` : ''}
     </span>`;
 }
 function letrasMunelocos(texto){
@@ -1040,10 +1071,11 @@ async function guardarCambioPassPortal(){
   };
   if (!(await validarPassPortal(correo, pfPassActual.value)))
     return falla('La contraseña actual no es correcta.', pfPassActual);
-  if (pfPassNueva.value.length < 8)
-    return falla('La nueva contraseña debe tener al menos 8 caracteres.', pfPassNueva);
+  /* La contraseña personal del portal es un NIP de 3 dígitos */
+  if (!/^\d{3}$/.test(pfPassNueva.value))
+    return falla('Tu NIP debe ser de 3 números, sin letras ni espacios.', pfPassNueva);
   if (pfPassNueva.value !== pfPassConfirma.value)
-    return falla('La confirmación no coincide con la nueva contraseña.', pfPassConfirma);
+    return falla('La confirmación no coincide con el NIP que escribiste.', pfPassConfirma);
 
   const hashNuevo = await hashIC(pfPassNueva.value);
   try { localStorage.setItem('alvaco-portal-pass-' + correo, hashNuevo); } catch(e){}

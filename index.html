@@ -226,10 +226,12 @@
       <div class="ic-login-error" id="pfPassError">Revisa los datos.</div>
       <label for="pfPassActual">Contraseña actual</label>
       <input type="password" id="pfPassActual" autocomplete="current-password" placeholder="La tuya o la general del equipo">
-      <label for="pfPassNueva">Nueva contraseña</label>
-      <input type="password" id="pfPassNueva" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
-      <label for="pfPassConfirma">Confirmar nueva contraseña</label>
-      <input type="password" id="pfPassConfirma" autocomplete="new-password" placeholder="Repite la nueva contraseña">
+      <label for="pfPassNueva">Nuevo NIP · 3 números</label>
+      <input type="password" id="pfPassNueva" autocomplete="new-password" placeholder="Ejemplo: 407"
+             inputmode="numeric" maxlength="3" pattern="[0-9]*">
+      <label for="pfPassConfirma">Confirmar NIP</label>
+      <input type="password" id="pfPassConfirma" autocomplete="new-password" placeholder="Repite los 3 números"
+             inputmode="numeric" maxlength="3" pattern="[0-9]*">
       <div class="ic-login-acciones">
         <button class="ic-btn-cancelar" id="pfPassCancelar">Cancelar</button>
         <button class="ic-btn-entrar" id="pfPassGuardar">
