@@ -14,7 +14,8 @@
 <!-- Estilos y lógica del portal en archivos separados: style.css y script.js -->
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<!-- El portal nace bloqueado: script.js quita la clase al validar la sesión -->
+<body class="portal-cerrado">
 
 <div class="app">
 
@@ -50,8 +51,14 @@
         <div class="hero-chips" id="heroChips"></div>
       </div>
       <div class="hero-side">
-        <div class="hero-reloj" aria-label="Hora actual">
-          <span id="relojHora">--:--</span><span class="reloj-seg" id="relojSeg">--</span>
+        <div class="hero-side-top">
+          <div class="hero-reloj" aria-label="Hora actual">
+            <span id="relojHora">--:--</span><span class="reloj-seg" id="relojSeg">--</span>
+          </div>
+          <!-- Avatar de perfil: script.js dibuja la foto o las iniciales -->
+          <div class="perfil-wrap" id="perfilWrap">
+            <button class="avatar-btn" id="avatarBtn" aria-haspopup="menu" aria-expanded="false" title="Mi cuenta"></button>
+          </div>
         </div>
         <div class="search">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
@@ -142,6 +149,134 @@
       </div>
       <iframe id="visorFrame" title="Visor de contenido" allowfullscreen
               allow="geolocation; microphone; camera; clipboard-write"></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== LOGIN GENERAL DEL PORTAL ==================== -->
+<div class="portal-login-overlay" id="portalLoginOverlay" role="dialog" aria-modal="true" aria-labelledby="portalLoginTitulo">
+  <div class="portal-login-card animate__animated animate__fadeInUp animate__faster" id="portalLoginCard">
+
+    <!-- Panel de imagen: la foto se define en script.js (PORTAL_LOGIN_IMAGEN) -->
+    <aside class="portal-visual" id="portalVisual">
+      <img src="img/logo-alvaco-transparente.png" alt="ALVACO" class="portal-visual-logo">
+      <div class="portal-visual-texto">
+        <h2 id="portalLoginTitulo">Portal de Dashboards</h2>
+        <p>Comercialización · Inteligencia Comercial</p>
+      </div>
+      <img src="img/logo-munelocos-transparente.png" alt="Muñelocos" class="portal-visual-marca">
+    </aside>
+
+    <!-- Formulario -->
+    <section class="portal-form">
+      <h3 id="portalSaludo">Iniciar Sesión</h3>
+      <p class="portal-form-sub">Inicia sesión con tu correo corporativo de ALVACO.</p>
+
+      <div class="portal-aviso" id="portalAviso"></div>
+      <div class="ic-login-error" id="portalLoginError">Correo o contraseña incorrectos.</div>
+
+      <label for="portalLoginCorreo">Correo corporativo</label>
+      <div class="portal-campo">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+        <input type="email" id="portalLoginCorreo" placeholder="nombre@alvaco.com.mx" autocomplete="username" inputmode="email">
+      </div>
+
+      <label for="portalLoginPass">Contraseña</label>
+      <div class="portal-campo">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        <input type="password" id="portalLoginPass" placeholder="••••••••••" autocomplete="current-password">
+        <button type="button" class="portal-ojo" id="portalVerPass" title="Mostrar contraseña" aria-label="Mostrar contraseña"></button>
+      </div>
+      <p class="portal-caps" id="portalCaps">Bloq Mayús está activado</p>
+
+      <label class="portal-check"><input type="checkbox" id="portalLoginRecordar" checked> Mantener sesión en este equipo</label>
+
+      <button class="portal-btn-entrar" id="portalLoginEntrar">
+        <span class="portal-btn-spinner" aria-hidden="true"></span>
+        <span class="portal-btn-texto">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Entrar al portal
+        </span>
+      </button>
+
+      <p class="portal-login-pie">¿No puedes entrar? Contacta al equipo de Inteligencia Comercial.</p>
+      <p class="portal-login-copy">© 2026 ALVACO Enterprises · Muñelocos</p>
+    </section>
+  </div>
+</div>
+
+<!-- ==================== PERFIL: VELO Y PANEL ==================== -->
+<!-- Viven fuera de .app para que el hero no los recorte -->
+<div class="perfil-backdrop" id="perfilBackdrop"></div>
+<div class="perfil-panel" id="perfilPanel" role="menu" aria-labelledby="avatarBtn"></div>
+
+<!-- ==================== CAMBIO DE CONTRASEÑA DEL PORTAL ==================== -->
+<div class="ic-login-overlay" id="pfPassOverlay" role="dialog" aria-modal="true" aria-labelledby="pfPassTitulo">
+  <div class="ic-login-card animate__animated animate__zoomIn animate__faster">
+    <div class="ic-login-head">
+      <div class="ic-banner-icono">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3"/></svg>
+      </div>
+      <div>
+        <h3 id="pfPassTitulo">Cambiar contraseña</h3>
+        <p id="pfPassSub">Acceso al portal</p>
+      </div>
+    </div>
+    <div class="ic-login-body" id="pfPassForm">
+      <div class="ic-login-error" id="pfPassError">Revisa los datos.</div>
+      <label for="pfPassActual">Contraseña actual</label>
+      <input type="password" id="pfPassActual" autocomplete="current-password" placeholder="La tuya o la general del equipo">
+      <label for="pfPassNueva">Nueva contraseña</label>
+      <input type="password" id="pfPassNueva" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
+      <label for="pfPassConfirma">Confirmar nueva contraseña</label>
+      <input type="password" id="pfPassConfirma" autocomplete="new-password" placeholder="Repite la nueva contraseña">
+      <div class="ic-login-acciones">
+        <button class="ic-btn-cancelar" id="pfPassCancelar">Cancelar</button>
+        <button class="ic-btn-entrar" id="pfPassGuardar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Guardar
+        </button>
+      </div>
+    </div>
+    <div class="ic-login-body ic-pass-exito" id="pfPassExito">
+      <div class="ic-pass-check">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      </div>
+      <h4>Contraseña actualizada en este equipo</h4>
+      <p>Para que tu nueva contraseña funcione también en <strong>cualquier otro equipo</strong>, envíale este código al administrador del portal (David) para registrarla:</p>
+      <div class="ic-pass-codigo" id="pfPassCodigo" title="Clic para copiar"></div>
+      <div class="ic-login-acciones">
+        <button class="ic-btn-cancelar" id="pfPassCopiar">Copiar código</button>
+        <button class="ic-btn-entrar" id="pfPassListo">Listo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ATAJOS ==================== -->
+<div class="ic-login-overlay" id="pfAtajos" role="dialog" aria-modal="true" aria-labelledby="pfAtajosTitulo">
+  <div class="ic-login-card animate__animated animate__zoomIn animate__faster">
+    <div class="ic-login-head">
+      <div class="ic-banner-icono">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12"/></svg>
+      </div>
+      <div>
+        <h3 id="pfAtajosTitulo">Atajos</h3>
+        <p>Para moverte más rápido</p>
+      </div>
+    </div>
+    <div class="ic-login-body">
+      <ul class="pf-atajos-lista">
+        <li><kbd>Ctrl</kbd><kbd>K</kbd><span>Buscar dashboards</span></li>
+        <li><kbd>Esc</kbd><span>Cerrar el visor, el menú o la búsqueda</span></li>
+        <li><kbd>?abrir=tickets</kbd><span>Abrir la app de tickets al cargar</span></li>
+        <li><kbd>?abrir=renta</kbd><span>Abrir Análisis de Renta (requiere IC)</span></li>
+        <li><kbd>?abrir=inventario</kbd><span>Abrir Reporte Inventario (requiere IC)</span></li>
+        <li><kbd>?salir=1</kbd><span>Cerrar sesión desde la URL</span></li>
+      </ul>
+      <div class="ic-login-acciones">
+        <button class="ic-btn-entrar" id="pfAtajosCerrar">Entendido</button>
+      </div>
     </div>
   </div>
 </div>
