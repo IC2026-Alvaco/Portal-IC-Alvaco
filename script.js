@@ -96,7 +96,7 @@ const DASHBOARDS = [
     url: ""
   },
   {
-    nombre: "Instalaciones",
+    nombre: "Altec",
     descripcion: "Instalaciones de equipos.",
     categoria: "Instalaciones",
     color: "green",
@@ -113,20 +113,7 @@ const DASHBOARDS = [
     embed: "https://app.powerbi.com/reportEmbed?reportId=96e39bfc-73e5-4fe7-bc95-902ac7e9c95b&autoAuth=true&ctid=923eb367-abae-4010-9989-b7cf33fb74a7",
     url: "https://app.powerbi.com/links/_THlr15aY4?ctid=923eb367-abae-4010-9989-b7cf33fb74a7&pbi_source=linkShare"
   },
-  {
-    nombre: "Tiendas Neto",
-    descripcion: "Ingreso, renta y equipos por estado, plaza y precio de juego.",
-    categoria: "Ingresos",
-    color: "red",
-    imagen: "img/maquina_sin_fondo.png",
-    /* ── DESACTIVADO TEMPORALMENTE ──
-       Para reactivarlo, restaura estas dos líneas:
-       embed: "https://app.powerbi.com/reportEmbed?reportId=c89958f5-bfbe-4950-a686-8974525da509&autoAuth=true&ctid=923eb367-abae-4010-9989-b7cf33fb74a7",
-       url: "https://app.powerbi.com/links/GdfBrn1uXa?ctid=923eb367-abae-4010-9989-b7cf33fb74a7&pbi_source=linkShare"
-    */
-    embed: "",
-    url: ""
-  },
+
   {
     nombre: "Análisis de Renta",
     descripcion: "Simula escenarios de renta mixta y prorrateo de renta fija: compara renta y margen actual vs. nuevo.",
@@ -186,6 +173,17 @@ const DASHBOARDS = [
     imagen: "img/oso_constructor_transparente.png",
     embed: "https://apps.powerapps.com/play/e/default-923eb367-abae-4010-9989-b7cf33fb74a7/a/37998833-3d4f-485d-9e16-0f4a8d37e341?tenantId=923eb367-abae-4010-9989-b7cf33fb74a7&source=portal-ic&hideNavBar=true",
     url: "https://apps.powerapps.com/play/e/default-923eb367-abae-4010-9989-b7cf33fb74a7/a/37998833-3d4f-485d-9e16-0f4a8d37e341?tenantId=923eb367-abae-4010-9989-b7cf33fb74a7"
+  },
+    {
+    nombre: "Tiendas Neto",
+    descripcion: "Ingreso, renta y equipos por estado, plaza y precio de juego.",
+    categoria: "Ingresos",
+    color: "red",
+    soloIC: true,
+    imagen: "img/maquina_sin_fondo.png",
+    embed: "https://app.powerbi.com/reportEmbed?reportId=c89958f5-bfbe-4950-a686-8974525da509&autoAuth=true&ctid=923eb367-abae-4010-9989-b7cf33fb74a7",
+    url: "https://app.powerbi.com/links/GdfBrn1uXa?ctid=923eb367-abae-4010-9989-b7cf33fb74a7&pbi_source=linkShare"
+   
   }
   /* Agrega más dashboards copiando la estructura anterior.
      La última entrada NO lleva coma al final.               */
@@ -210,7 +208,7 @@ const OCULTAR_PANEL_FILTROS = true;
 const OCULTAR_PANEL_PAGINAS = false;
 
 /* ---------- Accesos directos del menú lateral ---------- */
-const ACCESO_DIRECTO_NOMBRE = "Tickets IC";
+const ACCESO_DIRECTO_NOMBRE = "";
 const ACCESO_DIRECTO_LABEL  = "Solicitar ticket";
 const ACCESO_DIRECTO2_NOMBRE = "";
 const ACCESO_DIRECTO2_LABEL  = "";
