@@ -223,7 +223,8 @@ const ACCESO_DIRECTO2_LABEL  = "";
 const PORTAL_EMAILS = [
   "david.castillo@alvaco.com.mx",
   "julio.chavez@alvaco.com.mx",
-  "marco.garcia@alvaco.com.mx"
+  "marco.garcia@alvaco.com.mx",
+  "monica.vazquez@alvaco.com.mx"
   /* ← agrega aquí a los demás de Comercialización */
 ];
 
