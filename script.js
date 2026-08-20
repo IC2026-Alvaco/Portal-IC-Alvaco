@@ -224,7 +224,7 @@ const PORTAL_EMAILS = [
   "david.castillo@alvaco.com.mx",
   "julio.chavez@alvaco.com.mx",
   "marco.garcia@alvaco.com.mx",
-  "monica.vazquez@alvaco.com.mx"
+  
   /* ← agrega aquí a los demás de Comercialización */
 ];
 
@@ -233,8 +233,8 @@ const PORTAL_EMAILS = [
 const PORTAL_DOMINIO_LIBRE = false;
 const PORTAL_DOMINIO       = "@alvaco.com.mx";
 /* CONTRASEÑA GENERAL DEL PORTAL (hash SHA-256).
-   El hash de abajo corresponde a 123 */
-const PORTAL_PASS_HASH = "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3";
+   El hash de abajo corresponde a Comer26 */
+const PORTAL_PASS_HASH = "9198275ee83a5cfd67f9117a9da71db3c295383a171280ec7c19049d8149b17c";
 /* Contraseñas personales permanentes del portal (opcional).
    Pega aquí el código que te envíe cada quien:
      "julio.chavez@alvaco.com.mx": "hash-de-64-caracteres",   */
