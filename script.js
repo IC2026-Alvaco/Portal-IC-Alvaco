@@ -232,7 +232,7 @@ const PORTAL_EMAILS = [
 
 /* true = cualquier correo @alvaco.com.mx entra con la contraseña
    general, sin listarlo arriba. false = solo la lista.        */
-const PORTAL_DOMINIO_LIBRE = false;
+const PORTAL_DOMINIO_LIBRE = true;
 const PORTAL_DOMINIO       = "@alvaco.com.mx";
 /* CONTRASEÑA GENERAL DEL PORTAL (hash SHA-256).
    El hash de abajo corresponde a Comer26 */
