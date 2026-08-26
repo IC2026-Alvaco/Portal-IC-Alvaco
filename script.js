@@ -91,9 +91,9 @@ const DASHBOARDS = [
     descripcion: "Equipos parados sin resolver por 15 días",
     categoria: "Equipos",
     color: "teal",
-    embed: "",
+    embed: "https://app.powerbi.com/reportEmbed?reportId=d126d7f9-4b5b-4de9-8cc3-4d6672b84dc8&autoAuth=true&ctid=923eb367-abae-4010-9989-b7cf33fb74a7",
     imagen: "img/oso_constructor_transparente.png",
-    url: ""
+    url: "https://app.powerbi.com/links/JrAluQT0B6?ctid=923eb367-abae-4010-9989-b7cf33fb74a7&pbi_source=linkShare"
   },
   {
     nombre: "Altec",
@@ -226,7 +226,19 @@ const PORTAL_EMAILS = [
   "marco.garcia@alvaco.com.mx",
   "monica.vazquez@alvaco.com.mx",
   "Sharoon.zepeda@alvaco.com.mx",
-  "eric.reyes@alvaco.com.mx"
+  "eric.reyes@alvaco.com.mx",
+  "alan.rangel@alvaco.com.mx",
+  "liliana.rincon@alvaco.com.mx",
+  "deyanira.islas@alvaco.com.mx",
+  "erik.gispert@alvaco.com.mx",
+  "jorge.ortega@alvaco.com.mx",
+  "leslie.cuellar@alvaco.com.mx",
+  "silvana.moreno@alvaco.com.mx",
+  "miguel.torres@alvaco.com.mx",
+  "marco.hernandez@alvaco.com.mx",
+  "miguel.cetina@alvaco.com.mx",
+  "maya.hernandez@alvaco.com.mx",
+  "santiago.mondragon@alvaco.com.mx"
   /* ← agrega aquí a los demás de Comercialización */
 ];
 
