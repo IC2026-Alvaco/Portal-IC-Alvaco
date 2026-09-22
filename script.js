@@ -238,7 +238,8 @@ const PORTAL_EMAILS = [
   "marco.hernandez@alvaco.com.mx",
   "miguel.cetina@alvaco.com.mx",
   "maya.hernandez@alvaco.com.mx",
-  "santiago.mondragon@alvaco.com.mx"
+  "santiago.mondragon@alvaco.com.mx",
+  "paola.silva@alvaco.com.mx"
   /* ← agrega aquí a los demás de Comercialización */
 ];
 
