@@ -149,9 +149,9 @@ const DASHBOARDS = [
     color: "blue",
     soloIC: true,
     imagen: "img/pagina-bsica-muelocos-2.png",
-    embed: "https://app.powerbi.com/reportEmbed?reportId=02edafb0-b01a-4625-9a98-4c88ee378b70&autoAuth=true&ctid=923eb367-abae-4010-9989-b7cf33fb74a7",
-    url: "https://app.powerbi.com/groups/9329f718-3abb-4325-8cfc-f5564b8e6fd2/reports/02edafb0-b01a-4625-9a98-4c88ee378b70/47bf8b942c1ad76902c5?language=es-MX&experience=power-bi"
-  },
+    embed: "https://app.powerbi.com/reportEmbed?reportId=59738434-77a1-4a1a-b770-4a5957251913&autoAuth=true&ctid=923eb367-abae-4010-9989-b7cf33fb74a7",
+    url: "https://app.powerbi.com/groups/9329f718-3abb-4325-8cfc-f5564b8e6fd2/reports/59738434-77a1-4a1a-b770-4a5957251913/e371878e77fd044f7a49?language=es-MX&experience=power-bi"
+},
   {
     /* ══════════ EXCLUSIVO IC · Power BI ══════════ */
     nombre: "Ingresos Mensuales Pelucheras",
