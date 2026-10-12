@@ -27,7 +27,7 @@
    está en pantalla y el error se muestra a la vista en lugar de
    dejar la página en blanco. No toca nada de la lógica.
    ============================================================ */
-const PORTAL_VERSION = 'v3.2';
+const PORTAL_VERSION = 'v3.2.2';
 (function arranqueSeguro(){
   console.log('%cPortal IC ALVACO ' + PORTAL_VERSION, 'color:#17A2A6;font-weight:bold');
 
