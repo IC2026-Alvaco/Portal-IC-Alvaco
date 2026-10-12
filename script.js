@@ -1,8 +1,12 @@
 /* ============================================================
    PORTAL DE DASHBOARDS — ALVACO · INTELIGENCIA COMERCIAL
    script.js · Lógica y configuración
-   v3.0 · ago 2026
+   v3.2 · oct 2026
    ------------------------------------------------------------
+   Novedades v3.2
+   · Acceso "Portal KPI's" en el menú lateral, debajo de
+     Inteligencia Comercial (Control Semanal de KPIs)
+   · Atajo ?abrir=kpis
    Novedades v3.0
    · Dos reportes nuevos exclusivos IC (Promedio Master Final e
      Ingresos Mensuales Pelucheras)
@@ -23,7 +27,7 @@
    está en pantalla y el error se muestra a la vista en lugar de
    dejar la página en blanco. No toca nada de la lógica.
    ============================================================ */
-const PORTAL_VERSION = 'v3.1';
+const PORTAL_VERSION = 'v3.2';
 (function arranqueSeguro(){
   console.log('%cPortal IC ALVACO ' + PORTAL_VERSION, 'color:#17A2A6;font-weight:bold');
 
@@ -151,7 +155,7 @@ const DASHBOARDS = [
     imagen: "img/pagina-bsica-muelocos-2.png",
     embed: "https://app.powerbi.com/reportEmbed?reportId=59738434-77a1-4a1a-b770-4a5957251913&autoAuth=true&ctid=923eb367-abae-4010-9989-b7cf33fb74a7",
     url: "https://app.powerbi.com/groups/9329f718-3abb-4325-8cfc-f5564b8e6fd2/reports/59738434-77a1-4a1a-b770-4a5957251913/e371878e77fd044f7a49?language=es-MX&experience=power-bi"
-},
+  },
   {
     /* ══════════ EXCLUSIVO IC · Power BI ══════════ */
     nombre: "Ingresos Mensuales Pelucheras",
@@ -174,7 +178,7 @@ const DASHBOARDS = [
     embed: "https://apps.powerapps.com/play/e/default-923eb367-abae-4010-9989-b7cf33fb74a7/a/37998833-3d4f-485d-9e16-0f4a8d37e341?tenantId=923eb367-abae-4010-9989-b7cf33fb74a7&source=portal-ic&hideNavBar=true",
     url: "https://apps.powerapps.com/play/e/default-923eb367-abae-4010-9989-b7cf33fb74a7/a/37998833-3d4f-485d-9e16-0f4a8d37e341?tenantId=923eb367-abae-4010-9989-b7cf33fb74a7"
   },
-    {
+  {
     nombre: "Tiendas Neto",
     descripcion: "Ingreso, renta y equipos por estado, plaza y precio de juego.",
     categoria: "Ingresos",
@@ -183,7 +187,20 @@ const DASHBOARDS = [
     imagen: "img/maquina_sin_fondo.png",
     embed: "https://app.powerbi.com/reportEmbed?reportId=c89958f5-bfbe-4950-a686-8974525da509&autoAuth=true&ctid=923eb367-abae-4010-9989-b7cf33fb74a7",
     url: "https://app.powerbi.com/links/GdfBrn1uXa?ctid=923eb367-abae-4010-9989-b7cf33fb74a7&pbi_source=linkShare"
-   
+  },
+  {
+    /* ══════════ ACCESO DEL SIDEBAR · Portal KPI's ══════════
+       Plataforma web de Control Semanal de KPIs.
+       Sin tarjeta en el grid: se abre desde el menú lateral
+       (debajo de Inteligencia Comercial) o con ?abrir=kpis   */
+    nombre: "Portal KPI's",
+    descripcion: "Control Semanal de KPIs · Comercialización.",
+    categoria: "KPIs",
+    color: "green",
+    tipo: "web",     /* ← se abre en el visor sin parámetros de Power BI */
+    oculto: true,    /* ← sin tarjeta: solo desde el sidebar o por URL */
+    embed: "https://ic2026-alvaco.github.io/KPI-s-Comercializaci-n/",
+    url:   "https://ic2026-alvaco.github.io/KPI-s-Comercializaci-n/"
   }
   /* Agrega más dashboards copiando la estructura anterior.
      La última entrada NO lleva coma al final.               */
@@ -212,6 +229,14 @@ const ACCESO_DIRECTO_NOMBRE = "";
 const ACCESO_DIRECTO_LABEL  = "Solicitar ticket";
 const ACCESO_DIRECTO2_NOMBRE = "";
 const ACCESO_DIRECTO2_LABEL  = "";
+
+/* Acceso al Portal KPI's: va debajo de Inteligencia Comercial.
+   Deja ACCESO_KPIS_NOMBRE en "" para ocultar el botón.
+   ACCESO_KPIS_PESTANA = true → abre en pestaña nueva en lugar
+   del visor (úsalo si la plataforma no carga dentro del iframe). */
+const ACCESO_KPIS_NOMBRE  = "Portal KPI's";
+const ACCESO_KPIS_LABEL   = "Portal KPI's";
+const ACCESO_KPIS_PESTANA = false;
 
 /* ============================================================
    🔐 ACCESOS — CORREOS Y CONTRASEÑAS
@@ -327,7 +352,8 @@ const ICONS = {
   app:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
   ticket:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2.5 2.5 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2.5 2.5 0 0 0 0-6Z"/><line x1="14" y1="5" x2="14" y2="8"/><line x1="14" y1="11" x2="14" y2="13"/><line x1="14" y1="16" x2="14" y2="19"/></svg>',
   lock:  '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
-  lockMini:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>'
+  lockMini:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+  kpi:   '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><polyline points="7 14 11 10 14 13 20 7"/><polyline points="16 7 20 7 20 11"/></svg>'
 };
 
 /* Iconos del menú de perfil */
@@ -1173,6 +1199,25 @@ function construirSidebar(){
     btnIC.addEventListener('click', entrarAreaIC);
     sideNav.appendChild(btnIC);
   }
+
+  /* Portal KPI's: debajo de Inteligencia Comercial, visible para todos */
+  const portalKpis = ACCESO_KPIS_NOMBRE
+    ? DASHBOARDS.find(d => d.nombre === ACCESO_KPIS_NOMBRE && (d.embed || d.url))
+    : null;
+  if (portalKpis){
+    const btnKpi = document.createElement('button');
+    btnKpi.className = 'side-item side-item-kpi';
+    btnKpi.innerHTML = ICONS.kpi + `<span>${ACCESO_KPIS_LABEL}</span><span class="count">web</span>`;
+    btnKpi.addEventListener('click', () => {
+      if (ACCESO_KPIS_PESTANA || !portalKpis.embed){
+        registrarReciente(portalKpis.nombre);
+        window.open(portalKpis.url || portalKpis.embed, '_blank', 'noopener');
+      } else {
+        abrirVisor(portalKpis);
+      }
+    });
+    sideNav.appendChild(btnKpi);
+  }
 }
 
 /* ==================== HERO: FECHA Y CHIPS ==================== */
@@ -1441,9 +1486,10 @@ if (esUsuarioPortal()){
 }
 
 /* Apertura automática por URL: ?abrir=<nombre>
-   Atajos: ?abrir=tickets · ?abrir=renta · ?abrir=inventario
-   (los dos últimos requieren sesión IC). También acepta el
-   nombre normalizado, p. ej. ?abrir=ingresos-diarios.       */
+   Atajos: ?abrir=tickets · ?abrir=kpis · ?abrir=renta ·
+   ?abrir=inventario (los dos últimos requieren sesión IC).
+   También acepta el nombre normalizado, p. ej.
+   ?abrir=ingresos-diarios.                                  */
 (function autoAbrir(){
   if (!esUsuarioPortal()) return;              /* con el portal cerrado, no abre nada */
   const p = new URLSearchParams(window.location.search).get('abrir');
@@ -1453,6 +1499,7 @@ if (esUsuarioPortal()){
     .replace(/\s+/g, '-');
   const ALIAS = {
     'tickets':    ACCESO_DIRECTO_NOMBRE,
+    'kpis':       ACCESO_KPIS_NOMBRE,
     'renta':      'Análisis de Renta',
     'inventario': 'Reporte Inventario',
     'promedio':   'Promedio Master Final',

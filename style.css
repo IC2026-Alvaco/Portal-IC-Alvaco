@@ -1,10 +1,13 @@
 /* ============================================================
    MENÚ DE DASHBOARDS — ALVACO · INTELIGENCIA COMERCIAL
-   CSS consolidado v5.2 · ago 2026
+   CSS consolidado v5.3 · oct 2026
    Secciones: variables · base · sidebar · botón-logo · hero ·
    buscador · recientes · tarjetas · footer · visor · zoom ·
-   responsivo · accesibilidad · área IC · carrusel ·
-   login del portal · perfil de usuario
+   responsivo · accesibilidad · área IC · portal KPI's ·
+   carrusel · login del portal · perfil de usuario
+   Novedades v5.3
+   · Botón "Portal KPI's" en el sidebar (contorno verde),
+     debajo de Inteligencia Comercial
    Novedades v4.3 — lienzo claro con juego de color:
    · Título tipo rótulo de arcade con subrayado arcoíris
    · Hero y pie con el color exacto del sidebar (#071829 → #10294A)
@@ -21,7 +24,6 @@
      que separa el encabezado del contenido
    · Densidad más alta en tarjetas y grid
    · Variables de Bootstrap 5 alineadas a la marca
-   Sin cambios en index.html ni en script.js
    ============================================================ */
 
 /* ==================== VARIABLES ==================== */
@@ -1411,6 +1413,28 @@ body{
 .side-item-ic.active{
   background:linear-gradient(120deg, var(--c-teal), #0E7C7F);
   box-shadow:0 4px 14px rgba(23,162,166,.40);
+}
+
+/* ==================== PORTAL KPI'S ==================== */
+/* Ítem del menú lateral: contorno verde, debajo del área IC */
+.side-item-kpi{
+  border:1px solid rgba(34,165,91,.45);
+  margin-top:6px;
+}
+.side-item-kpi svg{
+  color:#7FE0A6;
+  background:rgba(34,165,91,.14);
+  border-color:rgba(34,165,91,.30);
+}
+.side-item-kpi:hover{
+  background:rgba(34,165,91,.16);
+  box-shadow:0 0 0 1px rgba(34,165,91,.35), 0 4px 14px rgba(34,165,91,.20);
+}
+.side-item-kpi:hover svg{background:rgba(34,165,91,.24)}
+.side-item-kpi .count{
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  font-size:9.5px;
 }
 
 /* Banner de la sección IC */
