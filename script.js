@@ -1,8 +1,11 @@
 /* ============================================================
    PORTAL DE DASHBOARDS — ALVACO · INTELIGENCIA COMERCIAL
    script.js · Lógica y configuración
-   v3.2 · oct 2026
+   v3.3 · oct 2026
    ------------------------------------------------------------
+   Novedades v3.3
+   · Las herramientas web externas (Portal KPI's) se cargan
+     siempre en su versión más reciente, sin caché del navegador
    Novedades v3.2
    · Acceso "Portal KPI's" en el menú lateral, debajo de
      Inteligencia Comercial (Control Semanal de KPIs)
@@ -27,7 +30,7 @@
    está en pantalla y el error se muestra a la vista en lugar de
    dejar la página en blanco. No toca nada de la lógica.
    ============================================================ */
-const PORTAL_VERSION = 'v3.2.2';
+const PORTAL_VERSION = 'v3.3.1';
 (function arranqueSeguro(){
   console.log('%cPortal IC ALVACO ' + PORTAL_VERSION, 'color:#17A2A6;font-weight:bold');
 
@@ -238,6 +241,10 @@ const ACCESO_KPIS_NOMBRE  = "Portal KPI's";
 const ACCESO_KPIS_LABEL   = "Portal KPI's";
 const ACCESO_KPIS_PESTANA = false;
 
+/* true = las herramientas web externas (tipo "web" con https://)
+   se cargan siempre frescas en el visor, sin usar la caché.     */
+const VISOR_SIN_CACHE = true;
+
 /* ============================================================
    🔐 ACCESOS — CORREOS Y CONTRASEÑAS
    ============================================================ */
@@ -264,7 +271,8 @@ const PORTAL_EMAILS = [
   "miguel.cetina@alvaco.com.mx",
   "maya.hernandez@alvaco.com.mx",
   "santiago.mondragon@alvaco.com.mx",
-  "jose.guzman@alvaco.com.mx"
+  "jose.guzman@alvaco.com.mx",
+  "jonathan.fabela@alvaco.com.mx"
   /* ← agrega aquí a los demás de Comercialización */
 ];
 
@@ -1427,6 +1435,13 @@ function abrirVisor(d){
   if (!esApp && !esWeb) {
     if (OCULTAR_PANEL_FILTROS) urlVisor += '&filterPaneEnabled=false';
     if (OCULTAR_PANEL_PAGINAS) urlVisor += '&navContentPaneEnabled=false';
+  }
+  /* Herramientas web en internet (p. ej. Portal KPI's): se pide SIEMPRE
+     la versión más reciente para que ningún equipo se quede con una
+     copia vieja guardada en caché. No aplica a archivos locales.  */
+  if (esWeb && VISOR_SIN_CACHE && /^https?:\/\//i.test(urlVisor)){
+    const [base, hash] = urlVisor.split('#');
+    urlVisor = base + (base.includes('?') ? '&' : '?') + '_v=' + Date.now() + (hash ? '#' + hash : '');
   }
   visorFrame.src = urlVisor;
   visorOverlay.classList.add('visible');
