@@ -1,8 +1,11 @@
 /* ============================================================
    PORTAL DE DASHBOARDS — ALVACO · INTELIGENCIA COMERCIAL
    script.js · Lógica y configuración
-   v3.3 · oct 2026
+   v3.4 · oct 2026
    ------------------------------------------------------------
+   Novedades v3.4
+   · "Promedio Master Final" disponible para todos, marcado
+     "En prueba" (campo nuevo: prueba: true)
    Novedades v3.3
    · Las herramientas web externas (Portal KPI's) se cargan
      siempre en su versión más reciente, sin caché del navegador
@@ -30,7 +33,7 @@
    está en pantalla y el error se muestra a la vista en lugar de
    dejar la página en blanco. No toca nada de la lógica.
    ============================================================ */
-const PORTAL_VERSION = 'v3.3.1';
+const PORTAL_VERSION = 'v3.4';
 (function arranqueSeguro(){
   console.log('%cPortal IC ALVACO ' + PORTAL_VERSION, 'color:#17A2A6;font-weight:bold');
 
@@ -75,6 +78,8 @@ const PORTAL_VERSION = 'v3.3.1';
    - soloIC: true → la tarjeta solo existe dentro del área IC.
    - oculto: true → sin tarjeta; solo accesible desde el sidebar
      o por URL.
+   - prueba: true → etiqueta "En prueba" en la tarjeta y en el
+     visor, para reportes que aún se están validando.
    - imagen: (opcional) ruta a una imagen para la tarjeta.
    - embed: URL de inserción segura (visor NO editable).
      · Power BI:
@@ -149,12 +154,14 @@ const DASHBOARDS = [
     url: "Reporte_Inventario.html"
   },
   {
-    /* ══════════ EXCLUSIVO IC · Power BI ══════════ */
-    nombre: "Promedio Master Final",
-    descripcion: "Promedio de ingresos por equipo — modelo Master_Final.",
+    /* ══════════ PARA TODOS · Power BI · EN PRUEBA ══════════
+       Visible para todo Comercialización. Quita "prueba: true"
+       cuando el reporte quede validado.                      */
+    nombre: "Master",
+    descripcion: "Ingresos, promedios,rentas,costo de producto, márgen comercial, etc.",
     categoria: "Ingresos",
     color: "blue",
-    soloIC: true,
+    prueba: true,    /* ← muestra la etiqueta "En prueba" en la tarjeta y en el visor */
     imagen: "img/pagina-bsica-muelocos-2.png",
     embed: "https://app.powerbi.com/reportEmbed?reportId=59738434-77a1-4a1a-b770-4a5957251913&autoAuth=true&ctid=923eb367-abae-4010-9989-b7cf33fb74a7",
     url: "https://app.powerbi.com/groups/9329f718-3abb-4325-8cfc-f5564b8e6fd2/reports/59738434-77a1-4a1a-b770-4a5957251913/e371878e77fd044f7a49?language=es-MX&experience=power-bi"
@@ -1330,13 +1337,14 @@ function render(){
               ? '<span class="badge-card badge-activo">Actualización diaria</span>'
               : (d.url ? '' : '<span class="badge-card badge-prox">Próximamente</span>')));
     const badgeIC = d.soloIC ? '<span class="badge-card badge-ic">' + ICONS.lockMini + ' Exclusivo IC</span>' : '';
+    const badgePrueba = d.prueba ? '<span class="badge-card badge-prueba">En prueba</span>' : '';
 
     card.innerHTML = `
       <div class="card-top">
         <div class="card-icon">${d.imagen ? `<img src="${d.imagen}" alt="${d.nombre}">` : ICONS.chart}</div>
         <div class="card-badges">
           <span class="badge-card badge-cat">${d.categoria}</span>
-          ${badgeEstado}
+          ${d.prueba ? badgePrueba : badgeEstado}
           ${badgeIC}
         </div>
       </div>
@@ -1420,7 +1428,9 @@ function abrirVisor(d){
   registrarReciente(d.nombre);
   visorTitle.textContent = d.nombre;
   document.getElementById('visorCategoria').textContent = d.categoria || '';
-  document.getElementById('visorPill').textContent = esApp ? 'App interactiva' : (esWeb ? 'Herramienta interactiva' : 'Solo lectura');
+  const visorPill = document.getElementById('visorPill');
+  visorPill.textContent = d.prueba ? 'En prueba' : (esApp ? 'App interactiva' : (esWeb ? 'Herramienta interactiva' : 'Solo lectura'));
+  visorPill.classList.toggle('visor-pill-prueba', !!d.prueba);
   document.getElementById('visorLoaderTitulo').textContent = (esApp || esWeb) ? 'Cargando herramienta…' : 'Cargando dashboard…';
   zoomVisor = 1;
   aplicarZoom();

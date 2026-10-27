@@ -1,6 +1,6 @@
 /* ============================================================
    MENÚ DE DASHBOARDS — ALVACO · INTELIGENCIA COMERCIAL
-   CSS consolidado v5.3 · oct 2026
+   CSS consolidado v5.4 · oct 2026
    Secciones: variables · base · sidebar · botón-logo · hero ·
    buscador · recientes · tarjetas · footer · visor · zoom ·
    responsivo · accesibilidad · área IC · portal KPI's ·
@@ -1512,6 +1512,18 @@ body{
   transition:background .15s;
 }
 .ic-banner-salir:hover{background:rgba(10,30,54,.65)}
+
+/* Badge "En prueba": reportes que aún se están validando */
+.badge-prueba{
+  color:#8A5A00;
+  background:#FFF3D6;
+  border:1px dashed #E8A020;
+}
+.visor-pill.visor-pill-prueba{
+  color:#FFE0AE;
+  background:rgba(232,160,32,.22);
+  border-color:rgba(232,160,32,.60);
+}
 
 /* Badge de tarjeta exclusiva IC */
 .badge-ic{
