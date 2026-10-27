@@ -33,7 +33,7 @@
    está en pantalla y el error se muestra a la vista en lugar de
    dejar la página en blanco. No toca nada de la lógica.
    ============================================================ */
-const PORTAL_VERSION = 'v3.4';
+const PORTAL_VERSION = 'v3.4.1';
 (function arranqueSeguro(){
   console.log('%cPortal IC ALVACO ' + PORTAL_VERSION, 'color:#17A2A6;font-weight:bold');
 
@@ -157,8 +157,8 @@ const DASHBOARDS = [
     /* ══════════ PARA TODOS · Power BI · EN PRUEBA ══════════
        Visible para todo Comercialización. Quita "prueba: true"
        cuando el reporte quede validado.                      */
-    nombre: "Master",
-    descripcion: "Ingresos, promedios,rentas,costo de producto, márgen comercial, etc.",
+    nombre: "Promedio Master Final",
+    descripcion: "Promedio de ingresos por equipo — modelo Master_Final. Versión en prueba: las cifras pueden ajustarse.",
     categoria: "Ingresos",
     color: "blue",
     prueba: true,    /* ← muestra la etiqueta "En prueba" en la tarjeta y en el visor */
@@ -279,7 +279,8 @@ const PORTAL_EMAILS = [
   "maya.hernandez@alvaco.com.mx",
   "santiago.mondragon@alvaco.com.mx",
   "jose.guzman@alvaco.com.mx",
-  "jonathan.fabela@alvaco.com.mx"
+  "jonathan.fabela@alvaco.com.mx",
+  "ximena.perez@alvaco.com.mx"
   /* ← agrega aquí a los demás de Comercialización */
 ];
 
