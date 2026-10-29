@@ -1,8 +1,13 @@
 /* ============================================================
    PORTAL DE DASHBOARDS — ALVACO · INTELIGENCIA COMERCIAL
    script.js · Lógica y configuración
-   v3.4 · oct 2026
+   v3.5 · oct 2026
    ------------------------------------------------------------
+   Novedades v3.6
+   · Campo pestana: true · el Tablero TC abre en pestaña nueva
+   Novedades v3.5
+   · "Tablero TC" (equipos parados con clave TC) exclusivo del
+     área IC · atajo ?abrir=tc
    Novedades v3.4
    · "Promedio Master Final" disponible para todos, marcado
      "En prueba" (campo nuevo: prueba: true)
@@ -33,7 +38,7 @@
    está en pantalla y el error se muestra a la vista en lugar de
    dejar la página en blanco. No toca nada de la lógica.
    ============================================================ */
-const PORTAL_VERSION = 'v3.4.1';
+const PORTAL_VERSION = 'v3.6.1';
 (function arranqueSeguro(){
   console.log('%cPortal IC ALVACO ' + PORTAL_VERSION, 'color:#17A2A6;font-weight:bold');
 
@@ -80,6 +85,8 @@ const PORTAL_VERSION = 'v3.4.1';
      o por URL.
    - prueba: true → etiqueta "En prueba" en la tarjeta y en el
      visor, para reportes que aún se están validando.
+   - pestana: true → la tarjeta abre en pestaña nueva en lugar
+     del visor (para herramientas que no cargan en el recuadro).
    - imagen: (opcional) ruta a una imagen para la tarjeta.
    - embed: URL de inserción segura (visor NO editable).
      · Power BI:
@@ -165,6 +172,23 @@ const DASHBOARDS = [
     imagen: "img/pagina-bsica-muelocos-2.png",
     embed: "https://app.powerbi.com/reportEmbed?reportId=59738434-77a1-4a1a-b770-4a5957251913&autoAuth=true&ctid=923eb367-abae-4010-9989-b7cf33fb74a7",
     url: "https://app.powerbi.com/groups/9329f718-3abb-4325-8cfc-f5564b8e6fd2/reports/59738434-77a1-4a1a-b770-4a5957251913/e371878e77fd044f7a49?language=es-MX&experience=power-bi"
+  },
+  {
+    /* ══════════ EXCLUSIVO IC · Herramienta HTML ══════════
+       Tablero de equipos parados con clave TC (Tema Comercial).
+       Tablero_TC_Munelocos.html debe estar en la MISMA carpeta
+       del portal (junto a index.html). Para abrirlo a todos,
+       quita "soloIC: true".                                  */
+    nombre: "Tablero TC",
+    descripcion: "Equipos parados con clave TC (Tema Comercial) — seguimiento por plaza, cadena y ejecutivo.",
+    categoria: "Herramientas IC",
+    color: "amber",
+    tipo: "web",
+    soloIC: true,
+    pestana: true,   /* ← se abre en pestaña nueva, no dentro del visor */
+    imagen: "img/oso_constructor_transparente.png",
+    embed: "Tablero_TC_Munelocos.html",
+    url: "Tablero_TC_Munelocos.html"
   },
   {
     /* ══════════ EXCLUSIVO IC · Power BI ══════════ */
@@ -323,6 +347,7 @@ const IC_PASS_HASH = "8bf7c3aa8c97f0782bf9fcb452bbe72627620a6945385fc08f7442b22f
 /* Contraseñas personales permanentes del área IC (opcional) */
 const IC_PASS_USUARIOS = {
   /* "correo@alvaco.com.mx": "hash-de-64-caracteres", */
+  "julio.chavez@alvaco.com.mx": "ee9383f477932f42dec5d75ca3010b469bf645acb52472eb2137b9d26e29e710",
 };
 
 /* ---------- 3) FOTOS DE PERFIL ----------
@@ -1424,6 +1449,12 @@ document.getElementById('zoomNivel').addEventListener('click', () => { zoomVisor
 
 function abrirVisor(d){
   if (!d || !d.embed) return;
+  /* Herramientas marcadas con pestana: true se abren aparte */
+  if (d.pestana){
+    registrarReciente(d.nombre);
+    window.open(d.url || d.embed, '_blank', 'noopener');
+    return;
+  }
   const esApp = d.tipo === 'app';
   const esWeb = d.tipo === 'web';
   registrarReciente(d.nombre);
@@ -1529,6 +1560,7 @@ if (esUsuarioPortal()){
     'renta':      'Análisis de Renta',
     'inventario': 'Reporte Inventario',
     'promedio':   'Promedio Master Final',
+    'tc':         'Tablero TC',
     'pelucheras': 'Ingresos Mensuales Pelucheras'
   };
   const objetivo = ALIAS[p.toLowerCase()];
