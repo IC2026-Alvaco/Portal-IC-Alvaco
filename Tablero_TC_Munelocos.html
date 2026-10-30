@@ -862,7 +862,7 @@ body.dash.fit .pbi-top{padding-top:8px}
         <div class="pbi-body">
           <div class="dk" id="dkpis"></div>
           <div class="pgrid">
-            <div class="pnl a-ant" style="border-top-color:#3F60A8"><div class="phd"><div class="ph">Antigüedad · días sin recaudar</div><div class="psub">equipos y % por rango · toca una barra</div></div><div class="pb"><div class="chart" id="chAnt"></div></div></div>
+            <div class="pnl a-ant" style="border-top-color:#3F60A8"><div class="phd"><div class="ph">Antigüedad · días parado</div><div class="psub">colores del semáforo · toca una barra</div></div><div class="pb"><div class="chart" id="chAnt"></div></div></div>
             <div class="pnl a-mtx" style="border-top-color:#7B61C4"><div class="phd"><div class="ph">Resumen por región</div><div class="psub">Toca una región para filtrar todo el tablero</div></div><div class="pb"><div class="mtx" id="mReg"></div></div></div>
             <div class="pnl a-rk" style="border-top-color:#0F9ED5"><div class="phd"><div class="ph">Ranking</div><div class="psub">Equipos parados por la dimensión que elijas</div></div><div class="pb"><div class="rkc"><span class="rkl">Orden</span><div class="segb" id="rkDir"><button data-d="top" class="on">Top</button><button data-d="bot">Bottom</button></div></div><div class="rkc"><span class="rkl">Ranking por</span></div><div class="rkm" id="rkDim"><button data-m="cad" class="on"><i></i>Cadena</button><button data-m="pv"><i></i>Punto de venta</button><button data-m="reg"><i></i>Región</button><button data-m="city"><i></i>Ciudad</button><button data-m="prod"><i></i>Producto</button><button data-m="mod"><i></i>Modelo</button></div><div class="rksub" id="rkSub"></div><div class="rkt" id="rkTbl"></div></div></div>
             <div class="pnl a-don" style="border-top-color:#A02B93"><div class="phd"><div class="ph">Equipos por producto</div><div class="psub">Toca un producto para filtrar</div></div><div class="pb"><div class="don" id="chProd"></div></div></div>
@@ -1304,13 +1304,15 @@ function diasParado(r){var ini=r.ftc||r.fcom||r.fact;var d=isoDays(ini,finCorte(
 // Semáforo: días desde que se asignó a TC (Crítico > 30, Atención > 15, Reciente <= 15; Resuelto aparte)
 var SEM={crit:{n:'Crítico',hex:'#C0392B',x:'FFC0392B'},aten:{n:'Atención',hex:'#E6A700',x:'FFE6A700'},rec:{n:'Reciente',hex:'#1E7E34',x:'FF1E7E34'},res:{n:'Resuelto',hex:'#3F60A8',x:'FF3F60A8'}};
 function semDias(d){d=d||0;return d>30?'crit':d>15?'aten':'rec'}
-function semOf(r){return r.mode==='resuelto'?'res':semDias(diasParado(r))}
+// Semáforo con la columna Días parado (días sin recaudar del archivo SAT)
+function diasSem(r){return r.dias===null||r.dias===undefined||r.dias===''?null:Number(r.dias)}
+function semOf(r){return r.mode==='resuelto'?'res':semDias(diasSem(r))}
 function editable(r,k){if(r.mode==='resuelto')return false;if(k==='dirigido')return editable(r,'coment');if(k==='dirAct')return editable(r,'actual');return k==='coment'?(r.mode==='nuevo'||r.mode==='sinprev'||!r.mode):k==='actual'?r.mode==='cambio':false}
 function serialToStr(s){if(s===null)return '';var d=new Date(Math.round((s-25569)*864e5));return ('0'+d.getUTCDate()).slice(-2)+'/'+('0'+(d.getUTCMonth()+1)).slice(-2)+'/'+d.getUTCFullYear()}
 
-// Orden: primero los de más días asignado a TC (de más a menos); los resueltos van fijos hasta abajo
+// Orden: primero los de más días parado (de más a menos); los resueltos van fijos hasta abajo
 function sortRows(){var coll=new Intl.Collator('es',{sensitivity:'base'});
-  var dp=function(r){var d=diasParado(r);return d===null?-1:d};
+  var dp=function(r){var d=diasSem(r);return d===null?-1:d};
   rows.sort(function(a,b){var ra=a.mode==='resuelto'?1:0, rb=b.mode==='resuelto'?1:0;
     return (ra-rb)||(ra?0:(dp(b)-dp(a)))||coll.compare(a.region||'',b.region||'')||coll.compare(a.ciudad||'',b.ciudad||'')||coll.compare(a.plaza||'',b.plaza||'')||((b.dias||0)-(a.dias||0))||coll.compare(a.codigo||'',b.codigo||'')});
   rows.forEach(function(r,i){r.id=i;r.pk=pkey(r)});}
@@ -1383,12 +1385,12 @@ if(FEAT_DET){document.body.classList.add('det');COLS.forEach(function(c){if(c.k=
 var segHoja='';
 var PAL=['#3F60A8','#7B61C4','#0F9ED5','#A02B93','#E97132','#1F3864','#4B2E83','#1E7E34'];
 var ANT=[{k:'5 a 15 días',a:0,b:15},{k:'16 a 30 días',a:16,b:30},{k:'31 a 45 días',a:31,b:45},{k:'46 a 60 días',a:46,b:60},{k:'61 a 75 días',a:61,b:75},{k:'76 a 100 días',a:76,b:100},{k:'Más de 100 días',a:101,b:1e9}];
-var PRIO={crit:{n:'Crítico',d:'Más de 30 días asignado a TC',hex:SEM.crit.hex},aten:{n:'Atención',d:'16 a 30 días asignado a TC',hex:SEM.aten.hex},rec:{n:'Reciente',d:'Hasta 15 días asignado a TC',hex:SEM.rec.hex}};
+var PRIO={crit:{n:'Crítico',d:'Más de 30 días parado',hex:SEM.crit.hex},aten:{n:'Atención',d:'16 a 30 días parado',hex:SEM.aten.hex},rec:{n:'Reciente',d:'Hasta 15 días parado',hex:SEM.rec.hex}};
 var ANTC=['#9FB3DE','#7D97D1','#5B7BC2','#3F60A8','#33508E','#283F73','#1F3864'];
 function antOf(d){d=d||0;for(var i=0;i<ANT.length;i++)if(d>=ANT[i].a&&d<=ANT[i].b)return ANT[i].k;return ANT[ANT.length-1].k}
 function prioOf(d){return semDias(d)}
-function prioR(r){return semDias(diasParado(r))}
-function semHtml(r,sm){var k=semOf(r),d=diasParado(r);return '<span class="sem sem-'+k+(sm?' sm':'')+'" title="'+SEM[k].n+(d!==null?' · '+d+(d===1?' día':' días')+' asignado a TC':'')+'"><i></i>'+SEM[k].n+'</span>'}
+function prioR(r){return semDias(diasSem(r))}
+function semHtml(r,sm){var k=semOf(r),d=diasSem(r);return '<span class="sem sem-'+k+(sm?' sm':'')+'" title="'+SEM[k].n+(d!==null?' · '+d+(d===1?' día':' días')+' parado':'')+'"><i></i>'+SEM[k].n+'</span>'}
 function pcB(a,b){return '<span class="pcb">'+pct(a,b)+'</span>'}
 function fmtN(n){return (n||0).toLocaleString('es-MX')}
 function pct(a,b){return b?Math.round(a*100/b)+'%':'0%'}
@@ -1560,7 +1562,7 @@ function charts(){
   var d=D(null);
   var am=countBy(D('fAnt'),function(r){return antOf(r.dias)}), fa=$('fAnt').value;
   var antH=290; if(document.body.classList.contains('fit')){$('chAnt').innerHTML='';antH=Math.max(130,$('chAnt').clientHeight-4);}
-  vbar($('chAnt'),ANT.map(function(a){return {k:a.k,l:a.k.replace(' días','').replace('Más de 100','+100').replace(' a ','–'),v:am[a.k]||0,c:ANTC[ANT.indexOf(a)]}}),{minW:240,H:antH,active:fa&&fa.indexOf('p:')!==0?fa:'',onClick:function(k){setF('fAnt',k)}});
+  vbar($('chAnt'),ANT.map(function(a){return {k:a.k,l:a.k.replace(' días','').replace('Más de 100','+100').replace(' a ','–'),v:am[a.k]||0,c:SEM[semDias(a.b>1e8?101:a.b)].hex}}),{minW:240,H:antH,active:fa&&fa.indexOf('p:')!==0?fa:'',activeFn:fa.indexOf('p:')===0?function(k){var x=ANT.filter(function(a){return a.k===k})[0];return semDias(x.b>1e8?101:x.b)===fa.slice(2)}:null,onClick:function(k){setF('fAnt',k)}});
   var fp=$('fProd').value;
   var pc={}; topN(countBy(base(),function(r){return r.producto||'(sin producto)'}),99).forEach(function(it,i){pc[it.k]=i<PAL.length?PAL[i]:'#9AA8C4'});
   var pi=topN(countBy(D('fProd'),function(r){return r.producto||'(sin producto)'}),99); pi.forEach(function(it){it.c=pc[it.k]||'#9AA8C4'});
@@ -1634,9 +1636,9 @@ $('dTbl').onclick=function(e){var td=e.target.closest('td.fc');if(td){setF(td.ge
   var tr=e.target.closest('tr[data-id]');if(tr&&FEAT_DET)detOpen(+tr.getAttribute('data-id'));};
 $('dirTab').onclick=function(e){var b=e.target.closest('button');if(b){DTAB=b.getAttribute('data-v');charts();}};
 $('dqs').addEventListener('input',function(){dashTbl()});
-/* ---- velocímetro: promedio de días asignado a TC (zonas del semáforo) ---- */
+/* ---- velocímetro: promedio de días parado (zonas del semáforo) ---- */
 function gauge(list){var el=$('dGauge');if(!el)return;
-  var dd=list.map(diasParado).filter(function(x){return x!==null}), avg=dd.length?dd.reduce(function(a,b){return a+b},0)/dd.length:0;
+  var dd=list.map(diasSem).filter(function(x){return x!==null}), avg=dd.length?dd.reduce(function(a,b){return a+b},0)/dd.length:0;
   var cr=list.filter(function(r){return prioR(r)==='crit'}).length, MX=Math.max(60,Math.ceil(avg/10)*10);
   var cx=110,cy=106,R=82,W=18, ang=function(v){return Math.PI*(1-Math.min(v,MX)/MX)}, pt=function(v,r){var a=ang(v);return [cx+r*Math.cos(a),cy-r*Math.sin(a)]};
   var arc=function(a,b,c){var p=pt(a,R),q=pt(b,R);return '<path d="M'+p[0]+','+p[1]+' A'+R+','+R+' 0 0 1 '+q[0]+','+q[1]+'" stroke="'+c+'" stroke-width="'+W+'" fill="none"/>'};
@@ -1644,7 +1646,7 @@ function gauge(list){var el=$('dGauge');if(!el)return;
   [0,15,30,MX].forEach(function(v){var p=pt(v,R+W/2+8);s+='<text x="'+p[0]+'" y="'+(p[1]+3)+'" text-anchor="middle" class="gt">'+v+'</text>'});
   var n=pt(avg,R-14);s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+n[0]+'" y2="'+n[1]+'" class="gn"/><circle cx="'+cx+'" cy="'+cy+'" r="7" class="gc"/></svg>';
   var k=semDias(Math.round(avg));
-  el.innerHTML='<div class="gh">¿Cómo vamos? <span>días parados en TC</span></div>'+s+'<div class="gv"><b class="num" style="color:'+SEM[k].hex+'">'+(Math.round(avg*10)/10)+'</b> días en promedio · <b style="color:'+SEM[k].hex+'">'+SEM[k].n+'</b></div><div class="gs">'+fmtN(list.length)+' equipos con TC · '+pct(cr,list.length)+' en crítico</div>';}
+  el.innerHTML='<div class="gh">¿Cómo vamos? <span>promedio de días parado</span></div>'+s+'<div class="gv"><b class="num" style="color:'+SEM[k].hex+'">'+(Math.round(avg*10)/10)+'</b> días en promedio · <b style="color:'+SEM[k].hex+'">'+SEM[k].n+'</b></div><div class="gs">'+fmtN(list.length)+' equipos con TC · '+pct(cr,list.length)+' en crítico</div>';}
 /* ---- tarjetas del semáforo: Crítico / Atención / Reciente ---- */
 function semCards(list){var el=$('dSem');if(!el)return;var fa=$('fAnt').value, c={crit:0,aten:0,rec:0};list.forEach(function(r){c[prioR(r)]++});
   el.innerHTML=['crit','aten','rec'].map(function(p){var on=fa==='p:'+p;return '<button class="smc sem-'+p+(on?' on':'')+(fa&&fa.indexOf('p:')===0&&!on?' dim':'')+'" data-p="'+p+'" title="Toca para ver solo '+PRIO[p].n+'"><span class="sem"><i></i>'+PRIO[p].n+'</span><span class="smr"><b class="num">'+fmtN(c[p])+'</b><span class="smp num">'+pct(c[p],list.length)+'</span></span><span class="smd">'+PRIO[p].d+'</span></button>'}).join('');
@@ -1696,7 +1698,7 @@ function fitDash(){
   var seg=on&&b.classList.contains('segv'), g=$('segActs').querySelector('.grow'), w=$('warns');
   if(seg&&w.parentNode!==g)g.appendChild(w); else if(!seg&&w.parentNode===g)$('kpis').parentNode.insertBefore(w,$('kpis').nextSibling);
   if(on){var pr=b.classList.contains('priov');$('hT').textContent=seg?'Seguimiento de Comercialización · clave TC':pr?'Prioridad de atención':'Dashboard · Equipos parados TC';
-    $('hS').textContent=seg?'Comentario por punto de venta (precargado Punto de venta-Código) · fecha automática · Guardar con el botón o Ctrl+S':pr?'Equipos ordenados de más a menos días asignado a TC · toca un nivel para ver solo esos equipos':(state&&state.fileDate?'Archivo del '+isoCorto(state.fileDate):'');}
+    $('hS').textContent=seg?'Comentario por punto de venta (precargado Punto de venta-Código) · fecha automática · Guardar con el botón o Ctrl+S':pr?'Equipos ordenados de más a menos días parado · toca un nivel para ver solo esos equipos':(state&&state.fileDate?'Archivo del '+isoCorto(state.fileDate):'');}
   if(on){window.scrollTo(0,0);m.style.height=Math.max(500,(window.innerHeight-m.getBoundingClientRect().top)/ZM)+'px';}else m.style.height='';
 }
 var rzT=null; window.addEventListener('resize',function(){clearTimeout(rzT);rzT=setTimeout(function(){applyZoom();fitDash();charts();},150)});
@@ -1708,7 +1710,7 @@ function prio(){
   var LIMG={crit:IMG.semaforo,aten:IMG.obra,rec:IMG.verde};
   $('lvls').innerHTML=['crit','aten','rec'].map(function(p){return '<button class="lvl'+(fa==='p:'+p?' on':'')+'" data-p="'+p+'"><div class="v num" style="color:'+PRIO[p].hex+'">'+c[p]+pcB(c[p],tA)+'</div><img src="'+LIMG[p]+'" alt=""><div class="n">'+PRIO[p].n+'</div><div class="d">'+PRIO[p].d+'</div></button>'}).join('');
   $('lvls').onclick=function(e){var b=e.target.closest('.lvl[data-p]');if(b)setF('fAnt','p:'+b.getAttribute('data-p'))};
-  var dpo=function(r){var x=diasParado(r);return x===null?-1:x};var list=d.slice().sort(function(a,b){return dpo(b)-dpo(a)||(b.dias||0)-(a.dias||0)});
+  var dpo=function(r){var x=diasSem(r);return x===null?-1:x};var list=d.slice().sort(function(a,b){return dpo(b)-dpo(a)||(b.dias||0)-(a.dias||0)});
   $('prioSub').textContent=fmtN(list.length)+' equipo(s) activos con clave TC'+(list.length>300?' · se muestran los primeros 300':'')+'.';
   $('prioTbl').innerHTML='<thead><tr><th>Semáforo</th><th>Código</th><th>Punto de venta</th><th>Cadena</th><th>Ciudad</th><th>Región</th><th>Producto</th><th class="n">Días asignado a TC</th><th class="n">Días parado</th><th>Seguimiento</th><th>Dirigido</th><th>Último comentario Comercialización</th></tr></thead><tbody>'+
     list.slice(0,300).map(function(r){var p=prioR(r),lc=r.actual||r.coment||'';var dq=diasParado(r);return '<tr class="sr sr-'+semOf(r)+'"><td>'+semHtml(r)+'</td><td class="code">'+esc(r.codigo)+'</td><td>'+esc(r.plaza)+'</td><td>'+esc(r.cadena||'Sin cadena')+'</td><td>'+esc(r.ciudad)+'</td><td>'+esc(r.region)+'</td><td>'+esc(r.producto)+'</td><td class="n num"><b>'+(dq===null?'':dq)+'</b></td><td class="n num">'+(r.dias===null?'':r.dias)+'</td><td><span class="sg sg-'+(r.seg===SEG.agrego?'agrego':(r.mode||'nuevo'))+'">'+esc(r.seg||SEG.nuevo)+'</span></td><td>'+esc(dirVig(r))+'</td><td class="wrap">'+(lc?esc(lc):'<span class="muted">Sin comentario</span>')+'</td></tr>'}).join('')+'</tbody>';
