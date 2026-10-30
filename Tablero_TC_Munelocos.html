@@ -788,6 +788,43 @@ body.dash.fit .pbi-top{padding-top:8px}
 .tipw .tipos{grid-auto-rows:minmax(0,1fr)}
 .dtop{grid-template-columns:230px 360px minmax(0,1fr)}
 
+/* la fila completa abre el detalle (sin datos subrayados) */
+.dtw td.fc{text-decoration:none}.dtw td.fc:hover{box-shadow:none}
+.dtw tbody tr:hover td{background-image:linear-gradient(rgba(63,96,168,.08),rgba(63,96,168,.08))}
+/* filtro de fecha tipo línea de tiempo */
+.pbi-top .tline{flex-basis:100%;min-width:0}
+.tline:empty{display:none}
+.tline{background:#FFFFFF;border:1px solid #D5DEF0;border-radius:12px;padding:6px 12px 8px;user-select:none}
+.tlh{display:flex;align-items:center;gap:10px;margin-bottom:3px}
+.tlt{font-weight:700;color:#1F3864;font-size:13px}
+.tlf button{font-size:11.5px;padding:3px 9px}
+.tls{font-size:12px;color:#595959;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tlx{font:inherit;font-size:11.5px;border:1px solid #D5DEF0;background:#FFFFFF;color:#3F60A8;border-radius:8px;padding:2px 9px;cursor:pointer}
+.tlg{display:flex;gap:0;overflow-x:auto}
+.tly{flex:1 1 0;min-width:360px}
+.tlyl{font-size:12px;font-weight:700;color:#333;line-height:1.1}
+.tlq{display:grid;grid-template-columns:repeat(4,1fr);font-size:11px;color:#333;line-height:1.1}
+.tlq span{padding-left:2px;cursor:pointer}.tlq span:hover,.tlyl:hover{color:#3F60A8}.tlyl{cursor:pointer}
+.tlm{display:grid;grid-template-columns:repeat(12,minmax(0,1fr))}
+.tlc{cursor:pointer;text-align:center}
+.tlc i{display:block;font-style:normal;font-size:11px;color:#333;line-height:1.3}
+.tlc b{display:block;height:14px;border:1px solid #7F8AA3;border-left-width:0;background:#FFFFFF}
+.tly .tlc:first-child b{border-left-width:1px}
+.tlc.z i{color:#9AA3B5}
+.tlc:hover b{background:#E3EBF8}
+.tlc.on b{background:#B7CDEE;border-color:#5B7BC2}
+.tlc.s b{border-left:6px solid #111;border-radius:7px 0 0 7px}
+.tlc.e b{border-right:6px solid #111;border-radius:0 7px 7px 0}
+
+/* línea de tiempo compacta: título a la izquierda; año y trimestres en un solo renglón */
+.tline{display:grid;grid-template-columns:150px minmax(0,1fr);column-gap:12px;align-items:center;padding:5px 12px 6px}
+.tlh{flex-direction:column;align-items:flex-start;gap:2px;margin:0;min-width:0}
+.tls{white-space:normal;line-height:1.2;font-size:11.5px}
+.tly{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"y q" "m m";column-gap:6px;align-items:end}
+.tlyl{grid-area:y}.tlq{grid-area:q}.tlm{grid-area:m}
+.tlc i{font-size:10.5px;line-height:1.2}
+.tlc b{height:12px}
+
 </style>
 </head>
 <body>
@@ -858,7 +895,7 @@ body.dash.fit .pbi-top{padding-top:8px}
       <table id="segSummary" class="hidden"></table><span id="resTitle" class="hidden"></span><span id="subModelo" class="hidden"></span>
       <div class="pbi">
         <div class="cslot" id="cSlot1"><div class="dtop"><div class="gpanel" id="dGauge"></div><div class="semk" id="dSem"></div><div class="tipw" id="tipW"></div></div></div>
-        <div class="pbi-top"><div class="dtitle"><h1>Tablero TC Muñelocos</h1><span id="dDate"></span></div><div class="pbi-filters" id="fSlot1"></div></div>
+        <div class="pbi-top"><div class="dtitle"><h1>Tablero TC Muñelocos</h1><span id="dDate"></span></div><div class="pbi-filters" id="fSlot1"></div><div class="tline" id="tline"></div></div>
         <div class="pbi-body">
           <div class="dk" id="dkpis"></div>
           <div class="pgrid">
@@ -1430,6 +1467,7 @@ function passF(r,skip){
   if(fp&&(r.producto||'(sin producto)')!==fp)return false;
   var fm=g('fMod'); if(fm&&(r.modelo||'(sin modelo)')!==fm)return false;
   var ft=g('fTipo'); if(ft&&(r.hoja||'(sin tipo)')!==ft)return false;
+  if(TL.a&&skip!=='tl'){var ym=tlYm(r);if(!ym||ym<TL.a||ym>TL.b)return false;}
   if(fa){if(fa.indexOf('p:')===0){if(prioR(r)!==fa.slice(2))return false;}else if(antOf(r.dias)!==fa)return false;}
   return segPass(r,fs);
 }
@@ -1480,15 +1518,37 @@ function refresh(){
   views();
 }
 function views(){
-  var any=FIDS.some(function(id){return $(id).value});
+  var any=FIDS.some(function(id){return $(id).value})||!!TL.a;
   $('clearF').classList.toggle('act',any);
   var names={fReg:'Región',fCity:'Ciudad',fCad:'Cadena',fProd:'Producto',fMod:'Modelo',fAnt:'Antigüedad',fSeg:'Seguimiento',fTipo:'Tipo de producto'};
-  $('chipsF').innerHTML=FIDS.filter(function(id){return $(id).value}).map(function(id){var s=$(id);return '<span class="chipF" data-f="'+id+'" title="Quitar filtro">'+names[id]+': '+esc(s.options[s.selectedIndex].text)+' ✕</span>'}).join('');
-  kpis(); kcards(); segSummary(); charts(); prio(); detalle(); table();
+  $('chipsF').innerHTML=FIDS.filter(function(id){return $(id).value}).map(function(id){var s=$(id);return '<span class="chipF" data-f="'+id+'" title="Quitar filtro">'+names[id]+': '+esc(s.options[s.selectedIndex].text)+' ✕</span>'}).join('')+(TL.a?'<span class="chipF" data-f="tl" title="Quitar filtro">Fecha asignado a TC: '+tlTxt()+' ✕</span>':'');
+  tline(); kpis(); kcards(); segSummary(); charts(); prio(); detalle(); table();
 }
 FIDS.forEach(function(id){$(id).addEventListener('change',views)});
-$('clearF').onclick=function(){FIDS.forEach(function(id){$(id).value=''});views()};
-$('chipsF').addEventListener('click',function(e){var f=e.target.getAttribute('data-f');if(f){$(f).value='';views();}});
+$('clearF').onclick=function(){FIDS.forEach(function(id){$(id).value=''});TL.a=TL.b='';views()};
+$('chipsF').addEventListener('click',function(e){var f=e.target.getAttribute('data-f');if(f==='tl'){TL.a=TL.b='';views();}else if(f){$(f).value='';views();}});
+/* ---- filtro de fecha tipo línea de tiempo (años · trimestres · meses) ---- */
+var TL={f:'ftc',a:'',b:''}, TLdrag=null;   // filtro de fechas: columna "Fecha que se asignó a TC"
+function tlYm(r){if(TL.f==='ftc')return r.ftc?r.ftc.slice(0,7):'';if(typeof r.ult!=='number')return '';var d=new Date(Math.round((r.ult-25569)*864e5));return d.getUTCFullYear()+'-'+('0'+(d.getUTCMonth()+1)).slice(-2);}
+function tlLbl(ym){var p=ym.split('-');return MESES[+p[1]-1]+' '+p[0].slice(2)}
+function tlTxt(){return TL.a===TL.b?tlLbl(TL.a):tlLbl(TL.a)+' – '+tlLbl(TL.b)}
+function tline(){var el=$('tline');if(!el)return;
+  var cnt={},ys=[]; base().forEach(function(r){var m=tlYm(r);if(m)cnt[m]=(cnt[m]||0)+1});
+  var ks=Object.keys(cnt).sort(); if(!ks.length){el.innerHTML='';return;}
+  var y1=+ks[ks.length-1].slice(0,4), y0=Math.min(+ks[0].slice(0,4),y1-1); for(var y=y0;y<=y1;y++)ys.push(y);
+  var lo=TLdrag?(TLdrag.a<TLdrag.b?TLdrag.a:TLdrag.b):TL.a, hi=TLdrag?(TLdrag.a<TLdrag.b?TLdrag.b:TLdrag.a):TL.b;
+  var h='<div class="tlh"><span class="tlt">Fecha que se asignó a TC</span><span class="tls">'+(lo?(lo===hi?tlLbl(lo):tlLbl(lo)+' – '+tlLbl(hi)):'Todas las fechas · arrastra o toca los meses')+'</span>'+(TL.a?'<button class="tlx" data-tlx="1">Quitar</button>':'')+'</div><div class="tlg">';
+  ys.forEach(function(y){h+='<div class="tly"><div class="tlyl" data-y="'+y+'" title="Toca para ver todo '+y+'">'+y+'</div><div class="tlq">'+[1,2,3,4].map(function(q){return '<span data-q="'+y+'-'+q+'" title="Toca para ver el trimestre">Q'+q+'</span>'}).join('')+'</div><div class="tlm">'+MESES.map(function(m,i){var ym=y+'-'+('0'+(i+1)).slice(-2),on=lo&&ym>=lo&&ym<=hi,c=cnt[ym]||0;
+    return '<div class="tlc'+(on?' on':'')+(on&&ym===lo?' s':'')+(on&&ym===hi?' e':'')+(c?'':' z')+'" data-ym="'+ym+'" title="'+tlLbl(ym)+' · '+c+' equipo(s)"><i>'+m+'</i><b></b></div>'}).join('')+'</div></div>'});
+  el.innerHTML=h+'</div>';}
+$('tline').addEventListener('mousedown',function(e){var c=e.target.closest('.tlc');if(!c)return;e.preventDefault();TLdrag={a:c.getAttribute('data-ym'),b:c.getAttribute('data-ym')};tline();});
+$('tline').addEventListener('mouseover',function(e){if(!TLdrag)return;var c=e.target.closest('.tlc');if(c&&c.getAttribute('data-ym')!==TLdrag.b){TLdrag.b=c.getAttribute('data-ym');tline();}});
+document.addEventListener('mouseup',function(){if(!TLdrag)return;var a=TLdrag.a<TLdrag.b?TLdrag.a:TLdrag.b,b=TLdrag.a<TLdrag.b?TLdrag.b:TLdrag.a;TLdrag=null;
+  if(TL.a===a&&TL.b===b){TL.a=TL.b='';}else{TL.a=a;TL.b=b;}views();});
+$('tline').addEventListener('click',function(e){var yy=e.target.closest('[data-y]'),qq=e.target.closest('[data-q]'),a=null,b=null;
+  if(yy){a=yy.getAttribute('data-y')+'-01';b=yy.getAttribute('data-y')+'-12';}
+  if(qq){var pq=qq.getAttribute('data-q').split('-'),m0=(+pq[1]-1)*3+1;a=pq[0]+'-'+('0'+m0).slice(-2);b=pq[0]+'-'+('0'+(m0+2)).slice(-2);}
+  if(a){if(TL.a===a&&TL.b===b){TL.a=TL.b='';}else{TL.a=a;TL.b=b;}views();return;}if(e.target.closest('[data-tlx]')){TL.a=TL.b='';views();}});
 
 /* ---- tarjetas ---- */
 function kcards(){buildCards(dashRows(),['kcards','kcards2']);}
@@ -1607,7 +1667,7 @@ function dashTbl(){
   [].forEach.call($('dirTab').children,function(b){b.classList.toggle('on',b.getAttribute('data-v')===DTAB)});
   if(!tb){$('dirS').textContent='Clave Dirigido vigente (Dirigido actualmente o, si no hay, Dirigido)';return;}
   var qq=($('dqs').value||'').toLowerCase().trim(), L=dashRows().filter(function(r){if(!qq)return true;var s=(r.region+' '+r.ciudad+' '+(r.cadena||'')+' '+r.plaza+' '+r.producto+' '+(r.modelo||'')+' '+r.codigo+' '+(r.info||'')+' '+(r.coment||'')+' '+(r.actual||'')+' '+dirVig(r)).toLowerCase();return s.indexOf(qq)>=0;}), lim=400, act=L.filter(function(r){return r.mode!=='resuelto'}).length;
-  $('dirS').textContent=fmtN(L.length)+' equipos · '+fmtN(act)+' con TC · toca un dato subrayado para filtrar o la fila para ver el detalle';
+  $('dirS').textContent=fmtN(L.length)+' equipos · '+fmtN(act)+' con TC · toca cualquier parte de la fila para ver y capturar comentarios';
   if(!L.length){$('dTbl').innerHTML='<div class="empty">Sin equipos para estos filtros</div>';return;}
   var F={region:'fReg',ciudad:'fCity',cadena:'fCad',producto:'fProd',modelo:'fMod'};
   var on=function(f,v){var x=$(f).value;return x&&x===v?' fon':''};
@@ -1632,7 +1692,7 @@ function dashTbl(){
     L.slice(0,lim).map(function(r){var k=semOf(r);return '<tr data-id="'+r.id+'" class="'+(k==='res'?'res':'sr sr-'+k)+'">'+COLS.map(function(col){return cellD(r,col)}).join('')+'</tr>'}).join('')+
     '</tbody></table>'+(L.length>lim?'<div class="mut" style="padding:6px 10px">Se muestran los primeros '+lim+'.</div>':'');
 }
-$('dTbl').onclick=function(e){var td=e.target.closest('td.fc');if(td){setF(td.getAttribute('data-f'),td.getAttribute('data-v'));return;}
+$('dTbl').onclick=function(e){
   var tr=e.target.closest('tr[data-id]');if(tr&&FEAT_DET)detOpen(+tr.getAttribute('data-id'));};
 $('dirTab').onclick=function(e){var b=e.target.closest('button');if(b){DTAB=b.getAttribute('data-v');charts();}};
 $('dqs').addEventListener('input',function(){dashTbl()});
