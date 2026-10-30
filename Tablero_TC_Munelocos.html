@@ -558,6 +558,11 @@ body.cargando .carga{display:flex;position:fixed;inset:0;z-index:250;align-items
 .cg-box{display:flex;flex-direction:column;align-items:center;gap:8px;color:#1F3864}.cg-box b{font-size:18px}.cg-box span{font-size:13.5px;color:#595959}
 .cg-spin{width:48px;height:48px;border-radius:50%;border:5px solid #E9EEF8;border-top-color:#7B61C4;border-right-color:#3F60A8;animation:cgs .8s linear infinite}
 @keyframes cgs{to{transform:rotate(360deg)}}
+/* solo consulta */
+body.solo-consulta #attachBtn,body.solo-consulta #sv,body.solo-consulta #dirty,body.solo-consulta #detC,body.solo-consulta #detH .dadd,body.solo-consulta #drop{display:none !important}
+body.solo-consulta .det-ft .mut{display:none}
+.urol{display:inline-block;margin-top:4px;font-size:11.5px;font-weight:700;border-radius:10px;padding:1px 8px;width:max-content}
+.urol.ro{background:#F3EEFC;color:#4B2E83;border:1px solid #D9CCF5}.urol.rw{background:#E9F5EC;color:#1E7E34;border:1px solid #C8E6CF}
 footer .fnote b{color:#FFFFFF}
 footer #saved{opacity:.8;font-size:12px}
 @media (max-width:1100px){html:not(.zm) .dk,html:not(.zm) .pgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}html.zm.mq14 .dk,html.zm.mq14 .pgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -676,7 +681,7 @@ footer .pg{font-size:15px;font-weight:700;color:#FFFFFF;padding-left:14px;border
     <button class="btn save sm" id="sv" disabled>Guardar cambios</button>
     <button class="btn ghost sm" id="dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Descargar Excel consolidado</button>
 <div class="umenu hidden" id="userChip"><button class="uav" id="uAv" aria-haspopup="true" aria-expanded="false"><span id="uIni"></span></button>
-  <div class="udrop hidden" id="uDrop" role="menu"><div class="uhd"><span class="uav big"><span id="uIni2"></span></span><div class="uid"><b id="uName"></b><span id="userMail"></span></div></div>
+  <div class="udrop hidden" id="uDrop" role="menu"><div class="uhd"><span class="uav big"><span id="uIni2"></span></span><div class="uid"><b id="uName"></b><span id="userMail"></span><span class="urol rw" id="uRol">Captura</span></div></div>
   <button class="uit" id="passBtn" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Cambiar contraseña</button>
   <button class="uit out" id="logoutBtn" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button></div></div>
     <button class="btn ghost sm hidden" id="resetAll" title="Borra lo cargado y lo capturado en este navegador"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>Reiniciar todo</button>
@@ -1806,7 +1811,7 @@ $('dl').onclick=function(){
    guardado, para no perder nada si se cierra la ventana.                    */
 var SB_URL_FIJA='https://yyvyyhjyychkbiinihhr.supabase.co', SB_KEY_FIJA='sb_publishable_yuW2tIun2sSlZMtYgf8T9A_6bGoAY3g';
 var SB_CFG='tc_sb_cfg', SB_SES='tc_sb_ses', SB_DOM=['alvaco.com.mx'];
-var sbVer=null, sbBusy=false, sbUser='', NO_PREG_CARGA=true;  // con Supabase, cargar otro Excel no pide confirmación: lo pendiente sigue en memoria y en el respaldo
+var sbVer=null, sbBusy=false, sbUser='', sbRol='captura', NO_PREG_CARGA=true;  // con Supabase, cargar otro Excel no pide confirmación: lo pendiente sigue en memoria y en el respaldo
 function sbCfg(){var u=SB_URL_FIJA.indexOf('/*')===0?'':SB_URL_FIJA, k=SB_KEY_FIJA.indexOf('/*')===0?'':SB_KEY_FIJA;
   if(!u||!k){try{var c=JSON.parse(localStorage.getItem(SB_CFG)||'null');if(c){u=u||c.url;k=k||c.key;}}catch(e){}}
   return {url:(u||'').replace(/\/+$/,''),key:k||'',fija:SB_URL_FIJA.indexOf('/*')!==0}}
@@ -1824,7 +1829,7 @@ function sbToken(){var s=sbSes();if(!s)return Promise.reject(Object.assign(new E
 function sbRpc(fn,args){return sbToken().then(function(s){return sbFetch('/rest/v1/rpc/'+fn,{method:'POST',headers:{'Authorization':'Bearer '+s.at},body:JSON.stringify(args||{})})});}
 
 /* ---- respaldo local de lo que aún no se guarda en Supabase ---- */
-function cacheWrite(pend){try{localStorage.setItem(KEY,JSON.stringify({v:2,fileBase:fileBase,loadedAt:loadedAt,savedAt:new Date().toISOString(),used:used,state:state,rows:rows,pendiente:!!pend,baseVer:sbVer,user:sbUser}));}catch(e){console.error(e)}}
+function cacheWrite(pend){try{localStorage.setItem(KEY,JSON.stringify({v:2,fileBase:fileBase,loadedAt:loadedAt,savedAt:new Date().toISOString(),used:used,state:state,rows:rows,pendiente:!!pend,baseVer:sbVer,user:sbUser,rol:sbRol}));}catch(e){console.error(e)}}
 function cacheRead(){try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){return null}}
 
 /* save() del tablero: ahora deja los cambios "pendientes de guardar en Supabase" */
@@ -1836,6 +1841,7 @@ function sbPayload(){var ks=sbKeys();return rows.map(function(r,i){var o=JSON.pa
 
 /* Guardar datos en Supabase */
 function cloudSave(opt){opt=opt||{};
+  if(sbRol==='consulta'){toastErr('Solo consulta','Tu usuario puede ver y descargar el Excel, pero no guardar cambios.');return Promise.resolve(false);}
   if(sbBusy)return Promise.resolve(false);
   sbBusy=true;var b=$('sv');b.disabled=true;b.textContent='Guardando…';
   var est={fileBase:fileBase,loadedAt:loadedAt,used:used,state:state};
@@ -1872,7 +1878,7 @@ function aplicar(d,ver){
 }
 function cloudLoad(descartar,opt){opt=opt||{};
   return sbRpc('tc_cargar',{}).then(function(j){
-    var e=(j&&j.estado)||{}; sbVer=e.version||0; cargando(false);
+    var e=(j&&j.estado)||{}; sbVer=e.version||0; cargando(false); sbRol=(j&&j.rol)||'captura'; aplicarRol();
     var c=cacheRead();
     var txtG=e.updated_at?('Datos de Supabase · último guardado el '+fmtDT(e.updated_at)+' por '+esc(e.updated_by||'')+' · versión '+sbVer):'Supabase conectado · aún no hay datos guardados';
     // ya se mostró la copia local y Supabase no cambió: no se vuelve a pintar (sin parpadeo)
@@ -1896,7 +1902,7 @@ function pedirLogin(m){var c=sbCfg();$('lgCfg').classList.toggle('hidden',!!(c.u
   $('lgMsg').textContent=m||''; $('login').classList.remove('hidden'); setTimeout(function(){($('lgEmail').value?$('lgPass'):$('lgEmail')).focus()},50);}
 function userChip(){var u=$('userChip');if(!u)return;u.classList.toggle('hidden',!sbUser);$('userMail').textContent=sbUser;
   var p=(sbUser.split('@')[0]||'').split(/[._-]+/).filter(Boolean), nom=p.map(function(x){return x.charAt(0).toUpperCase()+x.slice(1).toLowerCase()}).join(' ');
-  var ini=((p[0]||'?').charAt(0)+(p[1]||'').charAt(0)).toUpperCase();
+  var ini=(p.length>1?(p[0].charAt(0)+p[1].charAt(0)):(p[0]||'?').slice(0,2)).toUpperCase();   // jcampos -> JC
   $('uIni').textContent=ini;$('uIni2').textContent=ini;$('uName').textContent=nom||sbUser;$('uAv').title=nom+' · '+sbUser;}
 function uMenu(open){var d=$('uDrop');d.classList.toggle('hidden',!open);$('uAv').setAttribute('aria-expanded',open?'true':'false');}
 $('uAv').onclick=function(e){e.stopPropagation();uMenu($('uDrop').classList.contains('hidden'));};
@@ -1941,6 +1947,11 @@ if($('resetAll'))$('resetAll').onclick=function(){
 persist=function(h){cloudSave({silencio:true}).then(function(ok){if(ok)toast(h.replace('</span>',' Ya quedó guardado en Supabase.</span>'))})};
 persistOp=function(op,h){var habiaPend=dirty; op(); save(true); if(detPk)detRender();
   cloudSave({silencio:true,reaplicar:habiaPend?null:op}).then(function(ok){if(ok){if(detPk)detRender();toast(h.replace('</span>',' Ya quedó guardado en Supabase.</span>'));}})};
+// Usuarios de solo consulta: ven el tablero y descargan el Excel; no cargan archivos ni guardan
+function aplicarRol(){var ro=sbRol==='consulta';document.body.classList.toggle('solo-consulta',ro);
+  var bd=$('uRol');if(bd){bd.textContent=ro?'Solo consulta':'Captura';bd.className='urol '+(ro?'ro':'rw');}
+  var wp=document.querySelector('#welcome p');if(wp&&ro)wp.innerHTML='Tu usuario es de <b>solo consulta</b>. Aún no hay datos guardados en Supabase; cuando el equipo de Comercialización los cargue, aquí los vas a ver.';}
+var _loadOrig=load; load=function(f){if(sbRol==='consulta'){toastErr('Solo consulta','Tu usuario no puede cargar archivos. Puedes ver la información y descargar el Excel consolidado.');return;}return _loadOrig(f);};
 function cloudInit(){setDirtyTxt();
   var brs=$('resetAll');if(brs)brs.parentNode.removeChild(brs);   // con Supabase tampoco se usa "Reiniciar todo"
   var bdel=$('delBtn');if(bdel)bdel.style.setProperty('display','none','important');   // con Supabase ya no se usa "Eliminar datos" (borraría para todos)
@@ -1954,6 +1965,7 @@ function cloudInit(){setDirtyTxt();
 function cargando(on){document.body.classList.toggle('cargando',!!on);}
 function cargarInicio(){
   var c=cacheRead(), ok=c&&!c.pendiente&&c.user===sbUser&&c.rows&&c.rows.length&&c.baseVer!=null;
+  if(c&&c.user===sbUser&&c.rol){sbRol=c.rol;aplicarRol();}
   if(ok){sbVer=c.baseVer;aplicar(c,c.baseVer);setDirty(false);$('saved').innerHTML='Datos de Supabase · versión '+c.baseVer+' · verificando cambios…';}
   else cargando(true);
   return cloudLoad(false,{verMostrada:ok?c.baseVer:null});
