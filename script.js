@@ -3,6 +3,9 @@
    script.js · Lógica y configuración
    v3.5 · oct 2026
    ------------------------------------------------------------
+   Novedades v3.7
+   · "Tablero TC" para todos: botón en el menú lateral, debajo
+     de Portal KPI's (ya no es exclusivo IC)
    Novedades v3.6
    · Campo pestana: true · el Tablero TC abre en pestaña nueva
    Novedades v3.5
@@ -38,7 +41,7 @@
    está en pantalla y el error se muestra a la vista en lugar de
    dejar la página en blanco. No toca nada de la lógica.
    ============================================================ */
-const PORTAL_VERSION = 'v3.6.1';
+const PORTAL_VERSION = 'v3.7';
 (function arranqueSeguro(){
   console.log('%cPortal IC ALVACO ' + PORTAL_VERSION, 'color:#17A2A6;font-weight:bold');
 
@@ -174,17 +177,18 @@ const DASHBOARDS = [
     url: "https://app.powerbi.com/groups/9329f718-3abb-4325-8cfc-f5564b8e6fd2/reports/59738434-77a1-4a1a-b770-4a5957251913/e371878e77fd044f7a49?language=es-MX&experience=power-bi"
   },
   {
-    /* ══════════ EXCLUSIVO IC · Herramienta HTML ══════════
+    /* ══════════ ACCESO DEL SIDEBAR · Tablero TC ══════════
        Tablero de equipos parados con clave TC (Tema Comercial).
+       Para TODOS: se abre desde el botón del menú lateral,
+       debajo de Portal KPI's, o con ?abrir=tc.
        Tablero_TC_Munelocos.html debe estar en la MISMA carpeta
-       del portal (junto a index.html). Para abrirlo a todos,
-       quita "soloIC: true".                                  */
+       del portal (junto a index.html).                       */
     nombre: "Tablero TC",
     descripcion: "Equipos parados con clave TC (Tema Comercial) — seguimiento por plaza, cadena y ejecutivo.",
     categoria: "Herramientas IC",
     color: "amber",
     tipo: "web",
-    soloIC: true,
+    oculto: true,    /* ← sin tarjeta: solo desde el sidebar o por URL */
     pestana: true,   /* ← se abre en pestaña nueva, no dentro del visor */
     imagen: "img/oso_constructor_transparente.png",
     embed: "Tablero_TC_Munelocos.html",
@@ -271,6 +275,11 @@ const ACCESO_DIRECTO2_LABEL  = "";
 const ACCESO_KPIS_NOMBRE  = "Portal KPI's";
 const ACCESO_KPIS_LABEL   = "Portal KPI's";
 const ACCESO_KPIS_PESTANA = false;
+
+/* Acceso al Tablero TC: va debajo de Portal KPI's, para todos.
+   Deja ACCESO_TC_NOMBRE en "" para ocultar el botón.           */
+const ACCESO_TC_NOMBRE = "Tablero TC";
+const ACCESO_TC_LABEL  = "Tablero TC";
 
 /* true = las herramientas web externas (tipo "web" con https://)
    se cargan siempre frescas en el visor, sin usar la caché.     */
@@ -394,6 +403,7 @@ const ICONS = {
   ticket:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2.5 2.5 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2.5 2.5 0 0 0 0-6Z"/><line x1="14" y1="5" x2="14" y2="8"/><line x1="14" y1="11" x2="14" y2="13"/><line x1="14" y1="16" x2="14" y2="19"/></svg>',
   lock:  '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
   lockMini:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+  tc:    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 14h3M8 17h6"/><circle cx="16.5" cy="15" r="1.6"/></svg>',
   kpi:   '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><polyline points="7 14 11 10 14 13 20 7"/><polyline points="16 7 20 7 20 11"/></svg>'
 };
 
@@ -1258,6 +1268,18 @@ function construirSidebar(){
       }
     });
     sideNav.appendChild(btnKpi);
+  }
+
+  /* Tablero TC: debajo de Portal KPI's, visible para todos */
+  const tableroTC = ACCESO_TC_NOMBRE
+    ? DASHBOARDS.find(d => d.nombre === ACCESO_TC_NOMBRE && (d.embed || d.url))
+    : null;
+  if (tableroTC){
+    const btnTC = document.createElement('button');
+    btnTC.className = 'side-item side-item-tc';
+    btnTC.innerHTML = ICONS.tc + `<span>${ACCESO_TC_LABEL}</span><span class="count">app</span>`;
+    btnTC.addEventListener('click', () => abrirVisor(tableroTC));
+    sideNav.appendChild(btnTC);
   }
 }
 

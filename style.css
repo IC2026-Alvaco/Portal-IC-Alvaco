@@ -1,6 +1,6 @@
 /* ============================================================
    MENÚ DE DASHBOARDS — ALVACO · INTELIGENCIA COMERCIAL
-   CSS consolidado v5.4 · oct 2026
+   CSS consolidado v5.5 · oct 2026
    Secciones: variables · base · sidebar · botón-logo · hero ·
    buscador · recientes · tarjetas · footer · visor · zoom ·
    responsivo · accesibilidad · área IC · portal KPI's ·
@@ -1432,6 +1432,28 @@ body{
 }
 .side-item-kpi:hover svg{background:rgba(34,165,91,.24)}
 .side-item-kpi .count{
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  font-size:9.5px;
+}
+
+/* ==================== TABLERO TC ==================== */
+/* Ítem del menú lateral: contorno ámbar, debajo de Portal KPI's */
+.side-item-tc{
+  border:1px solid rgba(232,160,32,.50);
+  margin-top:6px;
+}
+.side-item-tc svg{
+  color:#FFD58A;
+  background:rgba(232,160,32,.16);
+  border-color:rgba(232,160,32,.34);
+}
+.side-item-tc:hover{
+  background:rgba(232,160,32,.16);
+  box-shadow:0 0 0 1px rgba(232,160,32,.38), 0 4px 14px rgba(232,160,32,.20);
+}
+.side-item-tc:hover svg{background:rgba(232,160,32,.26)}
+.side-item-tc .count{
   text-transform:uppercase;
   letter-spacing:.06em;
   font-size:9.5px;
