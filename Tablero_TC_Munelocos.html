@@ -1141,11 +1141,11 @@ function importBase(wb){
     }
     var st=l?l.status:'', m=null, tx=[l?l.coment:'',r.info].concat(tm);
     for(var i=0;i<tx.length&&!m;i++){var mm=tx[i]&&String(tx[i]).match(RETIRO_RE);if(mm)m=mm[0];}
-    var why=st==='OPERANDO'?'ya operando (status OPERANDO en la lista)':st==='RETIRO'?'retiro (status RETIRO en la lista)':m?'retiro confirmado ('+m.toLowerCase()+')':'';
+    var why=st==='RETIRO'?'retiro (status RETIRO en la lista)':m?'retiro confirmado ('+m.toLowerCase()+')':'';
     if(l&&l.verde)why=why?why+' · en verde en la lista':'finalizado (marcado en verde en la lista)';
     if(!why)return;
-    rs[st==='OPERANDO'?'op':st==='RETIRO'?'ret':'conf']++;
-    r.mode='resuelto';r.listaRes=1;r.fres=fr;if(st!=='OPERANDO')r.retiro=1;r.seg='Resuelto - '+why+' · '+isoToStr(fr);
+    rs[st==='RETIRO'?'ret':'conf']++;
+    r.mode='resuelto';r.listaRes=1;r.fres=fr;if(st==='RETIRO'||m)r.retiro=1;r.seg='Resuelto - '+why+' · '+isoToStr(fr);
   });
   // Equipos TC de la lista que YA NO vienen con TC en el SAT: se agregan como resueltos para tenerlos ubicados
   var ya={}, add=0, sc=(state&&state.satC)||{}; rows.forEach(function(r){ya[norm(r.codigo)]=1});
@@ -1160,7 +1160,7 @@ function importBase(wb){
   save(true);
   var rsl=rows.filter(function(r){return r.mode==='resuelto'}), c={op:0,ret:0,conf:0,otro:0}; rsl.forEach(function(r){var s=r.seg||'';if(r.desdeLista){c.lista=(c.lista||0)+1;return;}if(/finalizado \(marcado en verde/.test(s))c.verde=(c.verde||0)+1;else if(/ya operando/.test(s))c.op++;else if(/status RETIRO/.test(s))c.ret++;else if(/retiro confirmado/.test(s))c.conf++;else c.otro++;});
   var tot=rsl.length, quedan=rows.length-tot;
-  msg('Cruce con la lista <b>'+esc(pendingName)+'</b>: <b>'+n+'</b> equipo(s) TC del SAT están en la lista'+(dif?' ('+dif+' con diferencias de región, ciudad, plaza o producto; ver Comentarios TC)':' y coinciden en región, ciudad, plaza y producto')+' · <b>'+tot+'</b> resueltos en total ('+c.op+' ya operando, '+c.ret+' con status RETIRO en la lista, '+c.conf+' con retiro confirmado'+(c.verde?', '+c.verde+' finalizados (en verde en la lista)':'')+(c.otro?', '+c.otro+' por cambio de clave o porque ya no vienen en el SAT':'')+(c.lista?', '+c.lista+' de la lista que ya no vienen con TC en el SAT (se agregaron para tenerlos ubicados)':'')+') · <b>'+rows.filter(function(r){return !L[norm(r.codigo)]}).length+'</b> no vienen en la lista · <b>Quedan '+quedan+' equipos con TC.</b>');
+  msg('Cruce con la lista <b>'+esc(pendingName)+'</b>: <b>'+n+'</b> equipo(s) TC del SAT están en la lista'+(dif?' ('+dif+' con diferencias de región, ciudad, plaza o producto; ver Comentarios TC)':' y coinciden en región, ciudad, plaza y producto')+' · <b>'+tot+'</b> resueltos en total ('+c.ret+' con status RETIRO en la lista, '+c.conf+' con retiro confirmado'+(c.verde?', '+c.verde+' finalizados (en verde en la lista)':'')+(c.otro?', '+c.otro+' por cambio de clave o porque ya no vienen en el SAT':'')+(c.lista?', '+c.lista+' de la lista que ya no vienen con TC en el SAT (se agregaron para tenerlos ubicados)':'')+') · <b>'+rows.filter(function(r){return !L[norm(r.codigo)]}).length+'</b> no vienen en la lista · <b>Quedan '+quedan+' equipos con TC.</b>');
   render(used,[],state.unknown||{},state.hdrErr||[]);
 }
 function findReport(wb){
@@ -1205,7 +1205,7 @@ function importReport(wb){
 function process(wb){
   fileBase=pendingName;
   var prev={},prevCod={}; rows.forEach(function(r){prev[ekey(r)]=r;prevCod[norm(r.codigo)]=r}); var hadPrev=rows.length>0, moved=[];
-  rows=[]; var allK={},allC={};
+  rows=[]; var allK={},allC={},vistos={};
   used=[]; var meta=(wb.Workbook&&wb.Workbook.Sheets)||[], skipped=[], unknown={}, hdrErr=[];
   wb.SheetNames.forEach(function(name,i){
     var hidden=meta[i]&&meta[i].Hidden;
@@ -1215,18 +1215,22 @@ function process(wb){
     for(var r=0;r<=Math.min(9,range.e.r);r++){ if(txt(cellVal(ws,r,3)).toLowerCase()==='plaza' && /c[oó]digo/i.test(txt(cellVal(ws,r,5)))){hr=r;break;} }
     if(hr<0)return;                       // hoja sin tabla de equipos (Resumen, Claves, etc.)
     if(hidden){skipped.push(name);return;}
+    if(/concentrado/i.test(name)){skipped.push(name);return;}   // hoja que junta todas las demás: se omite para no duplicar equipos
+    // columnas por nombre de encabezado (si no se encuentran, se usan las posiciones de siempre)
+    var colH=function(re,def){for(var c=0;c<=Math.min(range.e.c,30);c++){if(re.test(txt(cellVal(ws,hr,c))))return c;}return def;};
+    var cDias=colH(/^d[ií]as$/i,9), cClave=colH(/^clave$/i,10), cUlt=colH(/recaud/i,8);
     // validar columnas clave
-    var chk=[[0,/regi/i],[1,/ciudad/i],[4,/producto/i],[8,/recaud/i],[9,/d[ií]as/i]];
+    var chk=[[0,/regi/i],[1,/ciudad/i],[4,/producto/i],[cUlt,/recaud/i],[cDias,/d[ií]as/i],[cClave,/clave/i]];
     chk.forEach(function(p){if(!p[1].test(txt(cellVal(ws,hr,p[0]))))hdrErr.push(name+' (col '+XLSX.utils.encode_col(p[0])+')')});
     // Columna de comentarios de Regionales: la primera después de "Días" que se llame "Status" o "Información de Regionales"
     var ic=11;
-    for(var cc=10;cc<=Math.min(range.e.c,25);cc++){var hh=txt(cellVal(ws,hr,cc)).toLowerCase();if(hh==='status'||/informaci[oó]n de regionales/.test(hh)){ic=cc;break;}}
+    for(var cc=cClave+1;cc<=Math.min(range.e.c,25);cc++){var hh=txt(cellVal(ws,hr,cc)).toLowerCase();if(hh==='status'||/informaci[oó]n de regionales/.test(hh)){ic=cc;break;}}
     var n=0;
     for(var r2=hr+1;r2<=range.e.r;r2++){
-      var cod=txt(cellVal(ws,r2,5)); if(!cod)continue;
-      var cl=txt(cellVal(ws,r2,10)).toUpperCase(); if(cl==='#VALUE!'||cl==='0')cl='';
+      var cod=txt(cellVal(ws,r2,5)); if(!cod)continue; if(vistos[norm(cod)])continue; vistos[norm(cod)]=1;
+      var cl=txt(cellVal(ws,r2,cClave)).toUpperCase(); if(cl==='#VALUE!'||cl==='0')cl='';
       var info=txt(cellVal(ws,r2,ic)); if(info==='0')info='';
-      var ult=cellVal(ws,r2,8), dias=cellVal(ws,r2,9);
+      var ult=cellVal(ws,r2,cUlt), dias=cellVal(ws,r2,cDias);
       if(typeof ult!=='number')ult=null;
       dias=(dias===null||dias==='')?null:Number(dias); if(isNaN(dias))dias=null;
       var desc=cl?(CLAVES[cl]||'Clave no catalogada'):'';
@@ -1253,10 +1257,14 @@ function process(wb){
     // ya no viene con TC: se resolvió (ya no está en el archivo o pasó a otra clave)
     var o=JSON.parse(JSON.stringify(p));
     if(p.mode!=='resuelto'){
-      var nw=allK[k]||allC[norm(p.codigo)], dir=p.dirAct||p.dirigido;
+      var nw=allK[k]||allC[norm(p.codigo)], dir=p.dirAct||p.dirigido, U=function(x){return txt(x).toUpperCase()};
+      if(nw&&nw.clave&&dir&&U(nw.clave)===U(dir)){   // está en la clave a la que TC lo dirigió: sigue en seguimiento
+        o.clave=nw.clave;o.desc=CLAVES[nw.clave]||'Clave no catalogada';o.info=nw.info;o.enDir=nw.clave;
+        o.seg='En '+nw.clave+' (clave a la que se dirigió) · sigue en seguimiento';rows.push(o);cnt.enDir=(cnt.enDir||0)+1;return;}
+      var de=p.enDir; delete o.enDir;
       o.mode='resuelto'; o.fres=fileDate;
       if(nw){o.clave=nw.clave||'(sin clave)';o.desc=nw.clave?(CLAVES[nw.clave]||'Clave no catalogada'):'';o.info=nw.info;
-        o.seg='Resuelto - pasó a '+(nw.clave||'sin clave')+(nw.clave&&dir&&nw.clave===dir?' (clave a la que se dirigió)':'');}
+        o.seg='Resuelto - '+(de?de+' lo pasó a ':'pasó a ')+(nw.clave||'sin clave');}
       else o.seg='Resuelto - ya no está en el archivo';
       o.seg+=' · '+isoToStr(fileDate);
     }
@@ -1267,7 +1275,7 @@ function process(wb){
   rows.forEach(function(r,i){r.id=i;r.pk=pkey(r)});
   loadedAt=new Date().toISOString(); state={unknown:unknown,hdrErr:hdrErr,fileDate:fileDate,satC:(function(){var o={};Object.keys(allC).forEach(function(c){o[c]=allC[c].clave||''});return o})()};
   save(true);
-  msg(hadPrev?('Comparado con la información anterior: <b>'+(cnt.igual+cnt.cambio)+'</b> regresaron con TC y ya tenían comentario → <b>'+cnt.cambio+'</b> con comentario nuevo de Regionales (se habilita el comentario actual) y <b>'+cnt.igual+'</b> sin cambios (solo visualizar) · <b>'+(cnt.nuevo+cnt.sinprev)+'</b> nuevos o sin comentario previo.')+(cnt.resuelto?' · <b>'+cnt.resuelto+'</b> resuelto(s) (en verde, solo lectura)'+(cnt.retiro?', de ellos <b>'+cnt.retiro+'</b> por retiro confirmado':'')+'.':'')+(moved.length?' · <b>'+moved.length+'</b> equipo(s) con el mismo código pero otro nombre de plaza (se emparejaron por código: '+esc(moved.slice(0,8).join(', '))+(moved.length>8?'…':'')+').':''):'');
+  msg(hadPrev?('Comparado con la información anterior: <b>'+(cnt.igual+cnt.cambio)+'</b> regresaron con TC y ya tenían comentario → <b>'+cnt.cambio+'</b> con comentario nuevo de Regionales (se habilita el comentario actual) y <b>'+cnt.igual+'</b> sin cambios (solo visualizar) · <b>'+(cnt.nuevo+cnt.sinprev)+'</b> nuevos o sin comentario previo.')+(cnt.resuelto?' · <b>'+cnt.resuelto+'</b> resuelto(s) (en verde, solo lectura)'+(cnt.retiro?', de ellos <b>'+cnt.retiro+'</b> por retiro confirmado':'')+'.':'')+(cnt.enDir?' · <b>'+cnt.enDir+'</b> en la clave a la que se dirigieron (siguen en seguimiento).':'')+(moved.length?' · <b>'+moved.length+'</b> equipo(s) con el mismo código pero otro nombre de plaza (se emparejaron por código: '+esc(moved.slice(0,8).join(', '))+(moved.length>8?'…':'')+').':''):'');
   render(used,skipped,unknown,hdrErr);
 }
 
