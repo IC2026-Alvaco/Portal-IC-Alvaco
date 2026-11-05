@@ -108,15 +108,7 @@ const DASHBOARDS = [
     imagen: "img/pagina-bsica-muelocos-2.png",
     url: "https://app.powerbi.com/links/sk9uzy9SnS?ctid=923eb367-abae-4010-9989-b7cf33fb74a7&pbi_source=linkShare"
   },
-  {
-    nombre: "Equipos parados",
-    descripcion: "Equipos parados sin resolver por 15 días",
-    categoria: "Equipos",
-    color: "teal",
-    embed: "https://app.powerbi.com/reportEmbed?reportId=d126d7f9-4b5b-4de9-8cc3-4d6672b84dc8&autoAuth=true&ctid=923eb367-abae-4010-9989-b7cf33fb74a7",
-    imagen: "img/oso_constructor_transparente.png",
-    url: "https://app.powerbi.com/links/JrAluQT0B6?ctid=923eb367-abae-4010-9989-b7cf33fb74a7&pbi_source=linkShare"
-  },
+  
   {
     nombre: "Altec",
     descripcion: "Instalaciones de equipos.",
