@@ -995,13 +995,13 @@ var IMG={classic:'data:image/webp;base64,UklGRmQjAABXRUJQVlA4WAoAAAAQAAAAYAAAnwA
 <script>
 (function(){
 'use strict';
-var CLAVES={'TC':'Tema Comercial','PVR':'Punto de venta en remodelación','I+D':'Falla de Alvaco Móvil','FV':'Frecuencia de visita','EO':'Equipo operando correctamente','ER':'Equipo retirado','INC':'Incidencia (vidrios rotos, vandalismo)','TQ':'Tienda quemada','CFO':'Se solicitó llaves/accesorio a Control Foráneo','LEG':'Tema legal','SAT':'Falla técnica en espera de refacción','TRR':'Técnico de la región reparando','FVO':'Encargado de ruta no ha visitado el equipo'};
+var CLAVES={'TC':'Tema Comercial','PVR':'Punto de venta en remodelación','I+D':'Falla de Alvaco Móvil','FV':'Frecuencia de visita','EO':'Equipo operando correctamente','ER':'Equipo retirado','INC':'Incidencia (vidrios rotos, vandalismo)','TQ':'Tienda quemada','CFO':'Control Foráneo','LEG':'Tema legal','SAT':'Falla técnica en espera de refacción','TRR':'Técnico de la región reparando','FVO':'Encargado de ruta no ha visitado el equipo'};
 var COLS=[
  {k:'sem',h:'Semáforo',w:12},{k:'region',h:'Región',w:16},{k:'ciudad',h:'Ciudad',w:18},{k:'cadena',h:'Cadena',w:20},{k:'plaza',h:'Plaza',w:36},{k:'producto',h:'Producto',w:22},{k:'modelo',h:'Modelo',w:16},
  {k:'codigo',h:'Código',w:12},{k:'status',h:'Status',w:11},{k:'ult',h:'Última recaudación',w:13},{k:'dias',h:'Días',w:7},
  {k:'clave',h:'Clave',w:8},{k:'desc',h:'Descripción clave',w:32},{k:'info',h:'Información de Regionales',w:60},{k:'hoja',h:'Hoja origen',w:16},{k:'ftc',h:'Fecha que se asignó a TC',w:14},{k:'ctc',h:'Comentarios TC',w:50},{k:'seg',h:'Seguimiento',w:26},{k:'dirigido',h:'Dirigido',w:11,input:true},{k:'coment',h:'Comentarios Comercialización',w:48,input:true},{k:'fcom',h:'Fecha comentario',w:14,input:true},{k:'dirAct',h:'Dirigido actualmente',w:12,input:true},{k:'actual',h:'Equipos parados_Actuales comentarios',w:48,input:true},{k:'fact',h:'Fecha nuevo comentario',w:14,input:true},{k:'dpar',h:'Días Parados',w:13}];
 var SEG={nuevo:'Nuevo',sinprev:'Sin comentario previo',igual:'Sin cambios (solo visualizar)',cambio:'Regresó con TC - nuevo comentario de Regionales',agrego:'Regresó con TC - Regionales agregó comentario'};
-var DIRIGIDO=['EO','ER','FIN','FV','INC','LEG','OP','PVC','PVR','SAT','TQ','TRR'];
+var DIRIGIDO=['CFO','EO','ER','FIN','FV','INC','LEG','OP','PVC','PVR','SAT','TQ','TRR'];
 if(!CLAVES['FIN'])CLAVES['FIN']='Finanzas';
 var DEF=['TC'];
 var sel={}, used=[];
