@@ -826,6 +826,64 @@ body.dash.fit .pbi-top{padding-top:8px}
 .tlc b{height:12px}
 
 </style>
+<style id="rkCompacto">
+/* ===== Ranking limpio: una sola barra de controles y la tabla ocupa el resto ===== */
+.a-rk .pb{display:flex;flex-direction:column;min-height:0}
+.a-rk .rkm,.a-rk .rkc:not(.rkbar){display:none !important}
+.rkbar{display:flex !important;align-items:center;justify-content:space-between;gap:8px;margin:2px 0 8px;flex-wrap:nowrap}
+.rksel{display:flex;align-items:center;gap:6px;min-width:0;flex:1 1 auto;margin:0}
+.rksel span{font-size:12px;font-weight:700;color:#6A7690;white-space:nowrap}
+.rksel select{flex:1 1 auto;min-width:0;max-width:170px;-webkit-appearance:none;appearance:none;cursor:pointer;
+  border:1px solid #D5DEF0;border-radius:8px;background:#FFFFFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233F60A8' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center/11px;
+  padding:4px 26px 4px 9px;font:inherit;font-size:13px;font-weight:700;color:#1F3864}
+.rksel select:hover{border-color:#7B61C4}
+.rksel select:focus{outline:none;border-color:#7B61C4;box-shadow:0 0 0 3px rgba(123,97,196,.18)}
+.a-rk .segb{flex:0 0 auto;display:inline-flex;background:#EEF1F8;border:0;border-radius:8px;padding:2px;gap:2px}
+.a-rk .segb button{background:transparent;border:0;border-radius:6px;padding:3px 11px;font-size:12px;font-weight:700;color:#595959;cursor:pointer}
+.a-rk .segb button.on{background:#FFFFFF;color:#1F3864;box-shadow:0 1px 3px rgba(31,56,100,.18)}
+.a-rk .rksub{font-size:11.5px;color:#6A7690;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a-rk .rkt{flex:1;min-height:150px;overflow:auto}
+.a-rk .rkt table{font-size:13px}
+.a-rk .rkt th{padding:6px 8px;font-size:12px}
+.a-rk .rkt td{padding:5px 8px}
+.a-rk .rkt td.nm .mt{margin-top:3px;height:4px}
+</style>
+<style id="tiposCuadradas">
+/* ===== Tipo de producto: tarjetas cuadradas en una sola fila ===== */
+.tipw .tipos{grid-template-columns:none !important;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);grid-auto-rows:auto;gap:8px;height:100%}
+.tipw .tcard{flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;padding:8px 6px !important;min-width:0;height:100%;border-top-width:4px;border-radius:12px}
+.tipw .tcard .kic{width:42px;height:42px;flex:0 0 auto}
+.tipw .tcard .tcx{align-items:center;width:100%;min-width:0;line-height:1.1}
+.tipw .tcard .tcx b{font-size:30px !important;line-height:1.05;font-weight:800;color:#1F3864;display:flex;align-items:baseline;justify-content:center;gap:5px;white-space:nowrap}
+.tipw .tcard .tcx b .tar{display:none}
+.tipw .tcard .tcx b .pcb{font-size:13.5px !important;font-weight:700;padding:1px 7px !important;margin:0 !important;border-radius:999px;background:#F6E9F4 !important;color:#A02B93;line-height:1.4;vertical-align:middle}
+.tipw .tcard .tcx .tn{font-size:13px;font-weight:700;color:#1F3864;white-space:normal !important;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.15;margin-top:2px}
+.tipw .tcard .tcx .tr{display:none}
+@media (max-width:640px){html:not(.zm) .tipw .tipos{grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr)) !important}}
+html.zm.mq21 .tipw .tipos{grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr)) !important}
+</style>
+<style id="selBuscar">
+/* ===== Filtros con buscador ===== */
+.ssw{position:relative;display:block;min-width:0}
+.ssw>select{position:absolute !important;inset:0;opacity:0 !important;pointer-events:none !important;width:100%}
+.ssb{display:flex;align-items:center;gap:6px;width:100%;min-width:0;background:#FFFFFF;border:1px solid #D5DEF0;border-radius:8px;padding:6px 8px;font:inherit;font-size:13.5px;color:#333333;cursor:pointer;text-align:left;transition:border-color .15s,box-shadow .15s}
+.ssb span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ssb svg{width:12px;height:12px;flex:0 0 auto;color:#595959;transition:transform .2s}
+.ssb:hover{border-color:#A9B8D6}
+.ssw.open .ssb{border-color:#7B61C4;box-shadow:0 0 0 3px rgba(123,97,196,.16)}.ssw.open .ssb svg{transform:rotate(180deg)}
+.ssw.act .ssb{border-color:#7B61C4;background:#F6F2FE;color:#4B2E83;font-weight:700}
+.ssp{position:fixed;z-index:500;background:#FFFFFF;border:1px solid #D5DEF0;border-radius:10px;box-shadow:0 14px 34px -10px rgba(31,56,100,.35);padding:6px;display:flex;flex-direction:column;animation:sspIn .14s ease-out}
+@keyframes sspIn{from{opacity:0;transform:translateY(-4px)}}
+.ssq{display:flex;align-items:center;gap:6px;border:1px solid #D5DEF0;border-radius:8px;padding:0 8px;margin-bottom:6px;background:#F7F9FD}
+.ssq:focus-within{border-color:#7B61C4;background:#FFFFFF}
+.ssq svg{width:15px;height:15px;color:#7B61C4;flex:0 0 auto}
+.ssq input{flex:1;min-width:0;border:0 !important;outline:none !important;box-shadow:none !important;background:transparent;font:inherit;font-size:13.5px;padding:7px 0;color:#333}
+.ssl{overflow:auto;max-height:280px}
+.sso{padding:6px 9px;border-radius:6px;font-size:13.5px;color:#333;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sso.hl{background:#EEF2FA}.sso.sel{color:#4B2E83;font-weight:700}.sso.sel::after{content:" ✓";color:#7B61C4}
+.sso mark{background:#FDE7B0;color:inherit;padding:0;border-radius:2px}
+.sse{padding:10px;text-align:center;color:#595959;font-size:12.5px}
+</style>
 </head>
 <body>
 <header class="top"><div class="in">
@@ -840,7 +898,7 @@ body.dash.fit .pbi-top{padding-top:8px}
     <button class="btn ghost sm del hidden" id="delBtn" title="Elimina los datos de la tabla en este navegador"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar datos</button>
     <button class="btn sm" id="attachBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Adjuntar Excel</button>
     <button class="btn save sm" id="sv" disabled>Guardar cambios</button>
-    <button class="btn ghost sm" id="dlT" title="Solo equipos activos: Crítico, Atención y Reciente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Reporte Tamara</button>
+    <button class="btn ghost sm" id="dlT" title="Equipos activos con Dirigido y Comentarios Comercialización"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Reporte Tamara</button>
     <button class="btn ghost sm" id="dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Descargar Excel consolidado</button>
 <div class="umenu hidden" id="userChip"><button class="uav" id="uAv" aria-haspopup="true" aria-expanded="false"><span id="uIni"></span></button>
   <div class="udrop hidden" id="uDrop" role="menu"><div class="uhd"><span class="uav big"><span id="uIni2"></span></span><div class="uid"><b id="uName"></b><span id="userMail"></span><span class="urol rw" id="uRol">Captura</span></div></div>
@@ -902,7 +960,7 @@ body.dash.fit .pbi-top{padding-top:8px}
           <div class="pgrid">
             <div class="pnl a-ant" style="border-top-color:#3F60A8"><div class="phd"><div class="ph">Antigüedad · días parado</div><div class="psub">colores del semáforo · toca una barra</div></div><div class="pb"><div class="chart" id="chAnt"></div></div></div>
             <div class="pnl a-mtx" style="border-top-color:#7B61C4"><div class="phd"><div class="ph">Resumen por región</div><div class="psub">Toca una región para filtrar todo el tablero</div></div><div class="pb"><div class="mtx" id="mReg"></div></div></div>
-            <div class="pnl a-rk" style="border-top-color:#0F9ED5"><div class="phd"><div class="ph">Ranking</div><div class="psub">Equipos parados por la dimensión que elijas</div></div><div class="pb"><div class="rkc"><span class="rkl">Orden</span><div class="segb" id="rkDir"><button data-d="top" class="on">Top</button><button data-d="bot">Bottom</button></div></div><div class="rkc"><span class="rkl">Ranking por</span></div><div class="rkm" id="rkDim"><button data-m="cad" class="on"><i></i>Cadena</button><button data-m="pv"><i></i>Punto de venta</button><button data-m="reg"><i></i>Región</button><button data-m="city"><i></i>Ciudad</button><button data-m="prod"><i></i>Producto</button><button data-m="mod"><i></i>Modelo</button></div><div class="rksub" id="rkSub"></div><div class="rkt" id="rkTbl"></div></div></div>
+            <div class="pnl a-rk" style="border-top-color:#0F9ED5"><div class="phd"><div class="ph">Ranking</div><div class="psub">Equipos parados por la dimensión que elijas</div></div><div class="pb"><div class="rkc rkbar"><label class="rksel"><span>Ranking por</span><select id="rkSel"><option value="cad">Cadena</option><option value="pv">Punto de venta</option><option value="reg">Región</option><option value="city">Ciudad</option><option value="prod">Producto</option><option value="mod">Modelo</option></select></label><div class="segb" id="rkDir" title="Orden"><button data-d="top" class="on" title="De mayor a menor número de equipos">↓ Mayor</button><button data-d="bot" title="De menor a mayor número de equipos">↑ Menor</button></div></div><div class="rkc"><span class="rkl">Ranking por</span></div><div class="rkm" id="rkDim"><button data-m="cad" class="on"><i></i>Cadena</button><button data-m="pv"><i></i>Punto de venta</button><button data-m="reg"><i></i>Región</button><button data-m="city"><i></i>Ciudad</button><button data-m="prod"><i></i>Producto</button><button data-m="mod"><i></i>Modelo</button></div><div class="rksub" id="rkSub"></div><div class="rkt" id="rkTbl"></div></div></div>
             <div class="pnl a-don" style="border-top-color:#A02B93"><div class="phd"><div class="ph">Equipos por producto</div><div class="psub">Toca un producto para filtrar</div></div><div class="pb"><div class="don" id="chProd"></div></div></div>
             <div class="pnl a-dir" style="border-top-color:#E97132"><div class="phd"><div class="ph" id="dirT">Equipos TC</div><div class="psub" id="dirS"></div><input id="dqs" class="dqs" type="search" placeholder="Buscar punto de venta, código, comentario…"><div class="segb dtab" id="dirTab"><button data-v="tbl" class="on">Tabla de equipos</button><button data-v="dir">Respuesta enviada a Operaciones</button></div></div><div class="pb"><div class="dtw" id="dTbl"></div><div class="chart hidden" id="chDir"></div></div></div>
           </div>
@@ -2080,9 +2138,9 @@ $('dlT').onclick=function(){
     {k:'codigo',h:'Código',w:12},{k:'status',h:'Status',w:11},{k:'ult',h:'Última recaudación',w:13},{k:'dias',h:'Días parado',w:9},{k:'clave',h:'Clave',w:8},{k:'desc',h:'Descripción clave',w:30},
     {k:'info',h:'Información de Regionales',w:60},
     {k:'dirigido',h:'Dirigido',w:10},{k:'coment',h:'Comentarios Comercialización',w:50}];
-  var data=base().filter(function(r){return r.mode!=='resuelto'&&['crit','aten','rec'].indexOf(semOf(r))>=0})
+  var data=base().filter(function(r){return r.mode!=='resuelto'&&['crit','aten','rec'].indexOf(semOf(r))>=0&&txt(dirVig(r))&&txt(r.actual||r.coment)})
     .sort(function(a,b){return (diasSem(b)||0)-(diasSem(a)||0)});
-  if(!data.length){toast('<b>Sin equipos activos</b><span>No hay equipos en Crítico, Atención o Reciente para el reporte.</span>');return;}
+  if(!data.length){toast('<b>Sin equipos para el reporte</b><span>Solo entran equipos activos que ya tengan Dirigido y Comentarios Comercialización.</span>');return;}
   var c={crit:0,aten:0,rec:0}; data.forEach(function(r){c[semOf(r)]++});
   var bd={style:'thin',color:{rgb:'FFBFBFBF'}}, B={top:bd,bottom:bd,left:bd,right:bd};
   var aoa=[['Equipos parados con clave TC'],TC.map(function(x){return x.h})];
@@ -2121,6 +2179,59 @@ $('dlT').onclick=function(){
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Reporte_TC_Tamara_'+ds+'.xlsx';document.body.appendChild(a);a.click();
   setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1000);
 };
+
+/* Ranking: selector de dimensión (usa los mismos botones internos) */
+$('rkSel').onchange=function(){var b=document.querySelector('#rkDim button[data-m="'+this.value+'"]');if(b)b.click();};
+new MutationObserver(function(){var b=document.querySelector('#rkDim button.on');if(b&&$('rkSel').value!==b.getAttribute('data-m'))$('rkSel').value=b.getAttribute('data-m');}).observe($('rkDim'),{attributes:true,subtree:true,attributeFilter:['class']});
+
+/* ===== Filtros con buscador: lupa + "Buscar…" en cada lista (el <select> original sigue mandando) ===== */
+(function(){
+  var LUPA='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
+  var FLE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>';
+  var nrm=function(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')};
+  var es=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+  var W=[], cur=null;
+  function sync(w){var s=w.sel,o=s.options[s.selectedIndex];w.lab.textContent=o?o.text:'';w.el.classList.toggle('act',!!s.value);}
+  function close(){if(!cur)return;cur.w.el.classList.remove('open');if(cur.p.parentNode)cur.p.parentNode.removeChild(cur.p);cur=null;}
+  function pick(w,v){close();if(w.sel.value!==v){w.sel.value=v;w.sel.dispatchEvent(new Event('change',{bubbles:true}));}sync(w);w.btn.focus();}
+  function open(w){
+    if(cur&&cur.w===w){close();return;} close();
+    var p=document.createElement('div');p.className='ssp';
+    p.innerHTML='<div class="ssq">'+LUPA+'<input type="text" placeholder="Buscar…" autocomplete="off"></div><div class="ssl"></div>';
+    document.body.appendChild(p); cur={w:w,p:p,hi:0,items:[]}; w.el.classList.add('open');
+    var r=w.btn.getBoundingClientRect(), wd=Math.max(r.width,230), lf=Math.min(r.left,window.innerWidth-wd-8);
+    p.style.left=Math.max(8,lf)+'px';p.style.width=wd+'px';
+    var below=window.innerHeight-r.bottom; if(below<260&&r.top>below){p.style.bottom=(window.innerHeight-r.top+4)+'px';}else p.style.top=(r.bottom+4)+'px';
+    var inp=p.querySelector('input'), list=p.querySelector('.ssl');
+    function draw(){var q=nrm(inp.value.trim()),opts=[].slice.call(w.sel.options);
+      cur.items=opts.filter(function(o){return !q||nrm(o.text).indexOf(q)>=0});
+      if(cur.hi>=cur.items.length)cur.hi=0;
+      list.innerHTML=cur.items.length?cur.items.map(function(o,i){var t=es(o.text);
+        if(q){var k=nrm(o.text).indexOf(q);if(k>=0)t=es(o.text.slice(0,k))+'<mark>'+es(o.text.slice(k,k+q.length))+'</mark>'+es(o.text.slice(k+q.length));}
+        return '<div class="sso'+(i===cur.hi?' hl':'')+(o.value===w.sel.value?' sel':'')+'" data-i="'+i+'">'+t+'</div>'}).join(''):'<div class="sse">Sin resultados</div>';}
+    function mv(d){if(!cur.items.length)return;cur.hi=(cur.hi+d+cur.items.length)%cur.items.length;draw();var h=list.querySelector('.hl');if(h)h.scrollIntoView({block:'nearest'});}
+    var sel=[].slice.call(w.sel.options).map(function(o){return o.value}).indexOf(w.sel.value); cur.hi=Math.max(0,sel);
+    draw(); var h0=list.querySelector('.hl'); if(h0)h0.scrollIntoView({block:'nearest'});
+    inp.addEventListener('input',function(){cur.hi=0;draw()});
+    inp.addEventListener('keydown',function(e){if(e.key==='ArrowDown'){e.preventDefault();mv(1)}else if(e.key==='ArrowUp'){e.preventDefault();mv(-1)}
+      else if(e.key==='Enter'){e.preventDefault();var o=cur.items[cur.hi];if(o)pick(w,o.value)}else if(e.key==='Escape'){e.preventDefault();close();w.btn.focus()}});
+    list.addEventListener('mousedown',function(e){var d=e.target.closest('.sso');if(!d)return;e.preventDefault();pick(w,cur.items[+d.getAttribute('data-i')].value)});
+    setTimeout(function(){inp.focus()},0);
+  }
+  function enhance(s){if(!s||s.parentNode.classList.contains('ssw'))return;
+    var el=document.createElement('div');el.className='ssw';s.parentNode.insertBefore(el,s);el.appendChild(s);s.tabIndex=-1;
+    var btn=document.createElement('button');btn.type='button';btn.className='ssb';btn.innerHTML='<span></span>'+FLE;el.appendChild(btn);
+    var w={el:el,sel:s,btn:btn,lab:btn.querySelector('span')};W.push(w);
+    btn.addEventListener('click',function(){open(w)});
+    btn.addEventListener('keydown',function(e){if(e.key==='ArrowDown'||e.key==='Enter'||e.key===' '){e.preventDefault();open(w)}});
+    new MutationObserver(function(){sync(w)}).observe(s,{childList:true,subtree:true});
+    s.addEventListener('change',function(){sync(w)}); sync(w);}
+  FIDS.forEach(function(id){enhance($(id))});
+  setInterval(function(){W.forEach(sync)},400);   // cambios hechos desde el tablero (tarjetas, gráficas, limpiar filtros)
+  document.addEventListener('mousedown',function(e){if(cur&&!e.target.closest('.ssp')&&!cur.w.el.contains(e.target))close()},true);
+  window.addEventListener('resize',close);
+  document.addEventListener('scroll',function(e){if(cur&&!(e.target&&e.target.closest&&e.target.closest('.ssp')))close()},true);
+})();
 /* ================= CONEXIÓN A SUPABASE =================
    Supabase es la fuente central: al abrir se cargan los datos de la base y
    "Guardar datos" los registra (inserta / actualiza / elimina, sin duplicados).
