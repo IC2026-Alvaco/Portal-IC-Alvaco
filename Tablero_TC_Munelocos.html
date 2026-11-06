@@ -884,6 +884,32 @@ html.zm.mq21 .tipw .tipos{grid-auto-flow:row;grid-template-columns:repeat(3,minm
 .sso mark{background:#FDE7B0;color:inherit;padding:0;border-radius:2px}
 .sse{padding:10px;text-align:center;color:#595959;font-size:12.5px}
 </style>
+<style id="tlCalendario">
+/* ===== Filtro de fecha con calendario (Desde / Hasta) ===== */
+.tline{display:block !important;padding:8px 12px !important}
+.tlr{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.tlt2{display:flex;align-items:center;gap:9px;flex:1 1 260px;min-width:0}
+.tlt2 svg{width:22px;height:22px;color:#7B61C4;flex:0 0 auto}
+.tlt2 b{display:block;font-size:13.5px;color:#1F3864}.tlt2 span{display:block;font-size:12px;color:#595959}
+.tlf2{display:flex;align-items:center;gap:7px;margin:0}
+.tlf2 span{font-size:12.5px;font-weight:700;color:#595959}
+.tlf2 input{border:1px solid #D5DEF0;border-radius:8px;padding:5px 8px;font:inherit;font-size:13.5px;color:#1F3864;background:#FFFFFF;cursor:pointer;min-width:150px}
+.tlf2 input:hover{border-color:#A9B8D6}.tlf2 input:focus{outline:none;border-color:#7B61C4;box-shadow:0 0 0 3px rgba(123,97,196,.16)}
+.tlf2 input:not([value=""]){border-color:#7B61C4;background:#F6F2FE;font-weight:700}
+.tlx2{border:1px solid #F5C6C2;background:#FFFFFF;color:#C0392B;border-radius:8px;padding:5px 12px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.tlx2:hover{background:#FDECEA}
+</style>
+<style id="tlEnFiltros">
+#tline{display:none !important}
+.tlslot{display:contents}
+.filters .tlfd{flex:0 0 auto;min-width:0 !important}
+.tlio{display:flex;align-items:center;gap:5px}.tlio i{font-style:normal;color:#595959;font-weight:700}
+.filters .tlfd input{width:132px !important}
+.filters .tlfd input{border:1px solid #D5DEF0;border-radius:8px;padding:4px 8px;line-height:1.3;font:inherit;font-size:13.5px;color:#333;background:#FFFFFF;cursor:pointer;width:100%}
+.filters .tlfd input:hover{border-color:#A9B8D6}
+.filters .tlfd input:focus{outline:none;border-color:#7B61C4;box-shadow:0 0 0 3px rgba(123,97,196,.16)}
+.filters .tlfd input:not([value=""]){border-color:#7B61C4;background:#F6F2FE;color:#4B2E83;font-weight:700}
+</style>
 </head>
 <body>
 <header class="top"><div class="in">
@@ -943,7 +969,7 @@ html.zm.mq21 .tipw .tipos{grid-auto-flow:row;grid-template-columns:repeat(3,minm
       <label class="fld"><span>Antigüedad</span><select id="fAnt"></select></label>
       <label class="fld"><span>Seguimiento</span><select id="fSeg"><option value="">Todo</option><option value="pend">Pendientes de comentario</option><option value="regreso">Regresaron con TC (comentario anterior)</option><option value="cambio">Comentario nuevo habilitado</option><option value="igual">Sin cambios (solo visualizar)</option><option value="nuevo">Nuevos / sin comentario previo</option><option value="resuelto">Resueltos</option><option value="activos">Todos menos resueltos</option><option value="d15">Más de 15 días parado</option><option value="dir">Respuesta enviada a Operaciones</option><option value="comp">Puntos de venta con comentario</option></select></label>
       <label class="fld"><span>Tipo de producto</span><select id="fTipo"><option value="">Todos</option></select></label>
-      <button class="clear" id="clearF">Limpiar filtros</button>
+      <span class="tlslot" id="tlSlot"></span><button class="clear" id="clearF">Limpiar filtros</button>
     </div>
     <div class="chipsF" id="chipsF"></div>
     </div>
@@ -1534,7 +1560,7 @@ function passF(r,skip){
   if(fp&&(r.producto||'(sin producto)')!==fp)return false;
   var fm=g('fMod'); if(fm&&(r.modelo||'(sin modelo)')!==fm)return false;
   var ft=g('fTipo'); if(ft&&(r.hoja||'(sin tipo)')!==ft)return false;
-  if(TL.a&&skip!=='tl'){var ym=tlYm(r);if(!ym||ym<TL.a||ym>TL.b)return false;}
+  if((TL.a||TL.b)&&skip!=='tl'){var ym=tlYm(r);if(!ym||(TL.a&&ym<TL.a)||(TL.b&&ym>TL.b))return false;}
   if(fa){if(fa.indexOf('p:')===0){if(prioR(r)!==fa.slice(2))return false;}else if(antOf(r.dias)!==fa)return false;}
   return segPass(r,fs);
 }
@@ -1585,10 +1611,10 @@ function refresh(){
   views();
 }
 function views(){
-  var any=FIDS.some(function(id){return $(id).value})||!!TL.a;
+  var any=FIDS.some(function(id){return $(id).value})||!!(TL.a||TL.b);
   $('clearF').classList.toggle('act',any);
   var names={fReg:'Región',fCity:'Ciudad',fCad:'Cadena',fProd:'Producto',fMod:'Modelo',fAnt:'Antigüedad',fSeg:'Seguimiento',fTipo:'Tipo de producto'};
-  $('chipsF').innerHTML=FIDS.filter(function(id){return $(id).value}).map(function(id){var s=$(id);return '<span class="chipF" data-f="'+id+'" title="Quitar filtro">'+names[id]+': '+esc(s.options[s.selectedIndex].text)+' ✕</span>'}).join('')+(TL.a?'<span class="chipF" data-f="tl" title="Quitar filtro">Fecha asignado a TC: '+tlTxt()+' ✕</span>':'');
+  $('chipsF').innerHTML=FIDS.filter(function(id){return $(id).value}).map(function(id){var s=$(id);return '<span class="chipF" data-f="'+id+'" title="Quitar filtro">'+names[id]+': '+esc(s.options[s.selectedIndex].text)+' ✕</span>'}).join('')+((TL.a||TL.b)?'<span class="chipF" data-f="tl" title="Quitar filtro">Fecha asignado a TC: '+tlTxt()+' ✕</span>':'');
   tline(); kpis(); kcards(); segSummary(); charts(); prio(); detalle(); table();
 }
 FIDS.forEach(function(id){$(id).addEventListener('change',views)});
@@ -1596,18 +1622,20 @@ $('clearF').onclick=function(){FIDS.forEach(function(id){$(id).value=''});TL.a=T
 $('chipsF').addEventListener('click',function(e){var f=e.target.getAttribute('data-f');if(f==='tl'){TL.a=TL.b='';views();}else if(f){$(f).value='';views();}});
 /* ---- filtro de fecha tipo línea de tiempo (años · trimestres · meses) ---- */
 var TL={f:'ftc',a:'',b:''}, TLdrag=null;   // filtro de fechas: columna "Fecha que se asignó a TC"
-function tlYm(r){if(TL.f==='ftc')return r.ftc?r.ftc.slice(0,7):'';if(typeof r.ult!=='number')return '';var d=new Date(Math.round((r.ult-25569)*864e5));return d.getUTCFullYear()+'-'+('0'+(d.getUTCMonth()+1)).slice(-2);}
+function tlYm(r){if(TL.f==='ftc')return r.ftc?r.ftc.slice(0,10):'';if(typeof r.ult!=='number')return '';var d=new Date(Math.round((r.ult-25569)*864e5));return d.getUTCFullYear()+'-'+('0'+(d.getUTCMonth()+1)).slice(-2)+'-'+('0'+d.getUTCDate()).slice(-2);}
 function tlLbl(ym){var p=ym.split('-');return MESES[+p[1]-1]+' '+p[0].slice(2)}
-function tlTxt(){return TL.a===TL.b?tlLbl(TL.a):tlLbl(TL.a)+' – '+tlLbl(TL.b)}
-function tline(){var el=$('tline');if(!el)return;
-  var cnt={},ys=[]; base().forEach(function(r){var m=tlYm(r);if(m)cnt[m]=(cnt[m]||0)+1});
-  var ks=Object.keys(cnt).sort(); if(!ks.length){el.innerHTML='';return;}
-  var y1=+ks[ks.length-1].slice(0,4), y0=Math.min(+ks[0].slice(0,4),y1-1); for(var y=y0;y<=y1;y++)ys.push(y);
-  var lo=TLdrag?(TLdrag.a<TLdrag.b?TLdrag.a:TLdrag.b):TL.a, hi=TLdrag?(TLdrag.a<TLdrag.b?TLdrag.b:TLdrag.a):TL.b;
-  var h='<div class="tlh"><span class="tlt">Fecha que se asignó a TC</span><span class="tls">'+(lo?(lo===hi?tlLbl(lo):tlLbl(lo)+' – '+tlLbl(hi)):'Todas las fechas · arrastra o toca los meses')+'</span>'+(TL.a?'<button class="tlx" data-tlx="1">Quitar</button>':'')+'</div><div class="tlg">';
-  ys.forEach(function(y){h+='<div class="tly"><div class="tlyl" data-y="'+y+'" title="Toca para ver todo '+y+'">'+y+'</div><div class="tlq">'+[1,2,3,4].map(function(q){return '<span data-q="'+y+'-'+q+'" title="Toca para ver el trimestre">Q'+q+'</span>'}).join('')+'</div><div class="tlm">'+MESES.map(function(m,i){var ym=y+'-'+('0'+(i+1)).slice(-2),on=lo&&ym>=lo&&ym<=hi,c=cnt[ym]||0;
-    return '<div class="tlc'+(on?' on':'')+(on&&ym===lo?' s':'')+(on&&ym===hi?' e':'')+(c?'':' z')+'" data-ym="'+ym+'" title="'+tlLbl(ym)+' · '+c+' equipo(s)"><i>'+m+'</i><b></b></div>'}).join('')+'</div></div>'});
-  el.innerHTML=h+'</div>';}
+function tlD(s){if(!s)return '';var p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
+function tlTxt(){return TL.a&&TL.b?(TL.a===TL.b?tlD(TL.a):tlD(TL.a)+' – '+tlD(TL.b)):TL.a?'desde '+tlD(TL.a):'hasta '+tlD(TL.b)}
+function tline(){var el=$('tlSlot');if(!el)return; if($('tline'))$('tline').innerHTML='';
+  var ds=base().map(tlYm).filter(Boolean).sort(); if(!ds.length){el.innerHTML='';return;}
+  var mn=ds[0], mx=ds[ds.length-1], act=TL.a||TL.b, ae=document.activeElement;
+  if(ae&&el.contains(ae))return;   // no se redibuja mientras se está eligiendo la fecha
+  var t='Fecha que se asignó a TC'+(act?' · '+tlTxt():'');
+  el.innerHTML='<div class="fld tlfd" title="'+t+'"><span>Periodo Desde - Hasta</span><div class="tlio">'+
+    '<input type="date" data-tl="a" aria-label="Desde" min="'+mn+'" max="'+mx+'" value="'+(TL.a||'')+'"><i>–</i>'+
+    '<input type="date" data-tl="b" aria-label="Hasta" min="'+mn+'" max="'+mx+'" value="'+(TL.b||'')+'"></div></div>';}
+$('tlSlot').addEventListener('change',function(e){var t=e.target.closest('input[data-tl]');if(!t)return;TL[t.getAttribute('data-tl')]=t.value||'';
+  if(TL.a&&TL.b&&TL.a>TL.b){var x=TL.a;TL.a=TL.b;TL.b=x;}t.blur();views();});
 $('tline').addEventListener('mousedown',function(e){var c=e.target.closest('.tlc');if(!c)return;e.preventDefault();TLdrag={a:c.getAttribute('data-ym'),b:c.getAttribute('data-ym')};tline();});
 $('tline').addEventListener('mouseover',function(e){if(!TLdrag)return;var c=e.target.closest('.tlc');if(c&&c.getAttribute('data-ym')!==TLdrag.b){TLdrag.b=c.getAttribute('data-ym');tline();}});
 document.addEventListener('mouseup',function(){if(!TLdrag)return;var a=TLdrag.a<TLdrag.b?TLdrag.a:TLdrag.b,b=TLdrag.a<TLdrag.b?TLdrag.b:TLdrag.a;TLdrag=null;
