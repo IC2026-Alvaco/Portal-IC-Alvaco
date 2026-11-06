@@ -840,6 +840,7 @@ body.dash.fit .pbi-top{padding-top:8px}
     <button class="btn ghost sm del hidden" id="delBtn" title="Elimina los datos de la tabla en este navegador"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar datos</button>
     <button class="btn sm" id="attachBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Adjuntar Excel</button>
     <button class="btn save sm" id="sv" disabled>Guardar cambios</button>
+    <button class="btn ghost sm" id="dlT" title="Solo equipos activos: Crítico, Atención y Reciente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Reporte Tamara</button>
     <button class="btn ghost sm" id="dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Descargar Excel consolidado</button>
 <div class="umenu hidden" id="userChip"><button class="uav" id="uAv" aria-haspopup="true" aria-expanded="false"><span id="uIni"></span></button>
   <div class="udrop hidden" id="uDrop" role="menu"><div class="uhd"><span class="uav big"><span id="uIni2"></span></span><div class="uid"><b id="uName"></b><span id="userMail"></span><span class="urol rw" id="uRol">Captura</span></div></div>
@@ -2070,6 +2071,54 @@ $('dl').onclick=function(){
   try{bin=addValidations(bin,5,4+data.length);}catch(err){console.error('validaciones',err);}
   var blob=new Blob([bin],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Equipos_Tema_Comercial_'+ds+'.xlsx';document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1000);
+};
+
+/* ---- Reporte Tamara: solo equipos activos (Crítico, Atención y Reciente), sin resueltos ---- */
+$('dlT').onclick=function(){
+  var TC=[{k:'region',h:'Región',w:16},{k:'ciudad',h:'Ciudad',w:18},{k:'cadena',h:'Cadena',w:20},{k:'plaza',h:'Plaza',w:36},{k:'producto',h:'Producto',w:22},{k:'modelo',h:'Modelo',w:16},
+    {k:'codigo',h:'Código',w:12},{k:'status',h:'Status',w:11},{k:'ult',h:'Última recaudación',w:13},{k:'dias',h:'Días parado',w:9},{k:'clave',h:'Clave',w:8},{k:'desc',h:'Descripción clave',w:30},
+    {k:'info',h:'Información de Regionales',w:60},
+    {k:'dirigido',h:'Dirigido',w:10},{k:'coment',h:'Comentarios Comercialización',w:50}];
+  var data=base().filter(function(r){return r.mode!=='resuelto'&&['crit','aten','rec'].indexOf(semOf(r))>=0})
+    .sort(function(a,b){return (diasSem(b)||0)-(diasSem(a)||0)});
+  if(!data.length){toast('<b>Sin equipos activos</b><span>No hay equipos en Crítico, Atención o Reciente para el reporte.</span>');return;}
+  var c={crit:0,aten:0,rec:0}; data.forEach(function(r){c[semOf(r)]++});
+  var bd={style:'thin',color:{rgb:'FFBFBFBF'}}, B={top:bd,bottom:bd,left:bd,right:bd};
+  var aoa=[['Equipos parados con clave TC'],TC.map(function(x){return x.h})];
+  data.forEach(function(r){aoa.push(TC.map(function(x){var v=r[x.k];
+    if(x.k==='cadena')v=r.cadena||'Sin cadena';
+    if(x.k==='seg')v=r.seg||SEG.nuevo;
+    if(x.k==='ctc')v=ctcText(r)||null;
+    if(x.k==='dirigido')v=dirVig(r)||null;
+    if(x.k==='hoja')v=(typeof TIPO_NOM!=='undefined'&&TIPO_NOM[r.hoja])||r.hoja||null;
+    if(x.k==='coment')v=r.actual||r.coment||null;
+    if(x.k==='ftc'&&v){var p=v.split('-');v=Date.UTC(+p[0],+p[1]-1,+p[2])/864e5+25569;}
+    return v===''||v===undefined?null:v}))});
+  var ws=XLSX.utils.aoa_to_sheet(aoa), R0=2;
+  ws['A1'].s={font:{name:'Arial',bold:true,sz:13,color:{rgb:'FF1F3864'}}};
+  TC.forEach(function(x,j){
+    ws[XLSX.utils.encode_cell({r:1,c:j})].s={font:{name:'Arial',bold:true,color:{rgb:'FFFFFFFF'}},fill:{patternType:'solid',fgColor:{rgb:'FF1F3864'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:B};
+    for(var i=0;i<data.length;i++){
+      var addr=XLSX.utils.encode_cell({r:R0+i,c:j}), cell=ws[addr]; if(!cell)cell=ws[addr]={t:'z'};
+      var sk=semOf(data[i]);
+      cell.s={font:{name:'Arial',sz:10},border:B};
+      if(x.k==='info'||x.k==='ctc'||x.k==='coment')cell.s.alignment={wrapText:true,vertical:'top'};
+      if(x.k==='ult'&&cell.t==='n')cell.z='dd/mm/yyyy';
+      if(x.k==='ftc'){if(cell.t==='n')cell.z='dd/mm/yyyy';cell.s.alignment={horizontal:'center'};}
+      if(x.k==='dias'){cell.s.alignment={horizontal:'center'};if(cell.t==='n')cell.z='0';}
+      if(x.k==='dirigido'||x.k==='clave')cell.s.alignment={horizontal:'center'};
+    }
+  });
+  ws['!cols']=TC.map(function(x){return{wch:x.w}});
+  ws['!rows']=[null,{hpt:30}];
+  ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:1,c:0},e:{r:1+data.length,c:TC.length-1}})};
+  ws['!freeze']={xSplit:0,ySplit:2};ws['!views']=[{state:'frozen',ySplit:2,topLeftCell:'A3'}];
+  var out=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(out,ws,'Reporte TC');
+  var t=new Date(), ds=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
+  var bin=XLSX.write(out,{bookType:'xlsx',type:'array'});
+  var blob=new Blob([bin],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Reporte_TC_Tamara_'+ds+'.xlsx';document.body.appendChild(a);a.click();
   setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1000);
 };
 /* ================= CONEXIÓN A SUPABASE =================
