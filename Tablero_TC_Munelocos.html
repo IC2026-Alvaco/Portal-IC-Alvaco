@@ -910,6 +910,48 @@ html.zm.mq21 .tipw .tipos{grid-auto-flow:row;grid-template-columns:repeat(3,minm
 .filters .tlfd input:focus{outline:none;border-color:#7B61C4;box-shadow:0 0 0 3px rgba(123,97,196,.16)}
 .filters .tlfd input:not([value=""]){border-color:#7B61C4;background:#F6F2FE;color:#4B2E83;font-weight:700}
 </style>
+<style id="estadoEnvio">
+/* ===== Equipos TC: color por estado de envío ===== */
+tr.sr.st-env td,tr.sr.st-env td.in{background:#DFF3F1 !important;color:#0B5C55;border-top-color:#BFE3DF}
+tr.sr.st-env td:first-child{box-shadow:inset 5px 0 0 #0E9384}
+tr.sr.st-sdir td,tr.sr.st-sdir td.in{background:#F1ECFC !important;color:#4B2E83;border-top-color:#DCD0F5}
+tr.sr.st-sdir td:first-child{box-shadow:inset 5px 0 0 #A57BE0}
+.a-dir .phd{flex-wrap:wrap}
+.a-dir #dirS{display:flex;align-items:center;gap:8px;flex-wrap:wrap;order:10;flex-basis:100%;margin-top:2px}
+.stlg{display:inline-flex;gap:6px;flex-wrap:wrap}
+.stc{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;cursor:pointer;border:1px solid;white-space:nowrap}
+.stc i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.stc b{font-weight:800}
+.stc.st-env{background:#DFF3F1;border-color:#BFE3DF;color:#0B5C55}.stc.st-env i{background:#0E9384}
+.stc.st-sdir{background:#F1ECFC;border-color:#D9CCF5;color:#4B2E83}.stc.st-sdir i{background:#A57BE0}
+.stc:hover{filter:brightness(.96)}.stc.on{box-shadow:0 0 0 2px currentColor}
+.stx{font-size:12px;color:#595959;white-space:nowrap}
+tr.sr.st-pend td,tr.sr.st-pend td.in{background:#F3F4F7 !important;color:#3D4555;border-top-color:#E1E4EA}
+tr.sr.st-pend td:first-child{box-shadow:inset 5px 0 0 #8A94A6}
+.stc.st-pend{background:#F3F4F7;border-color:#D9DDE5;color:#3D4555}.stc.st-pend i{background:#8A94A6}
+</style>
+<style id="filasBlancas">
+/* ===== Tabla Equipos TC: filas en blanco; el color queda solo en el punto del semáforo
+   (y en la franja de estado a la izquierda). Los resueltos se quedan como estaban. ===== */
+#dTbl tr.sr td,#dTbl tr.sr td.in,#dTbl tr.sr.st-env td,#dTbl tr.sr.st-sdir td,#dTbl tr.sr.st-pend td{background:#FFFFFF !important;color:#333333 !important;border-top-color:#E3E9F5 !important}
+#dTbl tr.sr td.cod{color:#1F3864 !important}
+#dTbl tr.sr:nth-child(even) td{background:#FAFBFD !important}
+#dTbl tr.sr td .sem{color:inherit}
+#dTbl tr.sr-crit td .sem{color:#C0392B !important}#dTbl tr.sr-aten td .sem{color:#B07F00 !important}#dTbl tr.sr-rec td .sem{color:#1E7E34 !important}
+</style>
+<style id="estadoColumna">
+/* columna Estado con color bien visible */
+#dTbl td.stcell{white-space:nowrap}
+.stb{display:inline-flex;align-items:center;gap:6px;padding:2px 10px 2px 8px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid}
+.stb i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.stb.st-env{background:#DFF3F1;border-color:#9FD6CF;color:#0B5C55}.stb.st-env i{background:#0E9384}
+.stb.st-sdir{background:#F1ECFC;border-color:#CDBAF2;color:#5B3FA8}.stb.st-sdir i{background:#8E5FD9}
+.stb.st-pend{background:#F3F4F7;border-color:#CED3DC;color:#3D4555}.stb.st-pend i{background:#8A94A6}
+#dTbl tr.sr.st-env td:first-child{box-shadow:inset 6px 0 0 #0E9384}
+#dTbl tr.sr.st-sdir td:first-child{box-shadow:inset 6px 0 0 #8E5FD9}
+#dTbl tr.sr.st-pend td:first-child{box-shadow:inset 6px 0 0 #8A94A6}
+.stc.st-sdir i{background:#8E5FD9}
+</style>
 </head>
 <body>
 <header class="top"><div class="in">
@@ -1755,14 +1797,23 @@ function dkpis(d){
   $('dkPv').onclick=function(e){var m=e.target.closest('.mb');if(m){$('dqs').value=m.getAttribute('data-k');dashTbl();}};
 }
 /* ---- tabla de equipos TC dentro del Dashboard (interactiva) ---- */
-var DTAB='tbl';
+var DTAB='tbl', DST='';
+// Estado de envío: 'env' = ya tiene Dirigido y comentario · 'sdir' = tiene comentario pero aún sin Dirigido · 'pend' = sin Dirigido ni comentario
+function envOf(r){if(r.mode==='resuelto')return '';var c=txt(r.actual||r.coment),d=txt(dirVig(r));return c&&d?'env':c?'sdir':!d?'pend':'';}
 function dashTbl(){
   var tb=DTAB==='tbl'; $('dTbl').classList.toggle('hidden',!tb); $('chDir').classList.toggle('hidden',tb);
   $('dirT').textContent=tb?'Equipos TC':'Respuesta enviada a Operaciones';
   [].forEach.call($('dirTab').children,function(b){b.classList.toggle('on',b.getAttribute('data-v')===DTAB)});
   if(!tb){$('dirS').textContent='Clave Dirigido vigente (Dirigido actualmente o, si no hay, Dirigido)';return;}
-  var qq=($('dqs').value||'').toLowerCase().trim(), L=dashRows().filter(function(r){if(!qq)return true;var s=(r.region+' '+r.ciudad+' '+(r.cadena||'')+' '+r.plaza+' '+r.producto+' '+(r.modelo||'')+' '+r.codigo+' '+(r.info||'')+' '+(r.coment||'')+' '+(r.actual||'')+' '+dirVig(r)).toLowerCase();return s.indexOf(qq)>=0;}), lim=400, act=L.filter(function(r){return r.mode!=='resuelto'}).length;
-  $('dirS').textContent=fmtN(L.length)+' equipos · '+fmtN(act)+' con TC · toca cualquier parte de la fila para ver y capturar comentarios';
+  var qq=($('dqs').value||'').toLowerCase().trim(), L=dashRows().filter(function(r){if(!qq)return true;var s=(r.region+' '+r.ciudad+' '+(r.cadena||'')+' '+r.plaza+' '+r.producto+' '+(r.modelo||'')+' '+r.codigo+' '+(r.info||'')+' '+(r.coment||'')+' '+(r.actual||'')+' '+dirVig(r)).toLowerCase();return s.indexOf(qq)>=0;}), lim=400;
+  var nE=L.filter(function(r){return envOf(r)==='env'}).length, nS=L.filter(function(r){return envOf(r)==='sdir'}).length, nP=L.filter(function(r){return envOf(r)==='pend'}).length;
+  if(DST)L=L.filter(function(r){return envOf(r)===DST});
+  var act=L.filter(function(r){return r.mode!=='resuelto'}).length;
+  $('dirS').innerHTML='<span class="stlg">'+
+    '<button class="stc st-env'+(DST==='env'?' on':'')+'" data-st="env" title="Ya tienen Dirigido y Comentarios Comercialización · toca para ver solo estos"><i></i>Enviado con Dirigido <b>'+fmtN(nE)+'</b></button>'+
+    '<button class="stc st-sdir'+(DST==='sdir'?' on':'')+'" data-st="sdir" title="Tienen comentario pero aún sin Dirigido · toca para ver solo estos"><i></i>Comentado sin Dirigido <b>'+fmtN(nS)+'</b></button>'+
+    '<button class="stc st-pend'+(DST==='pend'?' on':'')+'" data-st="pend" title="Aún sin Dirigido ni Comentarios Comercialización · toca para ver solo estos"><i></i>Sin Dirigido ni comentario <b>'+fmtN(nP)+'</b></button></span>'+
+    '<span class="stx">'+fmtN(L.length)+' equipos · '+fmtN(act)+' con TC</span>';
   if(!L.length){$('dTbl').innerHTML='<div class="empty">Sin equipos para estos filtros</div>';return;}
   var F={region:'fReg',ciudad:'fCity',cadena:'fCad',producto:'fProd',modelo:'fMod'};
   var on=function(f,v){var x=$(f).value;return x&&x===v?' fon':''};
@@ -1783,12 +1834,15 @@ function dashTbl(){
     if(k==='cadena')return c('cadena',r.cadena,F.cadena);
     v=r[k]===null||r[k]===undefined?'':String(r[k]);
     return '<td'+(LONG[k]?' class="lc"':'')+' title="'+esc(v)+'">'+esc(v)+'</td>';};
-  $('dTbl').innerHTML='<table><thead><tr>'+COLS.map(function(col){return '<th'+(col.k==='dias'||col.k==='dpar'?' class="n"':'')+'>'+(col.k==='plaza'?'Punto de venta':col.h)+'</th>'}).join('')+'</tr></thead><tbody>'+
-    L.slice(0,lim).map(function(r){var k=semOf(r);return '<tr data-id="'+r.id+'" class="'+(k==='res'?'res':'sr sr-'+k)+'">'+COLS.map(function(col){return cellD(r,col)}).join('')+'</tr>'}).join('')+
+  var STN={env:'Enviado con Dirigido',sdir:'Comentado sin Dirigido',pend:'Sin Dirigido ni comentario'};
+  var stCell=function(r){var s=envOf(r);return '<td class="stcell">'+(s?'<span class="stb st-'+s+'" title="'+STN[s]+'"><i></i>'+({env:'Enviado',sdir:'Sin Dirigido',pend:'Pendiente'})[s]+'</span>':'')+'</td>'};
+  $('dTbl').innerHTML='<table><thead><tr>'+COLS.map(function(col){return '<th'+(col.k==='dias'||col.k==='dpar'?' class="n"':'')+'>'+(col.k==='plaza'?'Punto de venta':col.h)+'</th>'+(col.k==='sem'?'<th>Estado</th>':'')}).join('')+'</tr></thead><tbody>'+
+    L.slice(0,lim).map(function(r){var k=semOf(r),st=envOf(r);return '<tr data-id="'+r.id+'" class="'+(k==='res'?'res':'sr sr-'+k)+(st?' st-'+st:'')+'">'+COLS.map(function(col){return cellD(r,col)+(col.k==='sem'?stCell(r):'')}).join('')+'</tr>'}).join('')+
     '</tbody></table>'+(L.length>lim?'<div class="mut" style="padding:6px 10px">Se muestran los primeros '+lim+'.</div>':'');
 }
 $('dTbl').onclick=function(e){
   var tr=e.target.closest('tr[data-id]');if(tr&&FEAT_DET)detOpen(+tr.getAttribute('data-id'));};
+$('dirS').addEventListener('click',function(e){var b=e.target.closest('[data-st]');if(!b)return;var v=b.getAttribute('data-st');DST=DST===v?'':v;dashTbl();});
 $('dirTab').onclick=function(e){var b=e.target.closest('button');if(b){DTAB=b.getAttribute('data-v');charts();}};
 $('dqs').addEventListener('input',function(){dashTbl()});
 /* ---- velocímetro: promedio de días parado (zonas del semáforo) ---- */
