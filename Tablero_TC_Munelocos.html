@@ -1153,7 +1153,11 @@ function load(file){
   fr.readAsArrayBuffer(file);
 }
 
-function route(wb){var cf=findCatalog(wb);if(cf){importCatalog(wb,cf);return;}if(findReport(wb))importReport(wb);else if(findBase(wb))importBase(wb);else process(wb);}
+function esTamara(wb){if(wb.SheetNames.indexOf('Reporte TC')>=0)return true;
+  var f=findReport(wb);if(!f)return false;var hs={};for(var c=0;c<=f.rg.e.c;c++){var v=txt(cellVal(f.ws,f.hr,c)).toLowerCase();if(v)hs[v]=1;}
+  return !hs['seguimiento']&&!hs['comentarios tc'];}
+function route(wb){if(esTamara(wb)){msg('Este archivo es el <b>Reporte Tamara</b> (solo lectura). No se puede cargar al tablero porque reemplazaría la información. Para actualizar, carga el Excel <b>“Eqs. Con Mas de 4 días Sin Ventas SAT”</b>.','err');toast('<b>✕ Archivo no válido para cargar</b><span>El Reporte Tamara es solo para consulta; no se cargó nada.</span>');return;}
+  var cf=findCatalog(wb);if(cf){importCatalog(wb,cf);return;}if(findReport(wb))importReport(wb);else if(findBase(wb))importBase(wb);else process(wb);}
 /* ===== Catálogo Cadena por PDV ===== */
 var pendingName='';
 var CATKEY='alvaco_ic_cadena_pdv_v1', CAT=null, catIdx=null;
@@ -1331,6 +1335,7 @@ function process(wb){
     if(hr<0)return;                       // hoja sin tabla de equipos (Resumen, Claves, etc.)
     if(hidden){skipped.push(name);return;}
     if(/concentrado/i.test(name)){skipped.push(name);return;}   // hoja que junta todas las demás: se omite para no duplicar equipos
+    if(/resuelt/i.test(name)){skipped.push(name);return;}       // "Eqs Resueltos": equipos ya atendidos por el SAT, no son equipos activos
     // columnas por nombre de encabezado (si no se encuentran, se usan las posiciones de siempre)
     var colH=function(re,def){for(var c=0;c<=Math.min(range.e.c,30);c++){if(re.test(txt(cellVal(ws,hr,c))))return c;}return def;};
     var cDias=colH(/^d[ií]as$/i,9), cClave=colH(/^clave$/i,10), cUlt=colH(/recaud/i,8);
@@ -1364,7 +1369,7 @@ function process(wb){
   rows.forEach(function(r,i){r.id=i;r.pk=pkey(r)});
   var cnt={nuevo:0,sinprev:0,igual:0,cambio:0,resuelto:0};
   var fileDate=findFileDate(wb);
-  var usedPrev={}; rows.forEach(function(r){var p=prev[ekey(r)];if(!p&&prevCod[norm(r.codigo)]){p=prevCod[norm(r.codigo)];moved.push(r.codigo);}if(p)usedPrev[ekey(p)]=1;compare(r,p,hadPrev,fileDate);if(p&&p.mode==='resuelto'&&p.listaRes){r.mode='resuelto';r.listaRes=1;r.seg=p.seg;r.fres=p.fres;r.ftc=p.ftc;if(p.retiro)r.retiro=1;r.coment=r.coment||p.coment;r.fcom=r.fcom||p.fcom;cnt.resuelto++;return;}if(marcarRetiro(r,p,fileDate))cnt.retiro=(cnt.retiro||0)+1;else delete r.retiro;cnt[r.mode]++;});
+  var usedPrev={}; rows.forEach(function(r){var p=prev[ekey(r)];if(!p&&prevCod[norm(r.codigo)]){p=prevCod[norm(r.codigo)];moved.push(r.codigo);}if(p)usedPrev[ekey(p)]=1;compare(r,p,hadPrev,fileDate);if(p&&p.mode==='resuelto'&&p.resDir){r.mode='resuelto';r.resDir=1;r.seg=p.seg;r.fres=p.fres;r.ftc=p.ftc||r.ftc;cnt.resuelto++;return;}if(resDirApply(r,fileDate)){cnt.resuelto++;return;}if(p&&p.mode==='resuelto'&&p.listaRes){r.mode='resuelto';r.listaRes=1;r.seg=p.seg;r.fres=p.fres;r.ftc=p.ftc;if(p.retiro)r.retiro=1;r.coment=r.coment||p.coment;r.fcom=r.fcom||p.fcom;cnt.resuelto++;return;}if(marcarRetiro(r,p,fileDate))cnt.retiro=(cnt.retiro||0)+1;else delete r.retiro;cnt[r.mode]++;});
   // RESUELTOS: equipos que tenían nuestro comentario y ya no vienen con TC (cambiaron de clave o ya no están en el archivo)
   var inTC={}; rows.forEach(function(r){inTC[ekey(r)]=1});
   Object.keys(prev).forEach(function(k){
@@ -1376,7 +1381,10 @@ function process(wb){
       if(nw&&nw.clave&&dir&&U(nw.clave)===U(dir)){   // está en la clave a la que TC lo dirigió: sigue en seguimiento
         o.clave=nw.clave;o.desc=CLAVES[nw.clave]||'Clave no catalogada';o.info=nw.info;o.enDir=nw.clave;
         o.seg='En '+nw.clave+' (clave a la que se dirigió) · sigue en seguimiento';rows.push(o);cnt.enDir=(cnt.enDir||0)+1;return;}
-      var de=p.enDir; delete o.enDir;
+      if(nw&&!txt(dir)){   // pasó a otra clave pero Comercialización no lo había dirigido: sigue en seguimiento
+        o.clave=nw.clave||'';o.desc=nw.clave?(CLAVES[nw.clave]||'Clave no catalogada'):'';o.info=nw.info;o.sinDir=1;delete o.enDir;
+        o.seg='Pasó a '+(nw.clave||'sin clave')+' sin Dirigido · falta indicar a dónde se dirigió';rows.push(o);cnt.sinDir=(cnt.sinDir||0)+1;return;}
+      var de=p.enDir; delete o.enDir; delete o.sinDir;
       o.mode='resuelto'; o.fres=fileDate;
       if(nw){o.clave=nw.clave||'(sin clave)';o.desc=nw.clave?(CLAVES[nw.clave]||'Clave no catalogada'):'';o.info=nw.info;
         o.seg='Resuelto - '+(de?de+' lo pasó a ':'pasó a ')+(nw.clave||'sin clave');}
@@ -1390,7 +1398,7 @@ function process(wb){
   rows.forEach(function(r,i){r.id=i;r.pk=pkey(r)});
   loadedAt=new Date().toISOString(); state={unknown:unknown,hdrErr:hdrErr,fileDate:fileDate,satC:(function(){var o={};Object.keys(allC).forEach(function(c){o[c]=allC[c].clave||''});return o})()};
   save(true);
-  msg(hadPrev?('Comparado con la información anterior: <b>'+(cnt.igual+cnt.cambio)+'</b> regresaron con TC y ya tenían comentario → <b>'+cnt.cambio+'</b> con comentario nuevo de Regionales (se habilita el comentario actual) y <b>'+cnt.igual+'</b> sin cambios (solo visualizar) · <b>'+(cnt.nuevo+cnt.sinprev)+'</b> nuevos o sin comentario previo.')+(cnt.resuelto?' · <b>'+cnt.resuelto+'</b> resuelto(s) (en verde, solo lectura)'+(cnt.retiro?', de ellos <b>'+cnt.retiro+'</b> por retiro confirmado':'')+'.':'')+(cnt.enDir?' · <b>'+cnt.enDir+'</b> en la clave a la que se dirigieron (siguen en seguimiento).':'')+(moved.length?' · <b>'+moved.length+'</b> equipo(s) con el mismo código pero otro nombre de plaza (se emparejaron por código: '+esc(moved.slice(0,8).join(', '))+(moved.length>8?'…':'')+').':''):'');
+  msg(hadPrev?('Comparado con la información anterior: <b>'+(cnt.igual+cnt.cambio)+'</b> regresaron con TC y ya tenían comentario → <b>'+cnt.cambio+'</b> con comentario nuevo de Regionales (se habilita el comentario actual) y <b>'+cnt.igual+'</b> sin cambios (solo visualizar) · <b>'+(cnt.nuevo+cnt.sinprev)+'</b> nuevos o sin comentario previo.')+(cnt.resuelto?' · <b>'+cnt.resuelto+'</b> resuelto(s) (en verde, solo lectura)'+(cnt.retiro?', de ellos <b>'+cnt.retiro+'</b> por retiro confirmado':'')+'.':'')+(cnt.enDir?' · <b>'+cnt.enDir+'</b> en la clave a la que se dirigieron (siguen en seguimiento).':'')+(cnt.sinDir?' · <b>'+cnt.sinDir+'</b> pasaron a otra clave sin Dirigido (siguen en seguimiento hasta indicar a dónde se dirigieron).':'')+(moved.length?' · <b>'+moved.length+'</b> equipo(s) con el mismo código pero otro nombre de plaza (se emparejaron por código: '+esc(moved.slice(0,8).join(', '))+(moved.length>8?'…':'')+').':''):'');
   render(used,skipped,unknown,hdrErr);
 }
 
@@ -1597,7 +1605,7 @@ function passF(r,skip){
 function segPass(r,fs){
   if(fs==='pend'&&!isPend(r))return false;
   if(fs==='d15'&&!(r.mode!=='resuelto'&&r.dias!==null&&r.dias>15))return false;
-  if(fs==='dir'&&!(r.mode!=='resuelto'&&dirVig(r)))return false;
+  if(fs==='dir'&&!(r.resDir||(r.mode!=='resuelto'&&dirVig(r))))return false;
   if(fs==='comp'&&!(r.mode!=='resuelto'&&!isPend(r)))return false;
   if(fs==='cambio'&&r.mode!=='cambio')return false;
   if(fs==='resuelto'&&r.mode!=='resuelto')return false;
@@ -1787,7 +1795,12 @@ function dkpis(d){
 /* ---- tabla de equipos TC dentro del Dashboard (interactiva) ---- */
 var DTAB='tbl', DST='';
 // Estado de envío: 'env' = ya tiene Dirigido y comentario · 'sdir' = tiene comentario pero aún sin Dirigido · 'pend' = sin Dirigido ni comentario
-function envOf(r){if(r.mode==='resuelto')return '';var c=txt(r.actual||r.coment),d=txt(dirVig(r));return c&&d?'env':c?'sdir':!d?'pend':'';}
+/* Regla: en cuanto un equipo tiene Dirigido + Comentarios Comercialización queda RESUELTO (ya se envió al área).
+   Si Regionales agrega un comentario nuevo (modo "cambio"), se reabre para contestarlo. */
+function resDirOk(r){return r&&r.mode!=='resuelto'&&!!txt(dirVig(r))&&!!txt(r.actual||r.coment);}
+function resDirApply(r,fecha){if(!resDirOk(r))return false;var d=txt(dirVig(r));r.mode='resuelto';r.resDir=1;r.fres=r.fres||fecha||todayIso();
+  r.seg='Resuelto - dirigido a '+d+(CLAVES[d]?' ('+CLAVES[d]+')':'')+' · '+isoToStr(r.fres);return true;}
+function envOf(r){if(r.mode==='resuelto')return r.resDir?'env':'';var c=txt(r.actual||r.coment),d=txt(dirVig(r));return c&&d?'env':c?'sdir':!d?'pend':'';}
 function dashTbl(){
   var tb=DTAB==='tbl'; $('dTbl').classList.toggle('hidden',!tb); $('chDir').classList.toggle('hidden',tb);
   $('dirT').textContent=tb?'Equipos TC':'Respuesta enviada a Operaciones';
@@ -1923,7 +1936,7 @@ function tipos(){var el=$('tipos');if(!el)return;if(!FEAT_DET){el.classList.add(
   el.onclick=function(e){var b=e.target.closest('.tcard');if(!b)return;var h=b.getAttribute('data-h');if(isDashV()){setF('fTipo',h);return;}segHoja=(segHoja!==h)?h:'';tipos();table();$('clearS').classList.toggle('act',!!segHoja||!!$('sSeg').value);};}
 function kpis(){tipos();
   var all=base(), nres=all.filter(function(r){return r.mode==='resuelto'}).length, b=all.filter(function(r){return r.mode!=='resuelto'});
-  var dir=b.filter(function(r){return dirVig(r)}).length, pl={},pend={}; b.forEach(function(r){pl[r.pk]=1;if(isPend(r))pend[r.pk]=1});
+  var dir=all.filter(function(r){return r.resDir||(r.mode!=='resuelto'&&dirVig(r))}).length, pl={},pend={}; b.forEach(function(r){pl[r.pk]=1;if(isPend(r))pend[r.pk]=1});
   var npl=Object.keys(pl).length, np=Object.keys(pend).length;
   var ig=b.filter(function(r){return r.mode==='igual'}).length, cb=b.filter(function(r){return r.mode==='cambio'}).length;
   var d15=b.filter(function(r){return r.dias!==null&&r.dias>15}).length;
@@ -2039,7 +2052,8 @@ $('detM').addEventListener('click',function(e){
     if(!v&&!d){$('detCom').focus();return;}
     var opCom=function(){detRows().forEach(function(r){if(r.mode==='resuelto')return;
       if(editable(r,'coment')){if(v){r.coment=v;r.fcom=hoy;}if(d)r.dirigido=d;}
-      else{if(v){r.actual=v;r.fact=hoy;}if(d)r.dirAct=d;}});};
+      else{if(v){r.actual=v;r.fact=hoy;}if(d)r.dirAct=d;}
+      resDirApply(r,hoy);});};
     var n=detRows().filter(function(r){return r.mode!=='resuelto'}).length; detDraft={}; persistOp(opCom,'<b>✓ Guardado exitosamente</b><span>Comentario'+(d?' y dirigido a <b>'+esc(d)+(CLAVES[d]?' · '+esc(CLAVES[d]):'')+'</b>':'')+' para '+n+' equipo(s) de este punto de venta.</span>'); return;}
   if(e.target.closest('#detTcG')){var v2=($('detTc').value||'').replace(/\s+/g,' ').trim();if(!v2){$('detTc').focus();return;}
     var hoy2=todayIso(); persistOp(function(){detRows().forEach(function(r){(r.ctc=r.ctc||[]).push({d:hoy2,t:v2});r.ctcd='';});},'<b>✓ Comentario TC guardado</b><span>Quedó en los '+detRows().length+' equipo(s) de este punto de venta.</span>'); return;}
@@ -2208,7 +2222,7 @@ $('dlT').onclick=function(){
     {k:'codigo',h:'Código',w:12},{k:'status',h:'Status',w:11},{k:'ult',h:'Última recaudación',w:13},{k:'dias',h:'Días parado',w:9},{k:'clave',h:'Clave',w:8},{k:'desc',h:'Descripción clave',w:30},
     {k:'info',h:'Información de Regionales',w:60},
     {k:'dirigido',h:'Dirigido',w:10},{k:'coment',h:'Comentarios Comercialización',w:50}];
-  var data=base().filter(function(r){return r.mode!=='resuelto'&&['crit','aten','rec'].indexOf(semOf(r))>=0&&txt(dirVig(r))&&txt(r.actual||r.coment)})
+  var data=base().filter(function(r){return (r.mode!=='resuelto'||r.resDir)&&['crit','aten','rec'].indexOf(semDias(diasSem(r)))>=0&&txt(dirVig(r))&&txt(r.actual||r.coment)})
     .sort(function(a,b){return (diasSem(b)||0)-(diasSem(a)||0)});
   if(!data.length){toast('<b>Sin equipos para el reporte</b><span>Solo entran equipos activos que ya tengan Dirigido y Comentarios Comercialización.</span>');return;}
   var c={crit:0,aten:0,rec:0}; data.forEach(function(r){c[semOf(r)]++});
@@ -2373,8 +2387,10 @@ function toastErr(t,m){toast('<b>✕ '+esc(t)+'</b><span>'+esc(m)+'</span>');var
 function aplicar(d,ver){
   rows=(d.rows||[]).map(function(r){delete r._k;return r;}); fileBase=d.fileBase||''; loadedAt=d.loadedAt||null; used=d.used||[]; state=d.state||{unknown:{},hdrErr:[]};
   rows.forEach(function(r,i){if(!r.mode){r.mode='nuevo';r.seg=SEG.nuevo;}r.id=i;r.pk=pkey(r)});
+  var nRD=0;try{rows.forEach(function(r){if(resDirApply(r,(state&&state.fileDate)||todayIso()))nRD++;});}catch(err){console.error('resDir',err);nRD=0;}
   if(rows.length)render(used,[],state.unknown||{},state.hdrErr||[]);
   else{$('out').classList.add('hidden');$('welcome').classList.remove('hidden');$('delBtn').classList.add('hidden');}
+  if(nRD&&sbRol!=='consulta'&&sbRol!=='consulta_tc')setTimeout(function(){try{cacheWrite(true);setDirty(true);toast('<b>'+nRD+' equipo(s) pasan a Resueltos</b><span>Ya tienen Dirigido y Comentarios Comercialización. Presiona <b>Guardar datos</b> para registrarlo.</span>');}catch(e){}},0);
 }
 function cloudLoad(descartar,opt){opt=opt||{};
   return sbRpc('tc_cargar',{}).then(function(j){
