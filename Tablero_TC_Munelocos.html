@@ -912,9 +912,7 @@ html.zm.mq21 .tipw .tipos{grid-auto-flow:row;grid-template-columns:repeat(3,minm
 </style>
 <style id="estadoEnvio">
 /* ===== Equipos TC: color por estado de envío ===== */
-tr.sr.st-env td,tr.sr.st-env td.in{background:#DFF3F1 !important;color:#0B5C55;border-top-color:#BFE3DF}
 tr.sr.st-env td:first-child{box-shadow:inset 5px 0 0 #0E9384}
-tr.sr.st-sdir td,tr.sr.st-sdir td.in{background:#F1ECFC !important;color:#4B2E83;border-top-color:#DCD0F5}
 tr.sr.st-sdir td:first-child{box-shadow:inset 5px 0 0 #A57BE0}
 .a-dir .phd{flex-wrap:wrap}
 .a-dir #dirS{display:flex;align-items:center;gap:8px;flex-wrap:wrap;order:10;flex-basis:100%;margin-top:2px}
@@ -926,18 +924,8 @@ tr.sr.st-sdir td:first-child{box-shadow:inset 5px 0 0 #A57BE0}
 .stc.st-sdir{background:#F1ECFC;border-color:#D9CCF5;color:#4B2E83}.stc.st-sdir i{background:#A57BE0}
 .stc:hover{filter:brightness(.96)}.stc.on{box-shadow:0 0 0 2px currentColor}
 .stx{font-size:12px;color:#595959;white-space:nowrap}
-tr.sr.st-pend td,tr.sr.st-pend td.in{background:#F3F4F7 !important;color:#3D4555;border-top-color:#E1E4EA}
 tr.sr.st-pend td:first-child{box-shadow:inset 5px 0 0 #8A94A6}
 .stc.st-pend{background:#F3F4F7;border-color:#D9DDE5;color:#3D4555}.stc.st-pend i{background:#8A94A6}
-</style>
-<style id="filasBlancas">
-/* ===== Tabla Equipos TC: filas en blanco; el color queda solo en el punto del semáforo
-   (y en la franja de estado a la izquierda). Los resueltos se quedan como estaban. ===== */
-#dTbl tr.sr td,#dTbl tr.sr td.in,#dTbl tr.sr.st-env td,#dTbl tr.sr.st-sdir td,#dTbl tr.sr.st-pend td{background:#FFFFFF !important;color:#333333 !important;border-top-color:#E3E9F5 !important}
-#dTbl tr.sr td.cod{color:#1F3864 !important}
-#dTbl tr.sr:nth-child(even) td{background:#FAFBFD !important}
-#dTbl tr.sr td .sem{color:inherit}
-#dTbl tr.sr-crit td .sem{color:#C0392B !important}#dTbl tr.sr-aten td .sem{color:#B07F00 !important}#dTbl tr.sr-rec td .sem{color:#1E7E34 !important}
 </style>
 <style id="estadoColumna">
 /* columna Estado con color bien visible */
