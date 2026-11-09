@@ -1357,7 +1357,7 @@ function process(wb){
       var tmpR={plaza:txt(cellVal(ws,r2,3)),codigo:cod}; allK[ekey(tmpR)]={clave:cl,desc:desc,info:info}; allC[norm(cod)]={clave:cl,desc:desc,info:info};
       if(cl!=='TC')continue;
       rows.push({region:txt(cellVal(ws,r2,0)),ciudad:txt(cellVal(ws,r2,1)),plaza:txt(cellVal(ws,r2,3)),producto:txt(cellVal(ws,r2,4)),
-        codigo:cod,modelo:txt(cellVal(ws,r2,6)),status:txt(cellVal(ws,r2,7)),ult:ult,dias:dias,clave:cl,desc:desc,info:info,hoja:name,dirigido:null,coment:null,fcom:null});
+        codigo:cod,modelo:txt(cellVal(ws,r2,6)),status:txt(cellVal(ws,r2,7)),ult:ult,dias:dias,clave:cl,desc:desc,info:info,hoja:name,enSat:1,dirigido:null,coment:null,fcom:null});
       n++;
     }
     used.push({name:name,n:n});
@@ -1375,7 +1375,7 @@ function process(wb){
   Object.keys(prev).forEach(function(k){
     var p=prev[k]; if(inTC[k]||usedPrev[k])return;
     // ya no viene con TC: se resolvió (ya no está en el archivo o pasó a otra clave)
-    var o=JSON.parse(JSON.stringify(p));
+    var o=JSON.parse(JSON.stringify(p)); delete o.enSat;
     if(p.mode!=='resuelto'){
       var nw=allK[k]||allC[norm(p.codigo)], dir=p.dirAct||p.dirigido, U=function(x){return txt(x).toUpperCase()};
       if(nw&&nw.clave&&dir&&U(nw.clave)===U(dir)){   // está en la clave a la que TC lo dirigió: sigue en seguimiento
@@ -1751,7 +1751,8 @@ function charts(){
   if($('out').classList.contains('hidden'))return;
   fitDash();
   // Gráficas conectadas: cada una aplica todos los filtros menos el suyo
-  var D=function(skip){return base().filter(function(r){return r.mode!=='resuelto'&&passF(r,skip)})};
+  var incRes=['resuelto','dir'].indexOf($('fSeg').value)>=0;   // con 'Resueltos' elegido, las tarjetas y gráficas muestran los resueltos del periodo
+  var D=function(skip){return base().filter(function(r){return (incRes||r.mode!=='resuelto')&&passF(r,skip)})};
   var d=D(null);
   var am=countBy(D('fAnt'),function(r){return antOf(r.dias)}), fa=$('fAnt').value;
   var antH=290; if(document.body.classList.contains('fit')){$('chAnt').innerHTML='';antH=Math.max(130,$('chAnt').clientHeight-4);}
@@ -1929,13 +1930,14 @@ function prio(){
 function detalle(){}
 /* ---- KPIs de seguimiento ---- */
 function tipos(){var el=$('tipos');if(!el)return;if(!FEAT_DET){el.classList.add('hidden');return;}el.classList.remove('hidden');
-  var m={}; base().forEach(function(r){var k=r.hoja||'(sin tipo)';if(!m[k])m[k]={a:0,r:0};m[k][r.mode==='resuelto'?'r':'a']++;});
-  var ks=Object.keys(m).sort(function(a,b){return (m[b].a+m[b].r)-(m[a].a+m[a].r)||a.localeCompare(b,'es')}), tA=0; ks.forEach(function(k){tA+=m[k].a});
-  var cH=isDashV()?$('fTipo').value:segHoja; el.innerHTML='<div class="tpl">Tipo de producto<span>toca para filtrar</span></div>'+ks.map(function(k){return '<button class="tcard'+(cH===k?' on':'')+(cH&&cH!==k?' dim':'')+'" data-h="'+esc(k)+'"><span class="kic">'+icoTipo(k)+'</span><span class="tcx"><b class="num">'+m[k].a+'<span class="tar">→</span>'+pcB(m[k].a,tA)+'</b><span class="tn">'+esc(TIPO_NOM[k]||k)+'</span><span class="tr">'+(m[k].r?'+'+m[k].r+' resuelto(s)':'con TC')+'</span></span></button>'}).join('');
+  var fsT=$('fSeg').value, B=base().filter(function(r){return passF(r,'fTipo')}), hayS=!fsT&&base().some(function(r){return r.enSat}), m={};
+  B.forEach(function(r){if(hayS&&!r.enSat)return;var k=r.hoja||'(sin tipo)';if(!m[k])m[k]={a:0,r:0,t:0};m[k][r.mode==='resuelto'?'r':'a']++;m[k].t++;});
+  var ks=Object.keys(m).filter(function(k){return m[k].t>0}).sort(function(a,b){return m[b].t-m[a].t||a.localeCompare(b,'es')}), tA=0; ks.forEach(function(k){tA+=m[k].t});
+  var cH=isDashV()?$('fTipo').value:segHoja; el.innerHTML='<div class="tpl">Tipo de producto<span>toca para filtrar</span></div>'+ks.map(function(k){return '<button class="tcard'+(cH===k?' on':'')+(cH&&cH!==k?' dim':'')+'" data-h="'+esc(k)+'" title="Con TC en el SAT: '+m[k].t+' ('+m[k].a+' activos, '+m[k].r+' resueltos)"><span class="kic">'+icoTipo(k)+'</span><span class="tcx"><b class="num">'+m[k].t+'<span class="tar">→</span>'+pcB(m[k].t,tA)+'</b><span class="tn">'+esc(TIPO_NOM[k]||k)+'</span><span class="tr">'+(m[k].r?'+'+m[k].r+' resuelto(s)':'con TC')+'</span></span></button>'}).join('');
   el.style.gridTemplateColumns=el.parentNode&&el.parentNode.id==='tipW'?'repeat('+Math.max(1,Math.ceil(ks.length/(ks.length>4?2:1)))+',minmax(0,1fr))':'';
   el.onclick=function(e){var b=e.target.closest('.tcard');if(!b)return;var h=b.getAttribute('data-h');if(isDashV()){setF('fTipo',h);return;}segHoja=(segHoja!==h)?h:'';tipos();table();$('clearS').classList.toggle('act',!!segHoja||!!$('sSeg').value);};}
 function kpis(){tipos();
-  var all=base(), nres=all.filter(function(r){return r.mode==='resuelto'}).length, b=all.filter(function(r){return r.mode!=='resuelto'});
+  var all=base().filter(function(r){return passF(r,'fSeg')}), nres=all.filter(function(r){return r.mode==='resuelto'}).length, b=all.filter(function(r){return r.mode!=='resuelto'});
   var dir=all.filter(function(r){return r.resDir||(r.mode!=='resuelto'&&dirVig(r))}).length, pl={},pend={}; b.forEach(function(r){pl[r.pk]=1;if(isPend(r))pend[r.pk]=1});
   var npl=Object.keys(pl).length, np=Object.keys(pend).length;
   var ig=b.filter(function(r){return r.mode==='igual'}).length, cb=b.filter(function(r){return r.mode==='cambio'}).length;
