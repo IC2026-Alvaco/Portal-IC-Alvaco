@@ -1369,7 +1369,7 @@ function process(wb){
   rows.forEach(function(r,i){r.id=i;r.pk=pkey(r)});
   var cnt={nuevo:0,sinprev:0,igual:0,cambio:0,resuelto:0};
   var fileDate=findFileDate(wb);
-  var usedPrev={}; rows.forEach(function(r){var p=prev[ekey(r)];if(!p&&prevCod[norm(r.codigo)]){p=prevCod[norm(r.codigo)];moved.push(r.codigo);}if(p)usedPrev[ekey(p)]=1;compare(r,p,hadPrev,fileDate);if(p&&p.mode==='resuelto'&&p.resDir){r.mode='resuelto';r.resDir=1;r.seg=p.seg;r.fres=p.fres;r.ftc=p.ftc||r.ftc;cnt.resuelto++;return;}if(resDirApply(r,fileDate)){cnt.resuelto++;return;}if(p&&p.mode==='resuelto'&&p.listaRes){r.mode='resuelto';r.listaRes=1;r.seg=p.seg;r.fres=p.fres;r.ftc=p.ftc;if(p.retiro)r.retiro=1;r.coment=r.coment||p.coment;r.fcom=r.fcom||p.fcom;cnt.resuelto++;return;}if(marcarRetiro(r,p,fileDate))cnt.retiro=(cnt.retiro||0)+1;else delete r.retiro;cnt[r.mode]++;});
+  var usedPrev={}; rows.forEach(function(r){var p=prev[ekey(r)];if(!p&&prevCod[norm(r.codigo)]){p=prevCod[norm(r.codigo)];moved.push(r.codigo);}if(p)usedPrev[ekey(p)]=1;compare(r,p,hadPrev,fileDate);if(p&&p.mode==='resuelto'&&p.resDir&&resDirClave(p)){r.mode='resuelto';r.resDir=1;r.seg=p.seg;r.fres=p.fres;r.ftc=p.ftc||r.ftc;cnt.resuelto++;return;}if(resDirApply(r,fileDate)){cnt.resuelto++;return;}if(p&&p.mode==='resuelto'&&p.listaRes){r.mode='resuelto';r.listaRes=1;r.seg=p.seg;r.fres=p.fres;r.ftc=p.ftc;if(p.retiro)r.retiro=1;r.coment=r.coment||p.coment;r.fcom=r.fcom||p.fcom;cnt.resuelto++;return;}if(marcarRetiro(r,p,fileDate))cnt.retiro=(cnt.retiro||0)+1;else delete r.retiro;cnt[r.mode]++;});
   // RESUELTOS: equipos que tenían nuestro comentario y ya no vienen con TC (cambiaron de clave o ya no están en el archivo)
   var inTC={}; rows.forEach(function(r){inTC[ekey(r)]=1});
   Object.keys(prev).forEach(function(k){
@@ -1798,7 +1798,13 @@ var DTAB='tbl', DST='';
 // Estado de envío: 'env' = ya tiene Dirigido y comentario · 'sdir' = tiene comentario pero aún sin Dirigido · 'pend' = sin Dirigido ni comentario
 /* Regla: en cuanto un equipo tiene Dirigido + Comentarios Comercialización queda RESUELTO (ya se envió al área).
    Si Regionales agrega un comentario nuevo (modo "cambio"), se reabre para contestarlo. */
-function resDirOk(r){return r&&r.mode!=='resuelto'&&!!txt(dirVig(r))&&!!txt(r.actual||r.coment);}
+// Solo estas claves de Dirigido cuentan como resuelto al enviarse (CFO = Control Foráneo, retiro). Las demás (OP, LEG, EO…) siguen en el semáforo.
+var RES_DIR=['CFO'];
+function resDirClave(r){return RES_DIR.indexOf(txt(dirVig(r)).toUpperCase())>=0}
+function resDirOk(r){return r&&r.mode!=='resuelto'&&resDirClave(r)&&!!txt(r.actual||r.coment);}
+// Regresa a seguimiento los que se marcaron resueltos por tener Dirigido a una clave que no es de las de RES_DIR
+function resDirReabrir(){var n=0;rows.forEach(function(r){if(r.mode==='resuelto'&&r.resDir&&!resDirClave(r)){
+  r.mode=(r.actual||r.coment)?'igual':'sinprev';r.seg=SEG[r.mode];delete r.resDir;delete r.fres;n++;}});return n;}
 function resDirApply(r,fecha){if(!resDirOk(r))return false;var d=txt(dirVig(r));r.mode='resuelto';r.resDir=1;r.fres=r.fres||fecha||todayIso();
   r.seg='Resuelto - dirigido a '+d+(CLAVES[d]?' ('+CLAVES[d]+')':'')+' · '+isoToStr(r.fres);return true;}
 function envOf(r){if(r.mode==='resuelto')return r.resDir?'env':'';var c=txt(r.actual||r.coment),d=txt(dirVig(r));return c&&d?'env':c?'sdir':!d?'pend':'';}
@@ -2389,10 +2395,10 @@ function toastErr(t,m){toast('<b>✕ '+esc(t)+'</b><span>'+esc(m)+'</span>');var
 function aplicar(d,ver){
   rows=(d.rows||[]).map(function(r){delete r._k;return r;}); fileBase=d.fileBase||''; loadedAt=d.loadedAt||null; used=d.used||[]; state=d.state||{unknown:{},hdrErr:[]};
   rows.forEach(function(r,i){if(!r.mode){r.mode='nuevo';r.seg=SEG.nuevo;}r.id=i;r.pk=pkey(r)});
-  var nRD=0;try{rows.forEach(function(r){if(resDirApply(r,(state&&state.fileDate)||todayIso()))nRD++;});}catch(err){console.error('resDir',err);nRD=0;}
+  var nRD=0,nRA=0;try{nRA=resDirReabrir();rows.forEach(function(r){if(resDirApply(r,(state&&state.fileDate)||todayIso()))nRD++;});}catch(err){console.error('resDir',err);}
   if(rows.length)render(used,[],state.unknown||{},state.hdrErr||[]);
   else{$('out').classList.add('hidden');$('welcome').classList.remove('hidden');$('delBtn').classList.add('hidden');}
-  if(nRD&&sbRol!=='consulta'&&sbRol!=='consulta_tc')setTimeout(function(){try{cacheWrite(true);setDirty(true);toast('<b>'+nRD+' equipo(s) pasan a Resueltos</b><span>Ya tienen Dirigido y Comentarios Comercialización. Presiona <b>Guardar datos</b> para registrarlo.</span>');}catch(e){}},0);
+  if((nRD||nRA)&&sbRol!=='consulta'&&sbRol!=='consulta_tc')setTimeout(function(){try{cacheWrite(true);setDirty(true);toast('<b>Se actualizaron los resueltos</b><span>'+(nRA?nRA+' equipo(s) regresan a seguimiento (su Dirigido no es CFO). ':'')+(nRD?nRD+' equipo(s) dirigidos a CFO pasan a Resueltos. ':'')+'Sus comentarios se conservan. Presiona <b>Guardar datos</b>.</span>');}catch(e){}},0);
 }
 function cloudLoad(descartar,opt){opt=opt||{};
   return sbRpc('tc_cargar',{}).then(function(j){
