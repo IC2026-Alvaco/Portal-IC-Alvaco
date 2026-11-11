@@ -1262,7 +1262,7 @@ function importBase(wb){
     for(var i=0;i<tx.length&&!m;i++){var mm=tx[i]&&String(tx[i]).match(RETIRO_RE);if(mm)m=mm[0];}
     var why=st==='RETIRO'?'retiro (status RETIRO en la lista)':m?'retiro confirmado ('+m.toLowerCase()+')':'';
     if(l&&l.verde)why=why?why+' · en verde en la lista':'finalizado (marcado en verde en la lista)';
-    if(!why)return;
+    return;   // REGLA: mientras siga con clave TC en el SAT no se marca resuelto
     rs[st==='RETIRO'?'ret':'conf']++;
     r.mode='resuelto';r.listaRes=1;r.fres=fr;if(st==='RETIRO'||m)r.retiro=1;r.seg='Resuelto - '+why+' · '+isoToStr(fr);
   });
@@ -1335,7 +1335,7 @@ function process(wb){
     if(hr<0)return;                       // hoja sin tabla de equipos (Resumen, Claves, etc.)
     if(hidden){skipped.push(name);return;}
     if(/concentrado/i.test(name)){skipped.push(name);return;}   // hoja que junta todas las demás: se omite para no duplicar equipos
-    if(/resuelt/i.test(name)){skipped.push(name);return;}       // "Eqs Resueltos": equipos ya atendidos por el SAT, no son equipos activos
+    if(/resuelt/i.test(name)||/claves de estatus|^resumen|an[aá]lisis/i.test(name)){skipped.push(name);return;}       // "Eqs Resueltos": equipos ya atendidos por el SAT, no son equipos activos
     // columnas por nombre de encabezado (si no se encuentran, se usan las posiciones de siempre)
     var colH=function(re,def){for(var c=0;c<=Math.min(range.e.c,30);c++){if(re.test(txt(cellVal(ws,hr,c))))return c;}return def;};
     var cDias=colH(/^d[ií]as$/i,9), cClave=colH(/^clave$/i,10), cUlt=colH(/recaud/i,8);
@@ -1369,7 +1369,7 @@ function process(wb){
   rows.forEach(function(r,i){r.id=i;r.pk=pkey(r)});
   var cnt={nuevo:0,sinprev:0,igual:0,cambio:0,resuelto:0};
   var fileDate=findFileDate(wb);
-  var usedPrev={}; rows.forEach(function(r){var p=prev[ekey(r)];if(!p&&prevCod[norm(r.codigo)]){p=prevCod[norm(r.codigo)];moved.push(r.codigo);}if(p)usedPrev[ekey(p)]=1;compare(r,p,hadPrev,fileDate);if(p&&p.mode==='resuelto'&&p.resDir&&resDirClave(p)){r.mode='resuelto';r.resDir=1;r.seg=p.seg;r.fres=p.fres;r.ftc=p.ftc||r.ftc;cnt.resuelto++;return;}if(resDirApply(r,fileDate)){cnt.resuelto++;return;}if(p&&p.mode==='resuelto'&&p.listaRes){r.mode='resuelto';r.listaRes=1;r.seg=p.seg;r.fres=p.fres;r.ftc=p.ftc;if(p.retiro)r.retiro=1;r.coment=r.coment||p.coment;r.fcom=r.fcom||p.fcom;cnt.resuelto++;return;}if(marcarRetiro(r,p,fileDate))cnt.retiro=(cnt.retiro||0)+1;else delete r.retiro;cnt[r.mode]++;});
+  var usedPrev={}; rows.forEach(function(r){var p=prev[ekey(r)];if(!p&&prevCod[norm(r.codigo)]){p=prevCod[norm(r.codigo)];moved.push(r.codigo);}if(p)usedPrev[ekey(p)]=1;/* REGLA: si el SAT lo sigue trayendo con clave TC, NO está resuelto (aunque tenga Dirigido, comentario o retiro). */if(p&&p.mode==='resuelto'){p=JSON.parse(JSON.stringify(p));p.mode=(p.actual||p.coment)?'igual':'sinprev';['listaRes','resDir','retiro','fres','enDir','sinDir'].forEach(function(x){delete p[x]});}compare(r,p,hadPrev,fileDate);['listaRes','resDir','retiro','fres','enDir','sinDir'].forEach(function(x){delete r[x]});cnt[r.mode]++;});
   // RESUELTOS: equipos que tenían nuestro comentario y ya no vienen con TC (cambiaron de clave o ya no están en el archivo)
   var inTC={}; rows.forEach(function(r){inTC[ekey(r)]=1});
   Object.keys(prev).forEach(function(k){
@@ -1377,17 +1377,10 @@ function process(wb){
     // ya no viene con TC: se resolvió (ya no está en el archivo o pasó a otra clave)
     var o=JSON.parse(JSON.stringify(p)); delete o.enSat;
     if(p.mode!=='resuelto'){
-      var nw=allK[k]||allC[norm(p.codigo)], dir=p.dirAct||p.dirigido, U=function(x){return txt(x).toUpperCase()};
-      if(nw&&nw.clave&&dir&&U(nw.clave)===U(dir)){   // está en la clave a la que TC lo dirigió: sigue en seguimiento
-        o.clave=nw.clave;o.desc=CLAVES[nw.clave]||'Clave no catalogada';o.info=nw.info;o.enDir=nw.clave;
-        o.seg='En '+nw.clave+' (clave a la que se dirigió) · sigue en seguimiento';rows.push(o);cnt.enDir=(cnt.enDir||0)+1;return;}
-      if(nw&&!txt(dir)){   // pasó a otra clave pero Comercialización no lo había dirigido: sigue en seguimiento
-        o.clave=nw.clave||'';o.desc=nw.clave?(CLAVES[nw.clave]||'Clave no catalogada'):'';o.info=nw.info;o.sinDir=1;delete o.enDir;
-        o.seg='Pasó a '+(nw.clave||'sin clave')+' sin Dirigido · falta indicar a dónde se dirigió';rows.push(o);cnt.sinDir=(cnt.sinDir||0)+1;return;}
-      var de=p.enDir; delete o.enDir; delete o.sinDir;
+      var nw=allK[k]||allC[norm(p.codigo)]; delete o.enDir; delete o.sinDir;
       o.mode='resuelto'; o.fres=fileDate;
-      if(nw){o.clave=nw.clave||'(sin clave)';o.desc=nw.clave?(CLAVES[nw.clave]||'Clave no catalogada'):'';o.info=nw.info;
-        o.seg='Resuelto - '+(de?de+' lo pasó a ':'pasó a ')+(nw.clave||'sin clave');}
+      if(nw){o.clave=nw.clave||'';o.desc=nw.clave?(CLAVES[nw.clave]||'Clave no catalogada'):'';o.info=nw.info;
+        o.seg='Resuelto - ya no tiene clave TC'+(nw.clave?' (ahora '+nw.clave+')':' (clave vacía en el SAT)');}
       else o.seg='Resuelto - ya no está en el archivo';
       o.seg+=' · '+isoToStr(fileDate);
     }
@@ -1799,7 +1792,7 @@ var DTAB='tbl', DST='';
 /* Regla: en cuanto un equipo tiene Dirigido + Comentarios Comercialización queda RESUELTO (ya se envió al área).
    Si Regionales agrega un comentario nuevo (modo "cambio"), se reabre para contestarlo. */
 // Solo estas claves de Dirigido cuentan como resuelto al enviarse (CFO = Control Foráneo, retiro). Las demás (OP, LEG, EO…) siguen en el semáforo.
-var RES_DIR=['CFO'];
+var RES_DIR=[];   // ninguna clave de Dirigido resuelve: solo el SAT decide
 function resDirClave(r){return RES_DIR.indexOf(txt(dirVig(r)).toUpperCase())>=0}
 function resDirOk(r){return r&&r.mode!=='resuelto'&&resDirClave(r)&&!!txt(r.actual||r.coment);}
 // Regresa a seguimiento los que se marcaron resueltos por tener Dirigido a una clave que no es de las de RES_DIR
@@ -2395,10 +2388,16 @@ function toastErr(t,m){toast('<b>✕ '+esc(t)+'</b><span>'+esc(m)+'</span>');var
 function aplicar(d,ver){
   rows=(d.rows||[]).map(function(r){delete r._k;return r;}); fileBase=d.fileBase||''; loadedAt=d.loadedAt||null; used=d.used||[]; state=d.state||{unknown:{},hdrErr:[]};
   rows.forEach(function(r,i){if(!r.mode){r.mode='nuevo';r.seg=SEG.nuevo;}r.id=i;r.pk=pkey(r)});
-  var nRD=0,nRA=0;try{nRA=resDirReabrir();rows.forEach(function(r){if(resDirApply(r,(state&&state.fileDate)||todayIso()))nRD++;});}catch(err){console.error('resDir',err);}
+  rows.forEach(function(r){if(r.clave==='(sin clave)'){r.clave='';if(r.seg)r.seg=r.seg.replace('(ahora sin clave)','(clave vacía en el SAT)');}});
+  var nRD=0,nRA=0;try{var hayS=rows.some(function(r){return r.enSat}), fd=(state&&state.fileDate)||todayIso();
+    if(hayS)rows.forEach(function(r){
+      if(r.enSat&&r.mode==='resuelto'){r.mode=(r.actual||r.coment)?'igual':'sinprev';r.seg=SEG[r.mode];['listaRes','resDir','retiro','fres'].forEach(function(x){delete r[x]});nRA++;}
+      else if(!r.enSat&&r.mode!=='resuelto'){var tc=txt(r.clave).toUpperCase()==='TC';r.mode='resuelto';r.fres=r.fres||fd;delete r.enDir;delete r.sinDir;
+        r.seg=(tc?'Resuelto - ya no está en el archivo':'Resuelto - ya no tiene clave TC'+(r.clave?' (ahora '+r.clave+')':' (clave vacía en el SAT)'))+' · '+isoToStr(r.fres);nRD++;}});
+  }catch(err){console.error('reglaTC',err);}
   if(rows.length)render(used,[],state.unknown||{},state.hdrErr||[]);
   else{$('out').classList.add('hidden');$('welcome').classList.remove('hidden');$('delBtn').classList.add('hidden');}
-  if((nRD||nRA)&&sbRol!=='consulta'&&sbRol!=='consulta_tc')setTimeout(function(){try{cacheWrite(true);setDirty(true);toast('<b>Se actualizaron los resueltos</b><span>'+(nRA?nRA+' equipo(s) regresan a seguimiento (su Dirigido no es CFO). ':'')+(nRD?nRD+' equipo(s) dirigidos a CFO pasan a Resueltos. ':'')+'Sus comentarios se conservan. Presiona <b>Guardar datos</b>.</span>');}catch(e){}},0);
+  if((nRD||nRA)&&sbRol!=='consulta'&&sbRol!=='consulta_tc')setTimeout(function(){try{cacheWrite(true);setDirty(true);toast('<b>Se actualizaron los resueltos</b><span>'+(nRA?nRA+' equipo(s) siguen con clave TC en el SAT y regresan a seguimiento. ':'')+(nRD?nRD+' equipo(s) ya no tienen clave TC y pasan a Resueltos. ':'')+'Sus comentarios se conservan. Presiona <b>Guardar datos</b>.</span>');}catch(e){}},0);
 }
 function cloudLoad(descartar,opt){opt=opt||{};
   return sbRpc('tc_cargar',{}).then(function(j){
