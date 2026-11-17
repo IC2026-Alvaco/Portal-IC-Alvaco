@@ -202,7 +202,7 @@ const DASHBOARDS = [
   descripcion: "Solicita apoyo al equipo de Inteligencia Comercial y da seguimiento a tus tickets.",
   categoria: "Herramientas IC",
   color: "purple",
-  tipo: "app",
+  tipo: "web",
   soloIC: true,
   imagen: "img/oso_constructor_transparente.png",
   embed: "https://ic2026-alvaco.github.io/Solicitud-de-Tickets-Comercializaci-n-/",
