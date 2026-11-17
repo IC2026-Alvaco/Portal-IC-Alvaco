@@ -198,16 +198,16 @@ const DASHBOARDS = [
     url: "https://app.powerbi.com/groups/9329f718-3abb-4325-8cfc-f5564b8e6fd2/reports/fdec9637-aba1-4a84-a376-53b905a636f9/3d2c6234636490a08731?language=es-MX&experience=power-bi"
   },
   {
-    nombre: "Tickets IC",
-    descripcion: "Solicita apoyo al equipo de Inteligencia Comercial y da seguimiento a tus tickets.",
-    categoria: "Solicitudes",
-    color: "purple",
-    tipo: "app",     /* ← Power Apps: el visor no agrega parámetros de Power BI */
-    oculto: true,    /* ← sin tarjeta en el grid: se abre solo desde "Solicitar ticket" */
-    imagen: "img/oso_constructor_transparente.png",
-    embed: "https://apps.powerapps.com/play/e/default-923eb367-abae-4010-9989-b7cf33fb74a7/a/37998833-3d4f-485d-9e16-0f4a8d37e341?tenantId=923eb367-abae-4010-9989-b7cf33fb74a7&source=portal-ic&hideNavBar=true",
-    url: "https://apps.powerapps.com/play/e/default-923eb367-abae-4010-9989-b7cf33fb74a7/a/37998833-3d4f-485d-9e16-0f4a8d37e341?tenantId=923eb367-abae-4010-9989-b7cf33fb74a7"
-  },
+  nombre: "Tickets IC",
+  descripcion: "Solicita apoyo al equipo de Inteligencia Comercial y da seguimiento a tus tickets.",
+  categoria: "Herramientas IC",
+  color: "purple",
+  tipo: "app",
+  soloIC: true,
+  imagen: "img/oso_constructor_transparente.png",
+  embed: "https://ic2026-alvaco.github.io/Solicitud-de-Tickets-Comercializaci-n-/",
+  url:   "https://ic2026-alvaco.github.io/Solicitud-de-Tickets-Comercializaci-n-/"
+},
   {
     nombre: "Tiendas Neto",
     descripcion: "Ingreso, renta y equipos por estado, plaza y precio de juego.",
