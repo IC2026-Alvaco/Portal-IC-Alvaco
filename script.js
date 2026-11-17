@@ -204,6 +204,7 @@ const DASHBOARDS = [
   color: "purple",
   tipo: "web",
   soloIC: true,
+  pestana: true,
   imagen: "img/oso_constructor_transparente.png",
   embed: "https://ic2026-alvaco.github.io/Solicitud-de-Tickets-Comercializaci-n-/",
   url:   "https://ic2026-alvaco.github.io/Solicitud-de-Tickets-Comercializaci-n-/"
