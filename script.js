@@ -230,6 +230,7 @@ const DASHBOARDS = [
     color: "green",
     tipo: "web",     /* ← se abre en el visor sin parámetros de Power BI */
     oculto: true,    /* ← sin tarjeta: solo desde el sidebar o por URL */
+    pestana: true,
     embed: "https://ic2026-alvaco.github.io/KPI-s-Comercializaci-n/",
     url:   "https://ic2026-alvaco.github.io/KPI-s-Comercializaci-n/"
   }
