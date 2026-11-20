@@ -2284,9 +2284,11 @@ new MutationObserver(function(){var b=document.querySelector('#rkDim button.on')
     var p=document.createElement('div');p.className='ssp';
     p.innerHTML='<div class="ssq">'+LUPA+'<input type="text" placeholder="Buscar…" autocomplete="off"></div><div class="ssl"></div>';
     document.body.appendChild(p); cur={w:w,p:p,hi:0,items:[]}; w.el.classList.add('open');
-    var r=w.btn.getBoundingClientRect(), wd=Math.max(r.width,230), lf=Math.min(r.left,window.innerWidth-wd-8);
+    // en pantallas grandes la página usa zoom: las medidas de pantalla se pasan a medidas de la página
+    var z=(typeof ZM==='number'&&ZM>0)?ZM:1, rr=w.btn.getBoundingClientRect(), r={left:rr.left/z,top:rr.top/z,bottom:rr.bottom/z,width:rr.width/z}, VW=window.innerWidth/z, VH=window.innerHeight/z;
+    var wd=Math.max(r.width,230), lf=Math.min(r.left,VW-wd-8);
     p.style.left=Math.max(8,lf)+'px';p.style.width=wd+'px';
-    var below=window.innerHeight-r.bottom; if(below<260&&r.top>below){p.style.bottom=(window.innerHeight-r.top+4)+'px';}else p.style.top=(r.bottom+4)+'px';
+    var below=VH-r.bottom; if(below<260&&r.top>below){p.style.bottom=(VH-r.top+4)+'px';}else p.style.top=(r.bottom+4)+'px';
     var inp=p.querySelector('input'), list=p.querySelector('.ssl');
     function draw(){var q=nrm(inp.value.trim()),opts=[].slice.call(w.sel.options);
       cur.items=opts.filter(function(o){return !q||nrm(o.text).indexOf(q)>=0});
