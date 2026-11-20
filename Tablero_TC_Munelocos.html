@@ -883,6 +883,7 @@ html.zm.mq21 .tipw .tipos{grid-auto-flow:row;grid-template-columns:repeat(3,minm
 .sso.hl{background:#EEF2FA}.sso.sel{color:#4B2E83;font-weight:700}.sso.sel::after{content:" ✓";color:#7B61C4}
 .sso mark{background:#FDE7B0;color:inherit;padding:0;border-radius:2px}
 .sse{padding:10px;text-align:center;color:#595959;font-size:12.5px}
+@media (pointer:coarse){.sso{padding:11px 12px;font-size:15px}.ssq input{font-size:15px;padding:10px 0}.ssl{max-height:340px}.ssb{min-height:38px}}
 </style>
 <style id="tlCalendario">
 /* ===== Filtro de fecha con calendario (Desde / Hasta) ===== */
@@ -2275,7 +2276,7 @@ new MutationObserver(function(){var b=document.querySelector('#rkDim button.on')
   var FLE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>';
   var nrm=function(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')};
   var es=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
-  var W=[], cur=null;
+  var W=[], cur=null, TACTIL=(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches)||('ontouchstart' in window)||navigator.maxTouchPoints>0;
   function sync(w){var s=w.sel,o=s.options[s.selectedIndex];w.lab.textContent=o?o.text:'';w.el.classList.toggle('act',!!s.value);}
   function close(){if(!cur)return;cur.w.el.classList.remove('open');if(cur.p.parentNode)cur.p.parentNode.removeChild(cur.p);cur=null;}
   function pick(w,v){close();if(w.sel.value!==v){w.sel.value=v;w.sel.dispatchEvent(new Event('change',{bubbles:true}));}sync(w);w.btn.focus();}
@@ -2309,8 +2310,10 @@ new MutationObserver(function(){var b=document.querySelector('#rkDim button.on')
     inp.addEventListener('input',function(){cur.hi=0;draw()});
     inp.addEventListener('keydown',function(e){if(e.key==='ArrowDown'){e.preventDefault();mv(1)}else if(e.key==='ArrowUp'){e.preventDefault();mv(-1)}
       else if(e.key==='Enter'){e.preventDefault();var o=cur.items[cur.hi];if(o)pick(w,o.value)}else if(e.key==='Escape'){e.preventDefault();close();w.btn.focus()}});
-    list.addEventListener('mousedown',function(e){var d=e.target.closest('.sso');if(!d)return;e.preventDefault();pick(w,cur.items[+d.getAttribute('data-i')].value)});
-    setTimeout(function(){inp.focus()},0);
+    list.addEventListener('mousedown',function(e){if(e.target.closest('.sso'))e.preventDefault();});
+    list.addEventListener('click',function(e){var d=e.target.closest('.sso');if(!d||!cur)return;pick(w,cur.items[+d.getAttribute('data-i')].value)});
+    cur.t0=Date.now(); cur.vw=window.innerWidth;
+    if(!TACTIL)setTimeout(function(){inp.focus()},0);
   }
   function enhance(s){if(!s||s.parentNode.classList.contains('ssw'))return;
     var el=document.createElement('div');el.className='ssw';s.parentNode.insertBefore(el,s);el.appendChild(s);s.tabIndex=-1;
@@ -2322,9 +2325,12 @@ new MutationObserver(function(){var b=document.querySelector('#rkDim button.on')
     s.addEventListener('change',function(){sync(w)}); sync(w);}
   FIDS.forEach(function(id){enhance($(id))});
   setInterval(function(){W.forEach(sync)},400);   // cambios hechos desde el tablero (tarjetas, gráficas, limpiar filtros)
-  document.addEventListener('mousedown',function(e){if(cur&&!e.target.closest('.ssp')&&!cur.w.el.contains(e.target))close()},true);
-  window.addEventListener('resize',close);
-  document.addEventListener('scroll',function(e){if(cur&&!(e.target&&e.target.closest&&e.target.closest('.ssp')))close()},true);
+  document.addEventListener('pointerdown',function(e){if(cur&&!e.target.closest('.ssp')&&!cur.w.el.contains(e.target))close()},true);
+  // el teclado táctil cambia la altura de la ventana: solo se cierra si cambia el ancho (giro de pantalla, ventana nueva)
+  window.addEventListener('resize',function(){if(cur&&window.innerWidth!==cur.vw)close();});
+  // al abrir el teclado la página se mueve sola: no se cierra en el primer segundo ni mientras escriben en "Buscar…"
+  document.addEventListener('scroll',function(e){if(!cur)return;if(e.target&&e.target.closest&&e.target.closest('.ssp'))return;
+    if(Date.now()-cur.t0<1200)return;var ae=document.activeElement;if(ae&&ae.closest&&ae.closest('.ssp'))return;close();},true);
 })();
 /* ================= CONEXIÓN A SUPABASE =================
    Supabase es la fuente central: al abrir se cargan los datos de la base y
