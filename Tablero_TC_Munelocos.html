@@ -2289,6 +2289,13 @@ new MutationObserver(function(){var b=document.querySelector('#rkDim button.on')
     var wd=Math.max(r.width,230), lf=Math.min(r.left,VW-wd-8);
     p.style.left=Math.max(8,lf)+'px';p.style.width=wd+'px';
     var below=VH-r.bottom; if(below<260&&r.top>below){p.style.bottom=(VH-r.top+4)+'px';}else p.style.top=(r.bottom+4)+'px';
+    // ajuste fino: se mide dónde quedó realmente y se corrige (funciona con cualquier zoom o navegador)
+    try{p.style.animation='none';var pr=p.getBoundingClientRect(), s=pr.width/wd||1, up=!!p.style.bottom;
+      var dx=(Math.max(8*s,Math.min(rr.left,window.innerWidth-pr.width-8*s))-pr.left)/s;
+      if(Math.abs(dx)>1)p.style.left=(parseFloat(p.style.left)+dx)+'px';
+      if(!up){var dy=(rr.bottom+4*s-pr.top)/s;if(Math.abs(dy)>1)p.style.top=(parseFloat(p.style.top)+dy)+'px';}
+      else{var dy2=(rr.top-4*s-pr.bottom)/s;if(Math.abs(dy2)>1)p.style.bottom=(parseFloat(p.style.bottom)-dy2)+'px';}}catch(e){}
+    p.style.animation='';
     var inp=p.querySelector('input'), list=p.querySelector('.ssl');
     function draw(){var q=nrm(inp.value.trim()),opts=[].slice.call(w.sel.options);
       cur.items=opts.filter(function(o){return !q||nrm(o.text).indexOf(q)>=0});
